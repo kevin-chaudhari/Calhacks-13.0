@@ -4,7 +4,8 @@ The API (mediator) and agents/run_agents.py (personal + provider agents) both bu
 directory from the same fixtures and AGENT_SEED_PREFIX, so every process knows every
 address without asking the network.
 
-AGENT_NETWORK=mailbox  Agentverse mailboxes; addresses resolve through the Almanac (venue / demo).
+AGENT_NETWORK=mailbox  the 8 agents in agentverse_keys() use Agentverse mailboxes and resolve through the
+                       Almanac; the other Rally agents are reached by direct HTTP (venue / demo).
 AGENT_NETWORK=local    plain HTTP on AGENT_HOST, static resolver; no Fetch.ai account needed (tests).
 """
 
@@ -102,6 +103,39 @@ def address_of(key: str) -> str:
     return by_key()[key].address
 
 
+# Agentverse's free plan holds 8 agents per account: these get mailboxes and Agentverse pages
+# (the ASI:One concierge, the mediator, the scuba demo group and its vendor). The rest run as
+# plain uAgents over HTTP on AGENT_HOST. Override with AGENTVERSE_AGENTS=key,key,...
+DEFAULT_ON_AGENTVERSE = ["concierge", "mediator", "personal:u_kevin", "personal:u_ana", "personal:u_ravi",
+                         "personal:u_maya", "personal:u_kai", "provider:p_ottercove"]
+
+
+def agentverse_keys() -> list[str]:
+    raw = os.environ.get("AGENTVERSE_AGENTS", "").strip()
+    return [k.strip() for k in raw.split(",") if k.strip()] if raw else list(DEFAULT_ON_AGENTVERSE)
+
+
+def on_agentverse(spec: AgentSpec) -> bool:
+    return network_mode() == "mailbox" and spec.key in agentverse_keys()
+
+
+def _resolver(direct_all: bool):
+    """Rally agents without a mailbox (or all of them, AGENT_DIRECT=1) by direct HTTP; anyone else
+    (Agentverse-registered agents, ASI:One users) through the Almanac."""
+    from uagents.resolver import GlobalResolver, Resolver
+
+    rules = {s.address: s.endpoint for s in directory() if direct_all or not on_agentverse(s)}
+    fallback = GlobalResolver()
+
+    class _RallyResolver(Resolver):
+        async def resolve(self, destination: str):
+            if destination in rules:
+                return destination, [rules[destination]]
+            return await fallback.resolve(destination)
+
+    return _RallyResolver()
+
+
 def start_in_loop(agent) -> list:
     """Run an agent inside an already-running loop (the API's) and return its tasks.
 
@@ -134,5 +168,8 @@ def make_agent(spec: AgentSpec, loop=None):
         return Agent(**common, endpoint=None, resolve=RulesBasedResolver(rules), enable_agent_inspector=False)
     if seed_prefix() == DEV_PREFIX or seed_prefix().startswith("PASTE_"):
         raise RuntimeError("AGENT_NETWORK=mailbox needs a private AGENT_SEED_PREFIX in .env; the default is public.")
-    return Agent(**common, mailbox=True, publish_agent_details=True,
+    resolve = _resolver(direct_all=_env("AGENT_DIRECT", "0") == "1")
+    if not on_agentverse(spec):
+        return Agent(**common, endpoint=None, resolve=resolve, enable_agent_inspector=False)
+    return Agent(**common, mailbox=True, publish_agent_details=True, resolve=resolve,
                  readme_path=str(readme) if readme.exists() else None)

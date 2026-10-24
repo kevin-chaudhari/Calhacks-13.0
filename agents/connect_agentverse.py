@@ -6,6 +6,9 @@
     TRANSPORT=agentverse python scripts/rally.py api    # terminal 2: mediator agent inside the API
     python agents/connect_agentverse.py       # terminal 3: registers each agent, prints the README table
     python agents/connect_agentverse.py --table   # only print the table (no network)
+    python agents/connect_agentverse.py --prune   # first unregister agents not in AGENTVERSE_AGENTS
+
+Only the agents in network.agentverse_keys() are registered (Agentverse's free plan holds 8).
 
 Each agent exposes POST /connect on its local port; this sends the API key there, which is what
 the Agentverse inspector's "Connect" button does, once per agent.
@@ -28,14 +31,17 @@ from rally.negotiation import network  # noqa: E402
 AGENTVERSE = "https://agentverse.ai/agents/details/{address}/profile"
 
 
-def connect(spec: network.AgentSpec, token: str) -> str:
+def connect(spec: network.AgentSpec, token: str, route: str = "connect") -> str:
+    body = {"user_token": token, "agent_type": "mailbox"} if route == "connect" else {"user_token": token}
     req = urllib.request.Request(
-        f"http://127.0.0.1:{spec.port}/connect",
-        data=json.dumps({"user_token": token, "agent_type": "mailbox"}).encode(),
+        f"http://127.0.0.1:{spec.port}/{route}",
+        data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json", "x-uagents-address": spec.address})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             body = json.load(r)
+            if not body.get("success", True) and "not found" in str(body.get("detail", "")).lower():
+                return "skipped (was not registered)"
             return "ok" if body.get("success", True) else f"failed: {body}"
     except urllib.error.URLError as exc:
         return f"not reachable ({exc.reason}); is it running?"
@@ -43,20 +49,26 @@ def connect(spec: network.AgentSpec, token: str) -> str:
 
 def table(specs: list[network.AgentSpec]) -> str:
     rows = ["| Agent | Kind | Address | Agentverse |", "|---|---|---|---|"]
-    rows += [f"| {s.name} | {s.kind} | `{s.address}` | [profile]({AGENTVERSE.format(address=s.address)}) |"
-             for s in specs]
+    rows += [f"| {s.name} | {s.kind} | `{s.address}` | "
+             + (f"[profile]({AGENTVERSE.format(address=s.address)}) |" if network.on_agentverse(s)
+                else "local uAgent (not registered) |") for s in specs]
     return "\n".join(rows)
 
 
 def main() -> int:
     specs = network.directory()
+    registered = [s for s in specs if network.on_agentverse(s)]
     if "--table" not in sys.argv:
         token = os.environ.get("AGENTVERSE_API_KEY", "").strip()
         if not token or token.startswith("PASTE_"):
             print("Set AGENTVERSE_API_KEY (agentverse.ai → Profile → API keys).")
             return 1
+        if "--prune" in sys.argv:                   # free Agentverse slots held by agents not in the list
+            for s in specs:
+                if not network.on_agentverse(s):
+                    print(f"{connect(s, token, 'disconnect'):<10} disconnect {s.name}")
         failed = 0
-        for s in specs:
+        for s in registered:
             status = connect(s, token)
             failed += status != "ok"
             print(f"{status:<10} {s.name}")

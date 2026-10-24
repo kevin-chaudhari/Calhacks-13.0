@@ -27,7 +27,7 @@ TRANSPORT=agentverse AGENT_NETWORK=local python -m pytest tests/integration/test
 # Agentverse mailboxes (set a private AGENT_SEED_PREFIX and AGENTVERSE_API_KEY in .env first)
 python agents/run_agents.py                                         # terminal 1
 TRANSPORT=agentverse python scripts/rally.py dev                    # terminal 2
-python agents/connect_agentverse.py                                 # once: registers all 27 mailboxes
+python agents/connect_agentverse.py                                 # once: registers the 8 Agentverse agents
 ```
 
 With `TRANSPORT=agentverse` the UI badge reads "Agents: agentverse" only once the mediator agent is actually up; if it fails to start, the API stays in-process and says "inproc".
@@ -78,7 +78,40 @@ Tests: `tests/unit/test_concierge.py` (fake API: the three replies, the follow-u
 
 ## Addresses
 
-Generated with `python agents/connect_agentverse.py --table` using the team's private `AGENT_SEED_PREFIX`. Not filled in yet.
+Generated with `python agents/connect_agentverse.py --table` from the team's private `AGENT_SEED_PREFIX`. Agentverse's free plan holds 8 agents per account, so the 8 that judges meet (the ASI:One concierge, the mediator, the scuba demo group and its vendor) have mailboxes and Agentverse pages; the other 20 run as plain uAgents reached by direct HTTP. Change the set with `AGENTVERSE_AGENTS`.
+
+| Agent | Kind | Address | Agentverse |
+|---|---|---|---|
+| Rally · group mediator | mediator | `agent1qvscamdczpsks92damhtxuesuhcaj3e78f0eva7rqt6w5d6lhw6agzw23q9` | [profile](https://agentverse.ai/agents/details/agent1qvscamdczpsks92damhtxuesuhcaj3e78f0eva7rqt6w5d6lhw6agzw23q9/profile) |
+| Rally · Kevin's agent | personal | `agent1qv2wrayq80ve4z5x0uyj4phmlwgdm9p282sqw878zy723mmjgezfcm000v7` | [profile](https://agentverse.ai/agents/details/agent1qv2wrayq80ve4z5x0uyj4phmlwgdm9p282sqw878zy723mmjgezfcm000v7/profile) |
+| Rally · Ana's agent | personal | `agent1qw2kn973ht957clt7cwlm522x9mpns7943xs55c5wtp6ryp69f6ag0afunj` | [profile](https://agentverse.ai/agents/details/agent1qw2kn973ht957clt7cwlm522x9mpns7943xs55c5wtp6ryp69f6ag0afunj/profile) |
+| Rally · Ravi's agent | personal | `agent1qfvhtemr8sy5z6ah2wzlg4cxwywz4ec5djn59t87gep205autcuqc45vq6n` | [profile](https://agentverse.ai/agents/details/agent1qfvhtemr8sy5z6ah2wzlg4cxwywz4ec5djn59t87gep205autcuqc45vq6n/profile) |
+| Rally · Maya's agent | personal | `agent1qga4kq5c262hfdzq52f96g8rngwhxpgcfxfg56gdvtcgcqwefr7yywsaw0k` | [profile](https://agentverse.ai/agents/details/agent1qga4kq5c262hfdzq52f96g8rngwhxpgcfxfg56gdvtcgcqwefr7yywsaw0k/profile) |
+| Rally · Kai's agent | personal | `agent1qw327s826z9gp5cpaghg4zmley0er7uxjkx4uc0e9508mzcfh8kxyjra9hl` | [profile](https://agentverse.ai/agents/details/agent1qw327s826z9gp5cpaghg4zmley0er7uxjkx4uc0e9508mzcfh8kxyjra9hl/profile) |
+| Rally · Eli's agent | personal | `agent1qtduus7g2l9xx0dp0lt6qgp9ll5nqrcg9kxw5aap75sdfzdj6yjlxyc0fhk` | local uAgent (not registered) |
+| Rally · Luis's agent | personal | `agent1qtta67ur7xfdk04xacvk9heq6knn284t55m5vafcngq2je0e9uvncht8yy4` | local uAgent (not registered) |
+| Rally · Sam's agent | personal | `agent1qwwnr40grs8ah873ve6mgdjqrndgekfq4wz2d4fvyltrpzvuytcfg4a3aax` | local uAgent (not registered) |
+| Rally · Priya's agent | personal | `agent1qdljljlnvk57vff5q9uwpzyrajrxx7fna8wnxj939ju4dnqxelp4uepqqp0` | local uAgent (not registered) |
+| Rally · Theo's agent | personal | `agent1qdre45eguffavyq0zmkw9se3s8xky4tt25aaqauugnmem9hnr6485lkfa46` | local uAgent (not registered) |
+| Rally · Noor's agent | personal | `agent1q2vlece25uw62dul9a64lc9kdpl56kgth874nrgmsa9shxp5600yjr75u97` | local uAgent (not registered) |
+| Rally · Jordan's agent | personal | `agent1qtvcx6yepma6ngpqmwg3fydw055xmgr0q40pa37hqm6wfe5u86ttv8g7553` | local uAgent (not registered) |
+| Rally · Mei's agent | personal | `agent1q0snzpedfggdjapy4w2ya78h5lnwrwytpzpzzwnvxhqf3k6xnzlyuzehpfy` | local uAgent (not registered) |
+| Rally · Tomas's agent | personal | `agent1qf2u43jw87wg4pr4aa2yxqvcc06qlluwnl3jar5wcpga5sj95457vp75dty` | local uAgent (not registered) |
+| Rally · Owen's agent | personal | `agent1qgapas7n5u2lrsdtpjremzeyedk6pnzm7aalym6tquxqz9ps9skpg3mu75e` | local uAgent (not registered) |
+| Rally · Lucia's agent | personal | `agent1q0xgarwk6fsnjft7j2rp79dtw0gd7x4a7g4d5qe8fzpl8fhempg4u6a5x3l` | local uAgent (not registered) |
+| Rally · Dev's agent | personal | `agent1qd5zl5qvdnhz9dv4y0cg5wcqrcq2ej2vnd8889qdepdc9g0ta9q9wsphvak` | local uAgent (not registered) |
+| Rally · Hana's agent | personal | `agent1q0unkq9nxr4pua3vrsmpu55np9pezh46z77lfkuj285p3z56n2j0jszaelz` | local uAgent (not registered) |
+| Rally · Felix's agent | personal | `agent1qwvc08pgje6327avq7fn82p83czldvgy5fhtk3f374yd4zanmm55x5eqxvh` | local uAgent (not registered) |
+| Rally · Zara's agent | personal | `agent1qt40lhur2mrlaenutg4ecrfsj54cjrwqwp0vdre4tqpr89mvr66ggllxr7p` | local uAgent (not registered) |
+| Rally · Kelp Line Divers | provider | `agent1qwzus3gqxu60fejyd2ek4escdazzcg4nt06q2976zl9wcwsqc6lrupkc27r` | local uAgent (not registered) |
+| Rally · Otter Cove Dive Co. | provider | `agent1qtprw9vtn0u9gytcgzswy6ye34g2emrgne9uux5ru9m7v80xfj93jjj423x` | [profile](https://agentverse.ai/agents/details/agent1qtprw9vtn0u9gytcgzswy6ye34g2emrgne9uux5ru9m7v80xfj93jjj423x/profile) |
+| Rally · Pacific Freefall | provider | `agent1q0nt6afcc7sp0uf7wvjtf2txg5a33q333m56naetyvk03ykq289d5pe062n` | local uAgent (not registered) |
+| Rally · Redwood Skydive Co. | provider | `agent1qvft3d56k5ly699g3zua9tg2yqpz56eknflfxkmu977dk04nkmstypvj6uy` | local uAgent (not registered) |
+| Rally · Harbor Paddle Co. | provider | `agent1qfyc58vgaqu0lgnpk0eege47kwkprd92tdkvr74kdv0g24sehdr8servd69` | local uAgent (not registered) |
+| Rally · Stillwater Kayak Tours | provider | `agent1qv2txz7fg6tfy0aq966jslg39g7vfnfyuracqg2zhdr90jceqnp7cj3akpl` | local uAgent (not registered) |
+| Rally concierge | concierge | `agent1qv97ccelftm7tv4gz523jgzehqq0tz0h6mxc2v2gu43jx7elke5hwhe2ca6` | [profile](https://agentverse.ai/agents/details/agent1qv97ccelftm7tv4gz523jgzehqq0tz0h6mxc2v2gu43jx7elke5hwhe2ca6/profile) |
+
+Measured on Oct 24 (scuba, 5 members over Agentverse mailboxes): plan v4 in 4 rounds, the same as in-process; replies took 3.5–7.8 s per hop, 56 s end to end including the 1.4 s per-round demo pacing. `AGENT_DIRECT=1` sends between Rally's own agents by direct HTTP instead (milliseconds) when the venue network is slow.
 
 ## Not done yet
 
