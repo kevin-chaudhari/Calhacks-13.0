@@ -1,0 +1,1065 @@
+{
+ "_note": "Recorded from a real run of the scuba scenario (TRANSPORT=inproc, simulated providers and ledger). For UI work without the API.",
+ "deal": {
+  "id": "d_1de4c3",
+  "shape": "group_provider",
+  "activity": "scuba_diving",
+  "title": "Scuba diving \u00b7 Monterey",
+  "status": "COMMITTED",
+  "statusVersion": 5,
+  "currentProposalVersion": 4,
+  "maxRounds": 5,
+  "round": 4,
+  "attempt": 1,
+  "groupMin": 2,
+  "groupMax": 5,
+  "deadlineAt": 1792942047085,
+  "termSpace": [
+   {
+    "key": "date",
+    "type": "date",
+    "options": [
+     "2026-11-01",
+     "2026-11-07",
+     "2026-11-08",
+     "2026-11-14",
+     "2026-11-15",
+     "2026-11-21",
+     "2026-11-22",
+     "2026-11-28",
+     "2026-11-29"
+    ],
+    "label": "Date"
+   },
+   {
+    "key": "site",
+    "type": "categorical",
+    "options": [
+     "Breakwater Cove",
+     "Lovers Point",
+     "Point Lobos"
+    ],
+    "label": "Dive site"
+   },
+   {
+    "key": "dive_type",
+    "type": "categorical",
+    "options": [
+     "shore",
+     "boat"
+    ],
+    "label": "Boat or shore"
+   },
+   {
+    "key": "gear_included",
+    "type": "boolean",
+    "options": [
+     true,
+     false
+    ],
+    "label": "Gear included"
+   },
+   {
+    "key": "price_per_person",
+    "type": "numeric",
+    "options": [],
+    "label": "Price (provider decides)"
+   }
+  ],
+  "createdBy": "u_kevin",
+  "createdAt": 1792855647085,
+  "bookingStatus": "not_booked",
+  "conflicts": [],
+  "chosenQuoteId": "q_a3a28812",
+  "paymentsMode": "simulated"
+ },
+ "members": [
+  {
+   "userId": "u_kevin",
+   "name": "Kevin",
+   "initials": "KC",
+   "intentId": "i_c9c57ea5",
+   "role": "organizer",
+   "state": "joined",
+   "isDemoPersona": false,
+   "agentAddress": "agent1q-demo-kevin",
+   "agentStatus": "accepted",
+   "agentTerm": null,
+   "removedReason": null
+  },
+  {
+   "userId": "u_ana",
+   "name": "Ana",
+   "initials": "AR",
+   "intentId": "i_ana",
+   "role": "member",
+   "state": "joined",
+   "isDemoPersona": false,
+   "agentAddress": "agent1q-demo-ana",
+   "agentStatus": "accepted",
+   "agentTerm": null,
+   "removedReason": null
+  },
+  {
+   "userId": "u_maya",
+   "name": "Maya",
+   "initials": "MO",
+   "intentId": "i_maya",
+   "role": "member",
+   "state": "joined",
+   "isDemoPersona": true,
+   "agentAddress": "agent1q-demo-maya",
+   "agentStatus": "accepted",
+   "agentTerm": null,
+   "removedReason": null
+  },
+  {
+   "userId": "u_kai",
+   "name": "Kai",
+   "initials": "KN",
+   "intentId": "i_kai",
+   "role": "member",
+   "state": "joined",
+   "isDemoPersona": true,
+   "agentAddress": "agent1q-demo-kai",
+   "agentStatus": "accepted",
+   "agentTerm": null,
+   "removedReason": null
+  },
+  {
+   "userId": "u_ravi",
+   "name": "Ravi",
+   "initials": "RP",
+   "intentId": "i_ravi",
+   "role": "member",
+   "state": "joined",
+   "isDemoPersona": false,
+   "agentAddress": "agent1q-demo-ravi",
+   "agentStatus": "accepted",
+   "agentTerm": null,
+   "removedReason": null
+  }
+ ],
+ "proposals": [
+  {
+   "version": 1,
+   "round": 1,
+   "terms": {
+    "date": "2026-11-08",
+    "dive_type": "shore",
+    "gear_included": false,
+    "site": "Breakwater Cove"
+   },
+   "providerId": "p_kelpline",
+   "pricePerPerson": 114.0,
+   "currency": "USD",
+   "rationale": [
+    "Opening plan: the lowest-priced option that fits everyone's hard constraints."
+   ],
+   "feasible": true,
+   "changed": []
+  },
+  {
+   "version": 2,
+   "round": 2,
+   "terms": {
+    "date": "2026-11-15",
+    "dive_type": "boat",
+    "gear_included": false,
+    "site": "Lovers Point"
+   },
+   "providerId": "p_kelpline",
+   "pricePerPerson": 154.0,
+   "currency": "USD",
+   "rationale": [
+    "Date: 2026-11-08 \u2192 2026-11-15 \u00b7 requested by 1 member",
+    "Dive type: shore \u2192 boat \u00b7 requested by 1 member",
+    "Site: Breakwater Cove \u2192 Lovers Point \u00b7 requested by 2 members",
+    "Price per person: $114 \u2192 $154"
+   ],
+   "feasible": true,
+   "changed": [
+    "date",
+    "dive_type",
+    "site"
+   ]
+  },
+  {
+   "version": 3,
+   "round": 3,
+   "terms": {
+    "date": "2026-11-15",
+    "dive_type": "boat",
+    "gear_included": true,
+    "site": "Lovers Point"
+   },
+   "providerId": "p_kelpline",
+   "pricePerPerson": 199.0,
+   "currency": "USD",
+   "rationale": [
+    "Gear included: no \u2192 yes \u00b7 requested by 1 member",
+    "Price per person: $154 \u2192 $199"
+   ],
+   "feasible": true,
+   "changed": [
+    "gear_included"
+   ]
+  },
+  {
+   "version": 4,
+   "round": 4,
+   "terms": {
+    "date": "2026-11-15",
+    "dive_type": "boat",
+    "gear_included": true,
+    "site": "Point Lobos"
+   },
+   "providerId": "p_ottercove",
+   "pricePerPerson": 182.0,
+   "currency": "USD",
+   "rationale": [
+    "Provider: Kelp Line Divers \u2192 Otter Cove Dive Co., the one that offers this combination.",
+    "Site: Lovers Point \u2192 Point Lobos \u00b7 requested by 1 member",
+    "Price per person: $199 \u2192 $182"
+   ],
+   "feasible": true,
+   "changed": [
+    "provider",
+    "site"
+   ]
+  }
+ ],
+ "rounds": [
+  {
+   "number": 1,
+   "attempt": 1,
+   "proposalVersion": 1,
+   "responses": [
+    {
+     "memberId": "u_kevin",
+     "kind": "change_request",
+     "term": "site"
+    },
+    {
+     "memberId": "u_ana",
+     "kind": "change_request",
+     "term": "date"
+    },
+    {
+     "memberId": "u_maya",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_kai",
+     "kind": "reject_hard",
+     "term": "dive_type"
+    },
+    {
+     "memberId": "u_ravi",
+     "kind": "change_request",
+     "term": "site"
+    }
+   ],
+   "outcome": "revised",
+   "accepted": 1,
+   "active": 5
+  },
+  {
+   "number": 2,
+   "attempt": 1,
+   "proposalVersion": 2,
+   "responses": [
+    {
+     "memberId": "u_kevin",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_ana",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_maya",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_kai",
+     "kind": "change_request",
+     "term": "gear_included"
+    },
+    {
+     "memberId": "u_ravi",
+     "kind": "accept",
+     "term": null
+    }
+   ],
+   "outcome": "revised",
+   "accepted": 4,
+   "active": 5
+  },
+  {
+   "number": 3,
+   "attempt": 1,
+   "proposalVersion": 3,
+   "responses": [
+    {
+     "memberId": "u_kevin",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_ana",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_maya",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_kai",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_ravi",
+     "kind": "change_request",
+     "term": "site"
+    }
+   ],
+   "outcome": "revised",
+   "accepted": 4,
+   "active": 5
+  },
+  {
+   "number": 4,
+   "attempt": 1,
+   "proposalVersion": 4,
+   "responses": [
+    {
+     "memberId": "u_kevin",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_ana",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_maya",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_kai",
+     "kind": "accept",
+     "term": null
+    },
+    {
+     "memberId": "u_ravi",
+     "kind": "accept",
+     "term": null
+    }
+   ],
+   "outcome": "all_accept",
+   "accepted": 5,
+   "active": 5
+  }
+ ],
+ "quotes": [
+  {
+   "id": "q_a3a28812",
+   "providerId": "p_ottercove",
+   "providerName": "Otter Cove Dive Co.",
+   "proposalVersion": 4,
+   "groupSize": 5,
+   "pricePerPerson": 182.0,
+   "soloPricePerPerson": 229.0,
+   "total": 910.0,
+   "currency": "USD",
+   "includes": [
+    "guide",
+    "tanks",
+    "weight belt",
+    "gear"
+   ],
+   "available": true,
+   "binding": true,
+   "provenance": "simulated",
+   "expiresAt": 1792857457944,
+   "tiers": [
+    {
+     "min": 1,
+     "max": 1,
+     "pricePerPerson": 229,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt",
+      "gear"
+     ]
+    },
+    {
+     "min": 2,
+     "max": 3,
+     "pricePerPerson": 205,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt",
+      "gear"
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "pricePerPerson": 182,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt",
+      "gear"
+     ]
+    },
+    {
+     "min": 6,
+     "max": 8,
+     "pricePerPerson": 165,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt",
+      "gear"
+     ]
+    }
+   ],
+   "sourceUrl": null,
+   "lastVerifiedAt": 1792855657944,
+   "baselineValid": true
+  },
+  {
+   "id": "q_bc05f931",
+   "providerId": "p_kelpline",
+   "providerName": "Kelp Line Divers",
+   "proposalVersion": 4,
+   "groupSize": 5,
+   "pricePerPerson": 0.0,
+   "soloPricePerPerson": 0.0,
+   "total": 0.0,
+   "currency": "USD",
+   "includes": [
+    "guide",
+    "tanks",
+    "weight belt",
+    "gear (rental)"
+   ],
+   "available": false,
+   "binding": false,
+   "provenance": "simulated",
+   "expiresAt": 1792857457944,
+   "tiers": [
+    {
+     "min": 1,
+     "max": 1,
+     "pricePerPerson": 199,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt"
+     ]
+    },
+    {
+     "min": 2,
+     "max": 3,
+     "pricePerPerson": 179,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt"
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "pricePerPerson": 154,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt"
+     ]
+    },
+    {
+     "min": 6,
+     "max": 8,
+     "pricePerPerson": 139,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt"
+     ]
+    }
+   ],
+   "sourceUrl": null,
+   "lastVerifiedAt": 1792855657944,
+   "baselineValid": false
+  }
+ ],
+ "approvals": [
+  {
+   "id": "a_1bd9957e",
+   "dealId": "d_1de4c3",
+   "userId": "u_kevin",
+   "proposalVersion": 4,
+   "quoteId": "q_a3a28812",
+   "decision": "approve",
+   "idempotencyKey": "d_1de4c3:u_kevin:v4",
+   "void": false,
+   "at": 1792855659219
+  },
+  {
+   "id": "a_287f1afa",
+   "dealId": "d_1de4c3",
+   "userId": "u_ana",
+   "proposalVersion": 4,
+   "quoteId": "q_a3a28812",
+   "decision": "approve",
+   "idempotencyKey": "d_1de4c3:u_ana:v4",
+   "void": false,
+   "at": 1792855660951
+  },
+  {
+   "id": "a_4169b852",
+   "dealId": "d_1de4c3",
+   "userId": "u_ravi",
+   "proposalVersion": 4,
+   "quoteId": "q_a3a28812",
+   "decision": "approve",
+   "idempotencyKey": "d_1de4c3:u_ravi:v4",
+   "void": false,
+   "at": 1792855662668
+  },
+  {
+   "id": "a_6abbd1b5",
+   "dealId": "d_1de4c3",
+   "userId": "u_maya",
+   "proposalVersion": 4,
+   "quoteId": "q_a3a28812",
+   "decision": "approve",
+   "idempotencyKey": "d_1de4c3:u_maya:v4",
+   "void": false,
+   "at": 1792855664384
+  },
+  {
+   "id": "a_fbea96ea",
+   "dealId": "d_1de4c3",
+   "userId": "u_kai",
+   "proposalVersion": 4,
+   "quoteId": "q_a3a28812",
+   "decision": "approve",
+   "idempotencyKey": "d_1de4c3:u_kai:v4",
+   "void": false,
+   "at": 1792855665317
+  }
+ ],
+ "commitments": [
+  {
+   "id": "c_8825fafa",
+   "dealId": "d_1de4c3",
+   "userId": "u_kevin",
+   "proposalVersion": 4,
+   "amount": 182.0,
+   "currency": "USD",
+   "state": "committed",
+   "method": "simulated",
+   "txRef": "sim_046513ba72ff",
+   "idempotencyKey": "d_1de4c3:u_kevin:v4:commit",
+   "at": 1792855665317
+  },
+  {
+   "id": "c_7c0f8aca",
+   "dealId": "d_1de4c3",
+   "userId": "u_ana",
+   "proposalVersion": 4,
+   "amount": 182.0,
+   "currency": "USD",
+   "state": "committed",
+   "method": "simulated",
+   "txRef": "sim_b80424baa73c",
+   "idempotencyKey": "d_1de4c3:u_ana:v4:commit",
+   "at": 1792855665318
+  },
+  {
+   "id": "c_fb127ae2",
+   "dealId": "d_1de4c3",
+   "userId": "u_maya",
+   "proposalVersion": 4,
+   "amount": 182.0,
+   "currency": "USD",
+   "state": "committed",
+   "method": "simulated",
+   "txRef": "sim_6ec9475c95a5",
+   "idempotencyKey": "d_1de4c3:u_maya:v4:commit",
+   "at": 1792855665318
+  },
+  {
+   "id": "c_100fb2f7",
+   "dealId": "d_1de4c3",
+   "userId": "u_kai",
+   "proposalVersion": 4,
+   "amount": 182.0,
+   "currency": "USD",
+   "state": "committed",
+   "method": "simulated",
+   "txRef": "sim_20032aa15ef6",
+   "idempotencyKey": "d_1de4c3:u_kai:v4:commit",
+   "at": 1792855665318
+  },
+  {
+   "id": "c_618138dc",
+   "dealId": "d_1de4c3",
+   "userId": "u_ravi",
+   "proposalVersion": 4,
+   "amount": 182.0,
+   "currency": "USD",
+   "state": "committed",
+   "method": "simulated",
+   "txRef": "sim_0095b94023d7",
+   "idempotencyKey": "d_1de4c3:u_ravi:v4:commit",
+   "at": 1792855665318
+  }
+ ],
+ "events": [
+  {
+   "seq": 1,
+   "type": "deal.created",
+   "actor": "u_kevin",
+   "summary": "Kevin started a group of 5",
+   "payload": {
+    "size": 5
+   },
+   "at": 1792855647086
+  },
+  {
+   "seq": 2,
+   "type": "member.invited",
+   "actor": "mediator",
+   "summary": "Invited Ana's agent",
+   "payload": {},
+   "at": 1792855647086
+  },
+  {
+   "seq": 3,
+   "type": "member.invited",
+   "actor": "mediator",
+   "summary": "Invited Maya's agent",
+   "payload": {},
+   "at": 1792855647086
+  },
+  {
+   "seq": 4,
+   "type": "member.invited",
+   "actor": "mediator",
+   "summary": "Invited Kai's agent",
+   "payload": {},
+   "at": 1792855647086
+  },
+  {
+   "seq": 5,
+   "type": "member.invited",
+   "actor": "mediator",
+   "summary": "Invited Ravi's agent",
+   "payload": {},
+   "at": 1792855647086
+  },
+  {
+   "seq": 6,
+   "type": "member.joined",
+   "actor": "u_ana",
+   "summary": "Ana's agent joined",
+   "payload": {
+    "memberId": "u_ana"
+   },
+   "at": 1792855647487
+  },
+  {
+   "seq": 7,
+   "type": "member.joined",
+   "actor": "u_maya",
+   "summary": "Maya's agent joined",
+   "payload": {
+    "memberId": "u_maya"
+   },
+   "at": 1792855647888
+  },
+  {
+   "seq": 8,
+   "type": "member.joined",
+   "actor": "u_kai",
+   "summary": "Kai's agent joined",
+   "payload": {
+    "memberId": "u_kai"
+   },
+   "at": 1792855648288
+  },
+  {
+   "seq": 9,
+   "type": "member.joined",
+   "actor": "u_ravi",
+   "summary": "Ravi's agent joined",
+   "payload": {
+    "memberId": "u_ravi"
+   },
+   "at": 1792855648696
+  },
+  {
+   "seq": 10,
+   "type": "deal.negotiating",
+   "actor": "mediator",
+   "summary": "Negotiation started with 5 members",
+   "payload": {
+    "from": "GROUP_FORMING",
+    "to": "NEGOTIATING"
+   },
+   "at": 1792855649535
+  },
+  {
+   "seq": 11,
+   "type": "proposal.sent",
+   "actor": "mediator",
+   "summary": "Proposed plan v1 (round 1)",
+   "payload": {
+    "version": 1,
+    "changed": []
+   },
+   "at": 1792855649538
+  },
+  {
+   "seq": 12,
+   "type": "agent.change_request",
+   "actor": "u_kevin",
+   "summary": "Kevin's agent asked to change site",
+   "payload": {
+    "term": "site"
+   },
+   "at": 1792855650740
+  },
+  {
+   "seq": 13,
+   "type": "agent.change_request",
+   "actor": "u_ana",
+   "summary": "Ana's agent asked to change date",
+   "payload": {
+    "term": "date"
+   },
+   "at": 1792855650740
+  },
+  {
+   "seq": 14,
+   "type": "agent.reject_hard",
+   "actor": "u_kai",
+   "summary": "Kai's agent can't do this dive type",
+   "payload": {
+    "term": "dive_type"
+   },
+   "at": 1792855650740
+  },
+  {
+   "seq": 15,
+   "type": "agent.change_request",
+   "actor": "u_ravi",
+   "summary": "Ravi's agent asked to change site",
+   "payload": {
+    "term": "site"
+   },
+   "at": 1792855650740
+  },
+  {
+   "seq": 16,
+   "type": "round.closed",
+   "actor": "mediator",
+   "summary": "Round 1: 1 of 5 accepted \u00b7 revising",
+   "payload": {
+    "round": 1,
+    "accepted": 1,
+    "active": 5,
+    "outcome": "revised"
+   },
+   "at": 1792855650740
+  },
+  {
+   "seq": 17,
+   "type": "proposal.sent",
+   "actor": "mediator",
+   "summary": "Proposed plan v2 (round 2)",
+   "payload": {
+    "version": 2,
+    "changed": [
+     "date",
+     "dive_type",
+     "site"
+    ]
+   },
+   "at": 1792855651340
+  },
+  {
+   "seq": 18,
+   "type": "agent.change_request",
+   "actor": "u_kai",
+   "summary": "Kai's agent asked to change gear included",
+   "payload": {
+    "term": "gear_included"
+   },
+   "at": 1792855652540
+  },
+  {
+   "seq": 19,
+   "type": "round.closed",
+   "actor": "mediator",
+   "summary": "Round 2: 4 of 5 accepted \u00b7 revising",
+   "payload": {
+    "round": 2,
+    "accepted": 4,
+    "active": 5,
+    "outcome": "revised"
+   },
+   "at": 1792855652540
+  },
+  {
+   "seq": 20,
+   "type": "proposal.sent",
+   "actor": "mediator",
+   "summary": "Proposed plan v3 (round 3)",
+   "payload": {
+    "version": 3,
+    "changed": [
+     "gear_included"
+    ]
+   },
+   "at": 1792855653141
+  },
+  {
+   "seq": 21,
+   "type": "agent.change_request",
+   "actor": "u_ravi",
+   "summary": "Ravi's agent asked to change site",
+   "payload": {
+    "term": "site"
+   },
+   "at": 1792855654342
+  },
+  {
+   "seq": 22,
+   "type": "round.closed",
+   "actor": "mediator",
+   "summary": "Round 3: 4 of 5 accepted \u00b7 revising",
+   "payload": {
+    "round": 3,
+    "accepted": 4,
+    "active": 5,
+    "outcome": "revised"
+   },
+   "at": 1792855654342
+  },
+  {
+   "seq": 23,
+   "type": "proposal.sent",
+   "actor": "mediator",
+   "summary": "Proposed plan v4 (round 4)",
+   "payload": {
+    "version": 4,
+    "changed": [
+     "provider",
+     "site"
+    ]
+   },
+   "at": 1792855654942
+  },
+  {
+   "seq": 24,
+   "type": "round.closed",
+   "actor": "mediator",
+   "summary": "Round 4: 5 of 5 accepted \u00b7 everyone accepted",
+   "payload": {
+    "round": 4,
+    "accepted": 5,
+    "active": 5,
+    "outcome": "all_accept"
+   },
+   "at": 1792855656142
+  },
+  {
+   "seq": 25,
+   "type": "deal.provider_quotes_pending",
+   "actor": "mediator",
+   "summary": "All 5 members accepted plan v4; requesting quotes",
+   "payload": {
+    "from": "NEGOTIATING",
+    "to": "PROVIDER_QUOTES_PENDING"
+   },
+   "at": 1792855656743
+  },
+  {
+   "seq": 26,
+   "type": "quote.received",
+   "actor": "p_ottercove",
+   "summary": "Otter Cove Dive Co.: $182 pp (binding quote, simulated)",
+   "payload": {
+    "quoteId": "q_a3a28812",
+    "binding": true
+   },
+   "at": 1792855657944
+  },
+  {
+   "seq": 27,
+   "type": "quote.received",
+   "actor": "p_kelpline",
+   "summary": "Kelp Line Divers can't serve this plan (simulated)",
+   "payload": {
+    "quoteId": "q_bc05f931",
+    "binding": false
+   },
+   "at": 1792855657944
+  },
+  {
+   "seq": 28,
+   "type": "deal.awaiting_approval",
+   "actor": "mediator",
+   "summary": "Binding quote from Otter Cove Dive Co.: $182 per person",
+   "payload": {
+    "from": "PROVIDER_QUOTES_PENDING",
+    "to": "AWAITING_APPROVAL",
+    "quoteId": "q_a3a28812"
+   },
+   "at": 1792855657944
+  },
+  {
+   "seq": 29,
+   "type": "approval.recorded",
+   "actor": "u_kevin",
+   "summary": "Kevin approved plan v4 (1 of 5)",
+   "payload": {},
+   "at": 1792855659219
+  },
+  {
+   "seq": 30,
+   "type": "approval.recorded",
+   "actor": "u_ana",
+   "summary": "Ana approved plan v4 (2 of 5)",
+   "payload": {},
+   "at": 1792855660951
+  },
+  {
+   "seq": 31,
+   "type": "approval.recorded",
+   "actor": "u_ravi",
+   "summary": "Ravi approved plan v4 (3 of 5)",
+   "payload": {},
+   "at": 1792855662668
+  },
+  {
+   "seq": 32,
+   "type": "approval.recorded",
+   "actor": "u_maya",
+   "summary": "Maya approved plan v4 (4 of 5)",
+   "payload": {},
+   "at": 1792855664384
+  },
+  {
+   "seq": 33,
+   "type": "approval.recorded",
+   "actor": "u_kai",
+   "summary": "Kai approved plan v4 (5 of 5)",
+   "payload": {},
+   "at": 1792855665317
+  },
+  {
+   "seq": 34,
+   "type": "deal.commitment_pending",
+   "actor": "commitments",
+   "summary": "All 5 members approved plan v4",
+   "payload": {
+    "from": "AWAITING_APPROVAL",
+    "to": "COMMITMENT_PENDING"
+   },
+   "at": 1792855665317
+  },
+  {
+   "seq": 35,
+   "type": "commitment.committed",
+   "actor": "u_kevin",
+   "summary": "Kevin committed $182 (simulated, no money moved)",
+   "payload": {
+    "txRef": "sim_046513ba72ff"
+   },
+   "at": 1792855665317
+  },
+  {
+   "seq": 36,
+   "type": "commitment.committed",
+   "actor": "u_ana",
+   "summary": "Ana committed $182 (simulated, no money moved)",
+   "payload": {
+    "txRef": "sim_b80424baa73c"
+   },
+   "at": 1792855665318
+  },
+  {
+   "seq": 37,
+   "type": "commitment.committed",
+   "actor": "u_maya",
+   "summary": "Maya committed $182 (simulated, no money moved)",
+   "payload": {
+    "txRef": "sim_6ec9475c95a5"
+   },
+   "at": 1792855665318
+  },
+  {
+   "seq": 38,
+   "type": "commitment.committed",
+   "actor": "u_kai",
+   "summary": "Kai committed $182 (simulated, no money moved)",
+   "payload": {
+    "txRef": "sim_20032aa15ef6"
+   },
+   "at": 1792855665318
+  },
+  {
+   "seq": 39,
+   "type": "commitment.committed",
+   "actor": "u_ravi",
+   "summary": "Ravi committed $182 (simulated, no money moved)",
+   "payload": {
+    "txRef": "sim_0095b94023d7"
+   },
+   "at": 1792855665318
+  },
+  {
+   "seq": 40,
+   "type": "deal.committed",
+   "actor": "commitments",
+   "summary": "Everyone committed. Booking is still with the provider (not booked yet).",
+   "payload": {
+    "from": "COMMITMENT_PENDING",
+    "to": "COMMITTED"
+   },
+   "at": 1792855665318
+  }
+ ],
+ "provenance": {
+  "compiler": "template",
+  "ranker": "local",
+  "transport": "inproc",
+  "providers": "seeded",
+  "payments": "simulated",
+  "store": "memory"
+ },
+ "providerNames": {
+  "p_kelpline": "Kelp Line Divers",
+  "p_ottercove": "Otter Cove Dive Co."
+ }
+}

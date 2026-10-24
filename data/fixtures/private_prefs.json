@@ -1,0 +1,308 @@
+{
+ "_note": "Private preferences for seeded personal agents, keyed by intent id (default:<activity> is the review-page starting point for the organizer). Loaded ONLY by the personal-agent process. Never written to Convex, never sent to the mediator or vendors.",
+ "prefs": {
+  "default:scuba_diving": {
+   "weights": {
+    "date": 0.25,
+    "site": 0.2,
+    "dive_type": 0.15,
+    "gear_included": 0.1,
+    "price_per_person": 0.3
+   },
+   "best": {
+    "date": "2026-11-14",
+    "site": "Lovers Point",
+    "dive_type": "boat",
+    "gear_included": true
+   },
+   "priceWorst": 300,
+   "reservation": 0.35,
+   "patience": 1.0
+  },
+  "i_ana": {
+   "weights": {
+    "date": 0.5,
+    "site": 0.1,
+    "dive_type": 0.1,
+    "gear_included": 0.1,
+    "price_per_person": 0.2
+   },
+   "best": {
+    "date": "2026-11-15",
+    "site": "Lovers Point",
+    "dive_type": "boat",
+    "gear_included": true
+   },
+   "priceWorst": 250,
+   "reservation": 0.4,
+   "patience": 0.8
+  },
+  "i_ravi": {
+   "weights": {
+    "date": 0.1,
+    "site": 0.45,
+    "dive_type": 0.2,
+    "gear_included": 0.05,
+    "price_per_person": 0.2
+   },
+   "best": {
+    "date": "2026-11-14",
+    "site": "Point Lobos",
+    "dive_type": "boat",
+    "gear_included": false
+   },
+   "priceWorst": 220,
+   "reservation": 0.35,
+   "patience": 1.2
+  },
+  "i_maya": {
+   "weights": {
+    "date": 0.1,
+    "site": 0.1,
+    "dive_type": 0.1,
+    "gear_included": 0.1,
+    "price_per_person": 0.6
+   },
+   "best": {
+    "date": "2026-11-08",
+    "site": "Breakwater Cove",
+    "dive_type": "shore",
+    "gear_included": true
+   },
+   "priceWorst": 260,
+   "reservation": 0.25,
+   "patience": 1.5
+  },
+  "i_kai": {
+   "weights": {
+    "date": 0.15,
+    "site": 0.15,
+    "dive_type": 0.3,
+    "gear_included": 0.25,
+    "price_per_person": 0.15
+   },
+   "ranges": {
+    "dive_type": [
+     "boat"
+    ]
+   },
+   "best": {
+    "date": "2026-11-15",
+    "site": "Point Lobos",
+    "dive_type": "boat",
+    "gear_included": true
+   },
+   "priceWorst": 260,
+   "reservation": 0.35,
+   "patience": 1.0
+  },
+  "i_eli": {
+   "weights": {
+    "date": 0.4,
+    "site": 0.1,
+    "dive_type": 0.1,
+    "gear_included": 0.1,
+    "price_per_person": 0.3
+   },
+   "best": {
+    "date": "2026-11-28",
+    "site": "Lovers Point",
+    "dive_type": "boat",
+    "gear_included": true
+   },
+   "priceWorst": 280,
+   "reservation": 0.35,
+   "patience": 1.0
+  },
+  "default:skydiving": {
+   "weights": {
+    "date": 0.2,
+    "dropzone": 0.1,
+    "altitude": 0.25,
+    "video_package": 0.15,
+    "price_per_person": 0.3
+   },
+   "best": {
+    "date": "2026-11-14",
+    "dropzone": "Watsonville",
+    "altitude": "13,000 ft",
+    "video_package": true
+   },
+   "priceWorst": 400,
+   "reservation": 0.35,
+   "patience": 1.0
+  },
+  "i_sky_ana": {
+   "weights": {
+    "date": 0.45,
+    "dropzone": 0.1,
+    "altitude": 0.1,
+    "video_package": 0.1,
+    "price_per_person": 0.25
+   },
+   "best": {
+    "date": "2026-11-15",
+    "dropzone": "Watsonville",
+    "altitude": "10,000 ft",
+    "video_package": true
+   },
+   "priceWorst": 380,
+   "reservation": 0.4,
+   "patience": 0.8
+  },
+  "i_sky_jordan": {
+   "weights": {
+    "date": 0.1,
+    "dropzone": 0.1,
+    "altitude": 0.2,
+    "video_package": 0.1,
+    "price_per_person": 0.5
+   },
+   "best": {
+    "date": "2026-11-08",
+    "dropzone": "Watsonville",
+    "altitude": "10,000 ft",
+    "video_package": false
+   },
+   "priceWorst": 350,
+   "reservation": 0.2,
+   "patience": 2.0
+  },
+  "i_sky_mei": {
+   "weights": {
+    "date": 0.1,
+    "dropzone": 0.1,
+    "altitude": 0.35,
+    "video_package": 0.3,
+    "price_per_person": 0.15
+   },
+   "best": {
+    "date": "2026-11-15",
+    "dropzone": "Hollister",
+    "altitude": "13,000 ft",
+    "video_package": true
+   },
+   "priceWorst": 420,
+   "reservation": 0.35,
+   "patience": 1.0,
+   "ranges": {
+    "video_package": [
+     true
+    ]
+   }
+  },
+  "i_sky_tomas": {
+   "weights": {
+    "date": 0.3,
+    "dropzone": 0.2,
+    "altitude": 0.2,
+    "video_package": 0.1,
+    "price_per_person": 0.2
+   },
+   "best": {
+    "date": "2026-11-14",
+    "dropzone": "Watsonville",
+    "altitude": "13,000 ft",
+    "video_package": false
+   },
+   "priceWorst": 400,
+   "reservation": 0.35,
+   "patience": 1.0
+  },
+  "default:kayaking": {
+   "weights": {
+    "date": 0.25,
+    "launch": 0.2,
+    "tour_type": 0.15,
+    "wetsuit_included": 0.1,
+    "price_per_person": 0.3
+   },
+   "best": {
+    "date": "2026-11-14",
+    "launch": "Elkhorn Slough",
+    "tour_type": "guided",
+    "wetsuit_included": true
+   },
+   "priceWorst": 120,
+   "reservation": 0.35,
+   "patience": 1.0
+  },
+  "i_kay_ravi": {
+   "weights": {
+    "date": 0.15,
+    "launch": 0.4,
+    "tour_type": 0.2,
+    "wetsuit_included": 0.05,
+    "price_per_person": 0.2
+   },
+   "best": {
+    "date": "2026-11-08",
+    "launch": "Elkhorn Slough",
+    "tour_type": "guided",
+    "wetsuit_included": false
+   },
+   "priceWorst": 100,
+   "reservation": 0.35,
+   "patience": 1.2
+  },
+  "i_kay_maya": {
+   "weights": {
+    "date": 0.1,
+    "launch": 0.1,
+    "tour_type": 0.1,
+    "wetsuit_included": 0.1,
+    "price_per_person": 0.6
+   },
+   "best": {
+    "date": "2026-11-08",
+    "launch": "Monterey Harbor",
+    "tour_type": "self-guided",
+    "wetsuit_included": false
+   },
+   "priceWorst": 100,
+   "reservation": 0.15,
+   "patience": 2.0
+  },
+  "i_kay_hana": {
+   "weights": {
+    "date": 0.2,
+    "launch": 0.2,
+    "tour_type": 0.35,
+    "wetsuit_included": 0.1,
+    "price_per_person": 0.15
+   },
+   "best": {
+    "date": "2026-11-15",
+    "launch": "Elkhorn Slough",
+    "tour_type": "guided",
+    "wetsuit_included": true
+   },
+   "priceWorst": 120,
+   "reservation": 0.35,
+   "patience": 1.0,
+   "ranges": {
+    "tour_type": [
+     "guided"
+    ]
+   }
+  },
+  "i_kay_felix": {
+   "weights": {
+    "date": 0.45,
+    "launch": 0.1,
+    "tour_type": 0.1,
+    "wetsuit_included": 0.15,
+    "price_per_person": 0.2
+   },
+   "best": {
+    "date": "2026-11-21",
+    "launch": "Monterey Harbor",
+    "tour_type": "guided",
+    "wetsuit_included": true
+   },
+   "priceWorst": 110,
+   "reservation": 0.25,
+   "patience": 1.6
+  }
+ }
+}

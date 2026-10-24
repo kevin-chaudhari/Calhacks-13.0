@@ -1,0 +1,214 @@
+{
+ "_note": "Seeded intent board. Eligible people plus deliberately incompatible ones so the Matches page shows real rejection reasons. All text is invented.",
+ "intents": [
+  {
+   "id": "i_kay_ravi",
+   "userId": "u_ravi",
+   "text": "Sea kayaking in Monterey with otters, any weekend in November, about $100.",
+   "draft": {
+    "activity": "kayaking",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "kayak",
+     "otters"
+    ],
+    "location": {
+     "label": "Monterey, CA",
+     "lat": 36.6002,
+     "lng": -121.8947
+    },
+    "radiusKm": 40,
+    "dateFrom": "2026-11-01",
+    "dateTo": "2026-11-30",
+    "budgetMax": {
+     "amount": 100,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_kay_maya",
+   "userId": "u_maya",
+   "text": "Cheap kayak trip near Monterey in November.",
+   "draft": {
+    "activity": "kayaking",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "kayak",
+     "budget"
+    ],
+    "location": {
+     "label": "Pacific Grove, CA",
+     "lat": 36.6177,
+     "lng": -121.9166
+    },
+    "radiusKm": 30,
+    "dateFrom": "2026-11-07",
+    "dateTo": "2026-11-29",
+    "budgetMax": {
+     "amount": 90,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 8,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_kay_hana",
+   "userId": "u_hana",
+   "text": "Guided kayak tour at Elkhorn Slough mid November, up to $120.",
+   "draft": {
+    "activity": "sea_kayaking",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "kayak",
+     "guided"
+    ],
+    "location": {
+     "label": "Monterey, CA",
+     "lat": 36.6002,
+     "lng": -121.8947
+    },
+    "radiusKm": 40,
+    "dateFrom": "2026-11-07",
+    "dateTo": "2026-11-22",
+    "budgetMax": {
+     "amount": 120,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_kay_felix",
+   "userId": "u_felix",
+   "text": "Kayak with a group in late November, Pacific Grove.",
+   "draft": {
+    "activity": "kayaking",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "kayak"
+    ],
+    "location": {
+     "label": "Pacific Grove, CA",
+     "lat": 36.6177,
+     "lng": -121.9166
+    },
+    "radiusKm": 40,
+    "dateFrom": "2026-11-14",
+    "dateTo": "2026-11-29",
+    "budgetMax": {
+     "amount": 110,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_kay_zara",
+   "userId": "u_zara",
+   "text": "Kayaking over the December holidays in Monterey.",
+   "draft": {
+    "activity": "kayaking",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "kayak",
+     "holiday"
+    ],
+    "location": {
+     "label": "Seaside, CA",
+     "lat": 36.6111,
+     "lng": -121.8516
+    },
+    "radiusKm": 30,
+    "dateFrom": "2026-12-19",
+    "dateTo": "2026-12-31",
+    "budgetMax": {
+     "amount": 120,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_kay_priya",
+   "userId": "u_priya",
+   "text": "Kayak on Lake Tahoe in November.",
+   "draft": {
+    "activity": "kayaking",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "kayak",
+     "tahoe"
+    ],
+    "location": {
+     "label": "Lake Tahoe, CA",
+     "lat": 39.0968,
+     "lng": -120.0324
+    },
+    "radiusKm": 40,
+    "dateFrom": "2026-11-07",
+    "dateTo": "2026-11-29",
+    "budgetMax": {
+     "amount": 120,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_kay_theo",
+   "userId": "u_theo",
+   "text": "Kayak rental in Monterey, max $40.",
+   "draft": {
+    "activity": "kayaking",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "kayak",
+     "budget"
+    ],
+    "location": {
+     "label": "Marina, CA",
+     "lat": 36.6844,
+     "lng": -121.8022
+    },
+    "radiusKm": 30,
+    "dateFrom": "2026-11-07",
+    "dateTo": "2026-11-29",
+    "budgetMax": {
+     "amount": 40,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  }
+ ]
+}

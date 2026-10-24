@@ -1,0 +1,15 @@
+{
+  "name": "rally",
+  "private": true,
+  "workspaces": ["apps/web"],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "typecheck": "npm --workspace apps/web run typecheck",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy"
+  },
+  "devDependencies": {
+    "convex": "1.27.3"
+  }
+}

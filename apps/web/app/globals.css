@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/* Design tokens (plan section 8.1). Light by default; dark follows the OS unless overridden. */
+:root {
+  --bg: #f5f7f8;
+  --surface: #ffffff;
+  --surface-2: #eef2f3;
+  --ink: #0f1a1f;
+  --muted: #5b6b73;
+  --line: #dce3e6;
+  --accent: #0b7a75;
+  --accent-ink: #ffffff;
+  --accent-soft: #ddf1ef;
+  --warn: #b45309;
+  --warn-soft: #fdf1e3;
+  --danger: #b42318;
+  --danger-soft: #fdeceb;
+  --sim: #6b5bd2;
+  --sim-soft: #eeebfb;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1114;
+    --surface: #151b1f;
+    --surface-2: #1c2429;
+    --ink: #e6edf0;
+    --muted: #90a1a9;
+    --line: #263137;
+    --accent: #3fc1b7;
+    --accent-ink: #062321;
+    --accent-soft: #12302e;
+    --warn: #f2a24b;
+    --warn-soft: #2e2213;
+    --danger: #f07167;
+    --danger-soft: #331715;
+    --sim: #a79cf0;
+    --sim-soft: #221d3d;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0d1114;
+  --surface: #151b1f;
+  --surface-2: #1c2429;
+  --ink: #e6edf0;
+  --muted: #90a1a9;
+  --line: #263137;
+  --accent: #3fc1b7;
+  --accent-ink: #062321;
+  --accent-soft: #12302e;
+  --warn: #f2a24b;
+  --warn-soft: #2e2213;
+  --danger: #f07167;
+  --danger-soft: #331715;
+  --sim: #a79cf0;
+  --sim-soft: #221d3d;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-sim: var(--sim);
+  --color-sim-soft: var(--sim-soft);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --radius-card: 10px;
+  --radius-control: 6px;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-size: 14px;
+  line-height: 20px;
+  font-feature-settings: "tnum" 1, "cv11" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.num { font-variant-numeric: tabular-nums; }
+
+@keyframes agreed-flash {
+  from { background: var(--accent-soft); }
+  to { background: transparent; }
+}
+.flash { animation: agreed-flash 600ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

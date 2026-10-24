@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.env
+.env.local
+apps/web/.env.local
+__pycache__/
+*.pyc
+.pytest_cache/
+.hypothesis/
+tests/e2e/shots/
+convex/_generated/
+.venv/

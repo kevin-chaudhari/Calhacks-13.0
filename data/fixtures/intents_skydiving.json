@@ -1,0 +1,213 @@
+{
+ "_note": "Seeded intent board. Eligible people plus deliberately incompatible ones so the Matches page shows real rejection reasons. All text is invented.",
+ "intents": [
+  {
+   "id": "i_sky_ana",
+   "userId": "u_ana",
+   "text": "First tandem skydive with friends in November, Bay Area side, up to $380.",
+   "draft": {
+    "activity": "skydiving",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "skydiving",
+     "tandem"
+    ],
+    "location": {
+     "label": "San Jose, CA",
+     "lat": 37.3382,
+     "lng": -121.8863
+    },
+    "radiusKm": 70,
+    "dateFrom": "2026-11-07",
+    "dateTo": "2026-11-22",
+    "budgetMax": {
+     "amount": 380,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_sky_jordan",
+   "userId": "u_jordan",
+   "text": "Bucket-list skydive near Santa Cruz any November weekend, budget $350.",
+   "draft": {
+    "activity": "skydiving",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "skydiving",
+     "bucket list"
+    ],
+    "location": {
+     "label": "Santa Cruz, CA",
+     "lat": 36.9741,
+     "lng": -122.0308
+    },
+    "radiusKm": 50,
+    "dateFrom": "2026-11-01",
+    "dateTo": "2026-11-30",
+    "budgetMax": {
+     "amount": 350,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_sky_mei",
+   "userId": "u_mei",
+   "text": "Tandem jump from 13,000 ft with video, Watsonville area, November.",
+   "draft": {
+    "activity": "tandem_skydive",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "skydiving",
+     "video"
+    ],
+    "location": {
+     "label": "Watsonville, CA",
+     "lat": 36.9102,
+     "lng": -121.7569
+    },
+    "radiusKm": 40,
+    "dateFrom": "2026-11-08",
+    "dateTo": "2026-11-29",
+    "budgetMax": {
+     "amount": 420,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_sky_tomas",
+   "userId": "u_tomas",
+   "text": "Skydiving mid November with a small group, Capitola.",
+   "draft": {
+    "activity": "skydiving",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "skydiving"
+    ],
+    "location": {
+     "label": "Capitola, CA",
+     "lat": 36.9752,
+     "lng": -121.9533
+    },
+    "radiusKm": 50,
+    "dateFrom": "2026-11-14",
+    "dateTo": "2026-11-22",
+    "budgetMax": {
+     "amount": 400,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_sky_owen",
+   "userId": "u_owen",
+   "text": "Skydive over the December holidays near Santa Cruz.",
+   "draft": {
+    "activity": "skydiving",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "skydiving",
+     "holiday"
+    ],
+    "location": {
+     "label": "Santa Cruz, CA",
+     "lat": 36.9741,
+     "lng": -122.0308
+    },
+    "radiusKm": 50,
+    "dateFrom": "2026-12-19",
+    "dateTo": "2026-12-31",
+    "budgetMax": {
+     "amount": 400,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_sky_lucia",
+   "userId": "u_lucia",
+   "text": "Skydiving near Sacramento in November.",
+   "draft": {
+    "activity": "skydiving",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "skydiving"
+    ],
+    "location": {
+     "label": "Sacramento, CA",
+     "lat": 38.5816,
+     "lng": -121.4944
+    },
+    "radiusKm": 50,
+    "dateFrom": "2026-11-07",
+    "dateTo": "2026-11-29",
+    "budgetMax": {
+     "amount": 380,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  },
+  {
+   "id": "i_sky_dev",
+   "userId": "u_dev",
+   "text": "Skydive in November if it's under $150.",
+   "draft": {
+    "activity": "skydiving",
+    "category": "trip_activity",
+    "templateId": "trip_activity",
+    "shape": "group_provider",
+    "tags": [
+     "skydiving",
+     "budget"
+    ],
+    "location": {
+     "label": "Aptos, CA",
+     "lat": 36.9772,
+     "lng": -121.8994
+    },
+    "radiusKm": 40,
+    "dateFrom": "2026-11-07",
+    "dateTo": "2026-11-29",
+    "budgetMax": {
+     "amount": 150,
+     "currency": "USD"
+    },
+    "groupMin": 2,
+    "groupMax": 6,
+    "conditions": []
+   }
+  }
+ ]
+}

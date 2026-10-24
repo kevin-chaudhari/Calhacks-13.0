@@ -1,0 +1,228 @@
+{
+ "_note": "Identities for the prototype. role=customer people use the main app; role=vendor people use the vendor portal for their provider. isDemoPersona marks seeded people (used only for 'approve on behalf of' in the prototype).",
+ "personas": [
+  {
+   "id": "u_kevin",
+   "name": "Kevin",
+   "initials": "KC",
+   "isDemoPersona": false,
+   "isTeammate": true,
+   "homeArea": "Berkeley, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_ana",
+   "name": "Ana",
+   "initials": "AR",
+   "isDemoPersona": false,
+   "isTeammate": true,
+   "homeArea": "San Jose, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_ravi",
+   "name": "Ravi",
+   "initials": "RP",
+   "isDemoPersona": false,
+   "isTeammate": true,
+   "homeArea": "Santa Cruz, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_maya",
+   "name": "Maya",
+   "initials": "MO",
+   "isDemoPersona": true,
+   "homeArea": "Monterey, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_kai",
+   "name": "Kai",
+   "initials": "KN",
+   "isDemoPersona": true,
+   "homeArea": "Pacific Grove, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_eli",
+   "name": "Eli",
+   "initials": "EB",
+   "isDemoPersona": true,
+   "homeArea": "Salinas, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_luis",
+   "name": "Luis",
+   "initials": "LM",
+   "isDemoPersona": true,
+   "homeArea": "Monterey, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_sam",
+   "name": "Sam",
+   "initials": "SW",
+   "isDemoPersona": true,
+   "homeArea": "Seaside, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_priya",
+   "name": "Priya",
+   "initials": "PS",
+   "isDemoPersona": true,
+   "homeArea": "Truckee, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_theo",
+   "name": "Theo",
+   "initials": "TG",
+   "isDemoPersona": true,
+   "homeArea": "Marina, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_noor",
+   "name": "Noor",
+   "initials": "NA",
+   "isDemoPersona": true,
+   "homeArea": "Carmel, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_jordan",
+   "name": "Jordan",
+   "initials": "JL",
+   "isDemoPersona": true,
+   "homeArea": "Santa Cruz, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_mei",
+   "name": "Mei",
+   "initials": "MC",
+   "isDemoPersona": true,
+   "homeArea": "Watsonville, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_tomas",
+   "name": "Tomas",
+   "initials": "TR",
+   "isDemoPersona": true,
+   "homeArea": "Capitola, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_owen",
+   "name": "Owen",
+   "initials": "OB",
+   "isDemoPersona": true,
+   "homeArea": "Santa Cruz, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_lucia",
+   "name": "Lucia",
+   "initials": "LV",
+   "isDemoPersona": true,
+   "homeArea": "Sacramento, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_dev",
+   "name": "Dev",
+   "initials": "DK",
+   "isDemoPersona": true,
+   "homeArea": "Aptos, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_hana",
+   "name": "Hana",
+   "initials": "HS",
+   "isDemoPersona": true,
+   "homeArea": "Monterey, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_felix",
+   "name": "Felix",
+   "initials": "FW",
+   "isDemoPersona": true,
+   "homeArea": "Pacific Grove, CA",
+   "role": "customer"
+  },
+  {
+   "id": "u_zara",
+   "name": "Zara",
+   "initials": "ZM",
+   "isDemoPersona": true,
+   "homeArea": "Seaside, CA",
+   "role": "customer"
+  },
+  {
+   "id": "v_lena",
+   "name": "Lena Ortiz",
+   "initials": "LO",
+   "isDemoPersona": false,
+   "homeArea": "",
+   "role": "vendor",
+   "providerId": "p_kelpline",
+   "title": "Dive operations lead"
+  },
+  {
+   "id": "v_marcus",
+   "name": "Marcus Bell",
+   "initials": "MB",
+   "isDemoPersona": false,
+   "homeArea": "",
+   "role": "vendor",
+   "providerId": "p_ottercove",
+   "title": "Owner"
+  },
+  {
+   "id": "v_sofia",
+   "name": "Sofia Reyes",
+   "initials": "SR",
+   "isDemoPersona": false,
+   "homeArea": "",
+   "role": "vendor",
+   "providerId": "p_pacificfreefall",
+   "title": "Manifest manager"
+  },
+  {
+   "id": "v_ken",
+   "name": "Ken Watanabe",
+   "initials": "KW",
+   "isDemoPersona": false,
+   "homeArea": "",
+   "role": "vendor",
+   "providerId": "p_redwoodsky",
+   "title": "Owner"
+  },
+  {
+   "id": "v_amara",
+   "name": "Amara Okafor",
+   "initials": "AO",
+   "isDemoPersona": false,
+   "homeArea": "",
+   "role": "vendor",
+   "providerId": "p_harborpaddle",
+   "title": "Tour coordinator"
+  },
+  {
+   "id": "v_diego",
+   "name": "Diego Santos",
+   "initials": "DS",
+   "isDemoPersona": false,
+   "homeArea": "",
+   "role": "vendor",
+   "providerId": "p_stillwater",
+   "title": "Head guide"
+  }
+ ]
+}

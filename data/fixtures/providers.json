@@ -1,0 +1,525 @@
+{
+ "_note": "Fictional vendors with illustrative, deterministic price rules. Each has a provider agent. autoQuote=false means the agent drafts the binding quote and a staff member approves it in the vendor portal. Price = tier base + modifiers for the chosen options. All quotes are labelled 'Simulated' in the UI.",
+ "providers": [
+  {
+   "id": "p_kelpline",
+   "name": "Kelp Line Divers",
+   "activity": "scuba_diving",
+   "location": {
+    "label": "Monterey, CA",
+    "lat": 36.6089,
+    "lng": -121.8943
+   },
+   "source": "agent",
+   "provenance": "simulated",
+   "agentAddress": "agent1q-provider-kelpline",
+   "url": null,
+   "autoQuote": true,
+   "offers": {
+    "site": [
+     "Breakwater Cove",
+     "Lovers Point"
+    ],
+    "dive_type": [
+     "shore",
+     "boat"
+    ],
+    "gear_included": [
+     true,
+     false
+    ]
+   },
+   "availableDates": [
+    "2026-11-07",
+    "2026-11-08",
+    "2026-11-14",
+    "2026-11-15",
+    "2026-11-21",
+    "2026-11-22"
+   ],
+   "tiers": [
+    {
+     "min": 1,
+     "max": 1,
+     "pricePerPerson": 199,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt"
+     ]
+    },
+    {
+     "min": 2,
+     "max": 3,
+     "pricePerPerson": 179,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt"
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "pricePerPerson": 154,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt"
+     ]
+    },
+    {
+     "min": 6,
+     "max": 8,
+     "pricePerPerson": 139,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt"
+     ]
+    }
+   ],
+   "modifiers": {
+    "dive_type": {
+     "shore": -40
+    },
+    "gear_included": {
+     "true": 45
+    }
+   },
+   "termsUrl": null
+  },
+  {
+   "id": "p_ottercove",
+   "name": "Otter Cove Dive Co.",
+   "activity": "scuba_diving",
+   "location": {
+    "label": "Carmel, CA",
+    "lat": 36.5552,
+    "lng": -121.9233
+   },
+   "source": "agent",
+   "provenance": "simulated",
+   "agentAddress": "agent1q-provider-ottercove",
+   "url": null,
+   "autoQuote": false,
+   "offers": {
+    "site": [
+     "Lovers Point",
+     "Point Lobos"
+    ],
+    "dive_type": [
+     "boat"
+    ],
+    "gear_included": [
+     true
+    ]
+   },
+   "availableDates": [
+    "2026-11-07",
+    "2026-11-08",
+    "2026-11-14",
+    "2026-11-15",
+    "2026-11-21",
+    "2026-11-22",
+    "2026-11-28",
+    "2026-11-29"
+   ],
+   "tiers": [
+    {
+     "min": 1,
+     "max": 1,
+     "pricePerPerson": 229,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt",
+      "gear"
+     ]
+    },
+    {
+     "min": 2,
+     "max": 3,
+     "pricePerPerson": 205,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt",
+      "gear"
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "pricePerPerson": 182,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt",
+      "gear"
+     ]
+    },
+    {
+     "min": 6,
+     "max": 8,
+     "pricePerPerson": 165,
+     "includes": [
+      "guide",
+      "tanks",
+      "weight belt",
+      "gear"
+     ]
+    }
+   ],
+   "modifiers": {},
+   "termsUrl": null
+  },
+  {
+   "id": "p_pacificfreefall",
+   "name": "Pacific Freefall",
+   "activity": "skydiving",
+   "location": {
+    "label": "Watsonville, CA",
+    "lat": 36.9358,
+    "lng": -121.7897
+   },
+   "source": "agent",
+   "provenance": "simulated",
+   "agentAddress": "agent1q-provider-pacificfreefall",
+   "url": null,
+   "autoQuote": true,
+   "offers": {
+    "dropzone": [
+     "Watsonville"
+    ],
+    "altitude": [
+     "10,000 ft",
+     "13,000 ft"
+    ],
+    "video_package": [
+     true,
+     false
+    ]
+   },
+   "availableDates": [
+    "2026-11-07",
+    "2026-11-08",
+    "2026-11-14",
+    "2026-11-15",
+    "2026-11-21",
+    "2026-11-22",
+    "2026-11-28",
+    "2026-11-29"
+   ],
+   "tiers": [
+    {
+     "min": 1,
+     "max": 1,
+     "pricePerPerson": 289,
+     "includes": [
+      "tandem instructor",
+      "ground training",
+      "jumpsuit"
+     ]
+    },
+    {
+     "min": 2,
+     "max": 3,
+     "pricePerPerson": 269,
+     "includes": [
+      "tandem instructor",
+      "ground training",
+      "jumpsuit"
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "pricePerPerson": 249,
+     "includes": [
+      "tandem instructor",
+      "ground training",
+      "jumpsuit"
+     ]
+    },
+    {
+     "min": 6,
+     "max": 8,
+     "pricePerPerson": 229,
+     "includes": [
+      "tandem instructor",
+      "ground training",
+      "jumpsuit"
+     ]
+    }
+   ],
+   "modifiers": {
+    "altitude": {
+     "13,000 ft": 40
+    },
+    "video_package": {
+     "true": 99
+    }
+   },
+   "termsUrl": null
+  },
+  {
+   "id": "p_redwoodsky",
+   "name": "Redwood Skydive Co.",
+   "activity": "skydiving",
+   "location": {
+    "label": "Hollister, CA",
+    "lat": 36.8933,
+    "lng": -121.4102
+   },
+   "source": "agent",
+   "provenance": "simulated",
+   "agentAddress": "agent1q-provider-redwoodsky",
+   "url": null,
+   "autoQuote": false,
+   "offers": {
+    "dropzone": [
+     "Hollister"
+    ],
+    "altitude": [
+     "13,000 ft"
+    ],
+    "video_package": [
+     true
+    ]
+   },
+   "availableDates": [
+    "2026-11-07",
+    "2026-11-14",
+    "2026-11-15",
+    "2026-11-21",
+    "2026-11-22"
+   ],
+   "tiers": [
+    {
+     "min": 1,
+     "max": 1,
+     "pricePerPerson": 349,
+     "includes": [
+      "tandem instructor",
+      "ground training",
+      "jumpsuit",
+      "video"
+     ]
+    },
+    {
+     "min": 2,
+     "max": 3,
+     "pricePerPerson": 319,
+     "includes": [
+      "tandem instructor",
+      "ground training",
+      "jumpsuit",
+      "video"
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "pricePerPerson": 295,
+     "includes": [
+      "tandem instructor",
+      "ground training",
+      "jumpsuit",
+      "video"
+     ]
+    },
+    {
+     "min": 6,
+     "max": 8,
+     "pricePerPerson": 279,
+     "includes": [
+      "tandem instructor",
+      "ground training",
+      "jumpsuit",
+      "video"
+     ]
+    }
+   ],
+   "modifiers": {},
+   "termsUrl": null
+  },
+  {
+   "id": "p_harborpaddle",
+   "name": "Harbor Paddle Co.",
+   "activity": "kayaking",
+   "location": {
+    "label": "Monterey, CA",
+    "lat": 36.604,
+    "lng": -121.8925
+   },
+   "source": "agent",
+   "provenance": "simulated",
+   "agentAddress": "agent1q-provider-harborpaddle",
+   "url": null,
+   "autoQuote": true,
+   "offers": {
+    "launch": [
+     "Monterey Harbor",
+     "Elkhorn Slough"
+    ],
+    "tour_type": [
+     "guided",
+     "self-guided"
+    ],
+    "wetsuit_included": [
+     true,
+     false
+    ]
+   },
+   "availableDates": [
+    "2026-11-07",
+    "2026-11-08",
+    "2026-11-14",
+    "2026-11-15",
+    "2026-11-21",
+    "2026-11-22",
+    "2026-11-28",
+    "2026-11-29"
+   ],
+   "tiers": [
+    {
+     "min": 1,
+     "max": 1,
+     "pricePerPerson": 95,
+     "includes": [
+      "kayak",
+      "paddle",
+      "PFD"
+     ]
+    },
+    {
+     "min": 2,
+     "max": 3,
+     "pricePerPerson": 85,
+     "includes": [
+      "kayak",
+      "paddle",
+      "PFD"
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "pricePerPerson": 75,
+     "includes": [
+      "kayak",
+      "paddle",
+      "PFD"
+     ]
+    },
+    {
+     "min": 6,
+     "max": 8,
+     "pricePerPerson": 65,
+     "includes": [
+      "kayak",
+      "paddle",
+      "PFD"
+     ]
+    }
+   ],
+   "modifiers": {
+    "tour_type": {
+     "self-guided": -25
+    },
+    "wetsuit_included": {
+     "true": 15
+    }
+   },
+   "termsUrl": null
+  },
+  {
+   "id": "p_stillwater",
+   "name": "Stillwater Kayak Tours",
+   "activity": "kayaking",
+   "location": {
+    "label": "Pebble Beach, CA",
+    "lat": 36.5658,
+    "lng": -121.943
+   },
+   "source": "agent",
+   "provenance": "simulated",
+   "agentAddress": "agent1q-provider-stillwater",
+   "url": null,
+   "autoQuote": false,
+   "offers": {
+    "launch": [
+     "Stillwater Cove",
+     "Elkhorn Slough"
+    ],
+    "tour_type": [
+     "guided"
+    ],
+    "wetsuit_included": [
+     true
+    ]
+   },
+   "availableDates": [
+    "2026-11-07",
+    "2026-11-08",
+    "2026-11-14",
+    "2026-11-15",
+    "2026-11-21",
+    "2026-11-22"
+   ],
+   "tiers": [
+    {
+     "min": 1,
+     "max": 1,
+     "pricePerPerson": 119,
+     "includes": [
+      "kayak",
+      "paddle",
+      "PFD",
+      "wetsuit",
+      "naturalist guide"
+     ]
+    },
+    {
+     "min": 2,
+     "max": 3,
+     "pricePerPerson": 105,
+     "includes": [
+      "kayak",
+      "paddle",
+      "PFD",
+      "wetsuit",
+      "naturalist guide"
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "pricePerPerson": 92,
+     "includes": [
+      "kayak",
+      "paddle",
+      "PFD",
+      "wetsuit",
+      "naturalist guide"
+     ]
+    },
+    {
+     "min": 6,
+     "max": 8,
+     "pricePerPerson": 84,
+     "includes": [
+      "kayak",
+      "paddle",
+      "PFD",
+      "wetsuit",
+      "naturalist guide"
+     ]
+    }
+   ],
+   "modifiers": {},
+   "termsUrl": null
+  }
+ ]
+}
