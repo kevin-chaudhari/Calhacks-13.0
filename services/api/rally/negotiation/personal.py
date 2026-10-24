@@ -53,6 +53,33 @@ class PersonalAgentBrain:
         return ResponseMsg(**base, kind="change_request", term=term,
                            preferred=self._json(self._preferred(term, plan)))
 
+    def explain(self, plan: Plan) -> list[dict[str, Any]]:
+        """Per-term fit of `plan` for this member: [{term, value, fit}], fit in good | ok | compromise.
+
+        Feeds the owner's own "why this plan" text (GET /v1/deals/{id}/explanation), never the
+        shared snapshot. Ordered most-important term first, but weights and scores stay private.
+        Call after set_plan_space so prices are scored against the same range used to negotiate.
+        """
+        weights: dict[str, float] = self.prefs.get("weights", {})
+        keys = sorted(weights, key=lambda k: (-weights[k], k))
+        keys += sorted(k for k in self.prefs.get("ranges", {}) if k not in weights)
+        out = []
+        for key in keys:
+            value = plan.get(key)
+            if value is None:
+                continue
+            s = term_score(key, value, self.prefs, self.price_lo, self.price_hi)
+            if s == VIOLATES:
+                fit = "violates"               # cannot happen for a plan this agent accepted
+            elif s >= 0.75:
+                fit = "good"
+            elif s >= 0.4:
+                fit = "ok"
+            else:
+                fit = "compromise"
+            out.append({"term": key, "value": self._json(value), "fit": fit})
+        return out
+
     # -- helpers ---------------------------------------------------------
 
     def _worst_term(self, plan: Plan) -> str:
