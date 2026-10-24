@@ -167,6 +167,13 @@ def test_leaving_voids_approvals_and_renegotiates(client):
     assert all(a["void"] for a in snap2["approvals"])
     r = c.post(f"/v1/deals/{deal_id}/approvals", json=body, headers=h(c, "u_kevin"))
     assert r.status_code == 409
+    # the mediator invited the next eligible match in Ana's place, so the group stays at 5
+    active = [m for m in snap2["members"] if m["state"] == "joined"]
+    assert len(active) == 5 and "u_ana" not in {m["userId"] for m in active}
+    [rep] = snap2["deal"]["replacements"]
+    newcomer = next(m for m in snap2["members"] if m["userId"] == rep["invitedUserId"])
+    assert rep["leftUserId"] == "u_ana" and newcomer["state"] == "joined"
+    assert any(e["type"] == "member.replaced" and newcomer["name"] in e["summary"] for e in snap2["events"])
 
 
 def test_compile_needs_input_and_publish_blocked(client):

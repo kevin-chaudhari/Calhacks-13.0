@@ -16,8 +16,8 @@ from datetime import date
 from typing import Any
 
 from rally_contracts import (ACTIVE, AgentMessage, Approval, ChatMessage, Commitment, Deal, DealSnapshot,
-                             DealStatus, IntentDraft, Member, Persona, PrivatePrefs, Proposal, PublicIntent,
-                             Quote, Round, RoundResponse)
+                             DealStatus, IntentDraft, Member, Nudge, Persona, PrivatePrefs, Proposal,
+                             PublicIntent, Quote, Replacement, Round, RoundResponse)
 
 from . import catalog
 from . import compiler as compiler_mod
@@ -430,6 +430,7 @@ class Rally:
 
     async def _mediate_inner(self, deal_id: str) -> None:
         deal = self.store.deals[deal_id]
+        deal.nudge = None                                   # a new negotiation makes any earlier offer stale
         members = self._active(deal_id)
         plans, constraints = self._plan_space(deal_id, members)
         brains = {m.user_id: PersonalAgentBrain(m.user_id, self.agent_prefs[m.intent_id], deal.max_rounds)
@@ -590,6 +591,7 @@ class Rally:
         self.store.transition(deal_id, S.PROVIDER_QUOTES_PENDING, S.AWAITING_APPROVAL, "mediator",
                               f"Binding quote from {quote.provider_name}: ${quote.price_per_person:.0f} per person",
                               {"quoteId": quote.id})
+        self._maybe_nudge(deal_id, prov, quote)
 
     # ============================================================ approvals
 
@@ -697,6 +699,7 @@ class Rally:
                                             f"Simulated refund recorded for {self.personas[c.user_id].name}")
                 elif c.state == "pending":
                     c.state = "cancelled"
+            new = self._auto_replace(deal_id, member)
             remaining = self._active(deal_id)
             restart = False
             if deal.status in ACTIVE and len(remaining) < deal.group_min:
@@ -704,8 +707,15 @@ class Rally:
                                       "Group fell below its minimum size")
             elif deal.status in {S.AWAITING_APPROVAL, S.COMMITMENT_PENDING, S.NO_AGREEMENT}:
                 self.store.transition(deal_id, {S.AWAITING_APPROVAL, S.COMMITMENT_PENDING, S.NO_AGREEMENT},
-                                      S.NEGOTIATING,
-                                      "mediator", "Re-negotiating for the smaller group; earlier approvals are void")
+                                      S.NEGOTIATING, "mediator",
+                                      f"Re-negotiating with {new.name} in place of {member.name}; earlier approvals are void"
+                                      if new else "Re-negotiating for the smaller group; earlier approvals are void")
+                restart = True
+            elif new and deal.status == S.NEGOTIATING:
+                if deal_id in self.tasks:
+                    self.tasks[deal_id].cancel()            # restart the rounds with the new member
+                self.store.append_event(deal_id, "negotiation.restarted", "mediator",
+                                        f"Restarting negotiation with {new.name} in place of {member.name}")
                 restart = True
             self.publish(deal_id)
         if restart:
@@ -1056,6 +1066,93 @@ class Rally:
             t.cancel()
         with contextlib.suppress(asyncio.CancelledError, Exception):
             await asyncio.gather(*tasks, return_exceptions=True)
+
+    # ------------------------------------------- group changes: nudge, replace
+
+    def _next_match(self, deal_id: str) -> PublicIntent | None:
+        """Best-ranked stored match for the organizer's goal who is free and not (or no longer) in this deal."""
+        organizer = next(m for m in self.store.members[deal_id] if m.role == "organizer")
+        taken = {m.user_id for m in self.store.members[deal_id]}
+        for c in (self.store.matches.get(organizer.intent_id) or {}).get("matches", []):
+            it = self.store.intents.get(c["intentId"])
+            if it and it.status == "open" and it.user_id not in taken and it.id in self.agent_prefs:
+                return it
+        return None
+
+    def _add_member(self, deal_id: str, intent: PublicIntent, why: str) -> Member:
+        """Invite a stored match into a running deal; their agent accepts under the owner's rules."""
+        p = self.personas[intent.user_id]
+        mem = Member(user_id=p.id, name=p.name, initials=p.initials, intent_id=intent.id, state="joined",
+                     is_demo_persona=p.is_demo_persona, agent_address=p.agent_address)
+        self.store.members[deal_id].append(mem)
+        intent.status = "in_deal"
+        deal = self.store.deals[deal_id]
+        self.agent_msg(deal_id, MEDIATOR, self._pa(mem), "InviteMsg", f"Invite to join '{deal.title}' ({why})",
+                       {"dealId": deal_id, "groupSize": len(self._active(deal_id))})
+        self.agent_msg(deal_id, self._pa(mem), MEDIATOR, "JoinMsg",
+                       "Accepted the invite (owner's rules: dates and budget still open)", {"accept": True})
+        self.store.append_event(deal_id, "member.joined", mem.user_id, f"{mem.name}'s agent joined ({why})",
+                                {"memberId": mem.user_id})
+        return mem
+
+    def _maybe_nudge(self, deal_id: str, prov: dict, quote: Quote) -> None:
+        """Provider agent, after its binding quote: would one more person reach a cheaper tier?"""
+        deal = self.store.deals[deal_id]
+        deal.nudge = None
+        n = quote.group_size
+        if not quote.binding or n + 1 > deal.group_max or self._next_match(deal_id) is None:
+            return
+        terms = self.store.proposals[deal_id][-1].terms
+        bigger = sheets([prov])[0].price(terms, n + 1)
+        if bigger is None or bigger >= quote.price_per_person:
+            return
+        deal.nudge = Nudge(provider_id=prov["id"], extra_people=1, new_price_per_person=bigger,
+                           saving_per_person=round(quote.price_per_person - bigger, 2))
+        self.agent_msg(deal_id, self._prov(prov), MEDIATOR, "NudgeMsg",
+                       f"One more person moves the group to the next price tier: ${bigger:.0f} pp instead of "
+                       f"${quote.price_per_person:.0f}, everyone saves ${deal.nudge.saving_per_person:.0f}",
+                       {**deal.nudge.wire(), "groupSize": n, "proposalVersion": quote.proposal_version})
+        self.store.append_event(deal_id, "deal.nudge", prov["id"],
+                                f"{prov['name']}: add 1 person and everyone pays ${bigger:.0f} instead of "
+                                f"${quote.price_per_person:.0f}", deal.nudge.wire())
+
+    async def accept_nudge(self, user_id: str, deal_id: str) -> dict:
+        async with self.store.locks[deal_id]:
+            deal = self._deal(deal_id)
+            if deal.created_by != user_id:
+                raise ApiError(403, "ORGANIZER_ONLY", "Only the organizer can invite someone new.")
+            if deal.nudge is None or deal.status != S.AWAITING_APPROVAL:
+                raise ApiError(409, "NO_NUDGE", "There is no group-size offer to accept right now.")
+            intent = self._next_match(deal_id)
+            if intent is None:
+                deal.nudge = None
+                self.publish(deal_id)
+                raise ApiError(409, "NO_MATCH", "Nobody else who fits is free right now.")
+            saving = deal.nudge.saving_per_person
+            new = self._add_member(deal_id, intent, f"one more person saves everyone ${saving:.0f}")
+            deal.nudge = None
+            for a in self.store.approvals[deal_id]:
+                a.void = True
+            self.store.transition(deal_id, S.AWAITING_APPROVAL, S.NEGOTIATING, "mediator",
+                                  f"Re-negotiating with {new.name} for the cheaper tier; earlier approvals are void")
+            self.publish(deal_id)
+        self.tasks[deal_id] = asyncio.create_task(self._mediate(deal_id))
+        return {"invitedUserId": new.user_id, "status": S.NEGOTIATING.value}
+
+    def _auto_replace(self, deal_id: str, left: Member) -> Member | None:
+        """Someone left mid-negotiation or approval: invite the next eligible match to keep the group's size."""
+        deal = self.store.deals[deal_id]
+        if deal.status not in {S.NEGOTIATING, S.AWAITING_APPROVAL, S.COMMITMENT_PENDING, S.NO_AGREEMENT}:
+            return None
+        intent = self._next_match(deal_id)
+        if intent is None:
+            return None
+        new = self._add_member(deal_id, intent, f"replacing {left.name}")
+        deal.replacements.append(Replacement(left_user_id=left.user_id, invited_user_id=new.user_id, at=now_ms()))
+        self.store.append_event(deal_id, "member.replaced", "mediator",
+                                f"{new.name} replaces {left.name}, keeping the group at {len(self._active(deal_id))}",
+                                {"leftUserId": left.user_id, "invitedUserId": new.user_id})
+        return new
 
     def lifespan(self, _app):
         @contextlib.asynccontextmanager

@@ -11,7 +11,8 @@ from concierge import Concierge, RallyAPI  # noqa: E402
 
 
 def test_chat_goal_reaches_a_negotiated_plan_with_a_room_link():
-    from rally.main import app
+    from rally.main import _buckets, app
+    _buckets.clear()
 
     async def go():
         api = RallyAPI("http://rally", transport=httpx.ASGITransport(app=app))

@@ -258,6 +258,11 @@ async def leave(deal_id: str, body: LeaveBody | None = None, uid: str = Depends(
     return await rally.leave(uid, deal_id, (body or LeaveBody()).reason)
 
 
+@app.post("/v1/deals/{deal_id}/nudge/accept")
+async def accept_nudge(deal_id: str, uid: str = Depends(user)):
+    return await rally.accept_nudge(uid, deal_id)
+
+
 @app.get("/v1/deals/{deal_id}/events")
 def events(deal_id: str, afterSeq: int = 0, uid: str = Depends(user)):
     rally._member(deal_id, uid, active_only=False)

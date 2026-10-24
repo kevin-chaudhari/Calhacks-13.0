@@ -64,6 +64,18 @@ Rally: Agreed! All 5 agents accepted plan v3 in 3 rounds: Nov 21, boat dive, gea
 
 Tests: `tests/unit/test_concierge.py` (fake API: the three replies, the follow-up question, errors) and `tests/integration/test_concierge_api.py` (the real API in-process).
 
+## Group changes (for the room UI)
+
+**Group-size nudge.** After its binding quote, the provider agent checks the next tier for the same plan. If one more person lowers the price, the group is below `groupMax`, and a stored match is free, it sends a `NudgeMsg` and the deal carries:
+
+```json
+"nudge": {"providerId": "p_kelpline", "extraPeople": 1, "newPricePerPerson": 139.0, "savingPerPerson": 15.0}
+```
+
+`POST /v1/deals/{id}/nudge/accept` (organizer only) invites the best-ranked free match, voids approvals and renegotiates; it returns `{"invitedUserId": "u_eli", "status": "NEGOTIATING"}`. Errors: `403 ORGANIZER_ONLY`, `409 NO_NUDGE`, `409 NO_MATCH`. `nudge` is `null` again once negotiation restarts.
+
+**Auto-replace.** When a member leaves during negotiation or approval and a stored match is free, the mediator invites them so the group keeps its size, and records `"replacements": [{"leftUserId": "u_ana", "invitedUserId": "u_eli", "at": 1792870000000}]` plus a `member.replaced` event. Without a free match it renegotiates with fewer people, as before.
+
 ## Addresses
 
 Generated with `python agents/connect_agentverse.py --table` using the team's private `AGENT_SEED_PREFIX`. Not filled in yet.
