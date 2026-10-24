@@ -5,11 +5,26 @@ from __future__ import annotations
 import hashlib
 import hmac
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "data" / "fixtures"
+
+
+def _load_dotenv(path: Path = ROOT / ".env") -> None:
+    """KEY=value lines from the git-ignored .env; variables already set in the shell win. Skipped under pytest."""
+    if "pytest" in sys.modules or not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        key, sep, value = line.partition("=")
+        value = value.split(" #", 1)[0].strip().strip('"').strip("'")
+        if sep and key.strip() and not key.lstrip().startswith("#") and value:
+            os.environ.setdefault(key.strip(), value)
+
+
+_load_dotenv()
 
 
 def _env(name: str, default: str) -> str:

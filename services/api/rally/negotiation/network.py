@@ -132,7 +132,7 @@ def make_agent(spec: AgentSpec, loop=None):
         from uagents.resolver import RulesBasedResolver
         rules = {s.address: s.endpoint for s in directory()}
         return Agent(**common, endpoint=None, resolve=RulesBasedResolver(rules), enable_agent_inspector=False)
-    if seed_prefix() == DEV_PREFIX:
+    if seed_prefix() == DEV_PREFIX or seed_prefix().startswith("PASTE_"):
         raise RuntimeError("AGENT_NETWORK=mailbox needs a private AGENT_SEED_PREFIX in .env; the default is public.")
     return Agent(**common, mailbox=True, publish_agent_details=True,
                  readme_path=str(readme) if readme.exists() else None)

@@ -52,7 +52,7 @@ def main() -> int:
     specs = network.directory()
     if "--table" not in sys.argv:
         token = os.environ.get("AGENTVERSE_API_KEY", "").strip()
-        if not token:
+        if not token or token.startswith("PASTE_"):
             print("Set AGENTVERSE_API_KEY (agentverse.ai → Profile → API keys).")
             return 1
         failed = 0
