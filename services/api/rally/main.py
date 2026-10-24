@@ -28,7 +28,7 @@ mirror = ConvexMirror(settings.convex_url, settings.convex_server_key) \
     if settings.store == "convex" and settings.convex_url else None
 rally = Rally(settings, MemoryStore(mirror))
 
-app = FastAPI(title="Rally API", version="0.1.0",
+app = FastAPI(title="Rally API", version="0.1.0", lifespan=rally.lifespan,
               description="Commands for the Rally group-deal engine. The UI reads state from Convex "
                           "(or GET /v1/deals/{id}/snapshot in local dev).")
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=False,

@@ -3,8 +3,8 @@
     python agents/bureau_demo.py
 
 Five personal agents (each holding only its owner's private preferences) and one
-mediator agent. The mediator runs the SAME Mediator class the API uses, through a
-UAgentsTransport that sends ProposalWire and awaits ResponseWire. Prints every hop
+mediator agent. The mediator runs the SAME Mediator class and UAgentsTransport the API uses
+(rally/negotiation/transport.py); the transport sends ProposalWire and awaits ResponseWire. Prints every hop
 with latency. Agentverse mailbox registration is not attempted here (needs network
 and an Agentverse account; see agents/README.md).
 """
@@ -26,8 +26,9 @@ from protocol import PlanSpaceWire, ProposalWire, ResponseWire  # noqa: E402
 from rally.negotiation.engine import Plan, PublicConstraints, enumerate_plans  # noqa: E402
 from rally.negotiation.mediator import Mediator  # noqa: E402
 from rally.negotiation.personal import PersonalAgentBrain  # noqa: E402
+from rally.negotiation.transport import UAgentsTransport  # noqa: E402
 from rally.providers import load_providers, sheets  # noqa: E402
-from rally_contracts import PrivatePrefs, ProposalMsg, ResponseMsg  # noqa: E402
+from rally_contracts import PrivatePrefs, ProposalMsg  # noqa: E402
 
 FIX = ROOT / "data/fixtures"
 MEMBERS = ["u_kevin", "u_ana", "u_ravi", "u_maya", "u_kai"]
@@ -74,50 +75,6 @@ mediator_agent = Agent(name="rally-mediator", seed="rally demo mediator agent lo
 bureau.add(mediator_agent)
 
 
-class UAgentsTransport:
-    mode = "bureau"
-
-    def __init__(self, ctx: Context):
-        self.ctx = ctx
-        self.waiting: dict[tuple[str, int], asyncio.Future] = {}
-        self.hops: list[float] = []
-
-    async def set_plan_space(self, member_ids, plans):
-        payload = json.dumps([[p.t, p.provider_id, p.price_per_person] for p in plans])
-        for m in member_ids:
-            await self.ctx.send(personal[m].address, PlanSpaceWire(deal_id="d_bureau", plans_json=payload))
-
-    async def gather(self, msg: ProposalMsg, member_ids, timeout_s):
-        loop = asyncio.get_running_loop()
-        sent_at = time.perf_counter()
-        futs = {m: loop.create_future() for m in member_ids}
-        for m, f in futs.items():
-            self.waiting[(m, msg.proposal_version)] = f
-            await self.ctx.send(personal[m].address, ProposalWire(
-                msg_id=msg.msg_id, deal_id=msg.deal_id, proposal_version=msg.proposal_version, round=msg.round,
-                terms_json=json.dumps(msg.terms), provider_id=msg.provider_id,
-                price_per_person=msg.price_per_person, currency=msg.currency, respond_by=msg.respond_by))
-        out = {}
-        for m, f in futs.items():
-            try:
-                out[m] = await asyncio.wait_for(f, timeout_s)
-                self.hops.append((time.perf_counter() - sent_at) * 1000)
-            except asyncio.TimeoutError:
-                out[m] = None
-        return out
-
-    def deliver(self, sender: str, w: ResponseWire):
-        owner = next((u for u, a in personal.items() if a.address == sender), None)
-        if owner is None or owner != w.member_id:
-            print(f"  dropped message: sender {sender[:16]}… does not own member {w.member_id}")
-            return
-        f = self.waiting.pop((w.member_id, w.proposal_version), None)
-        if f and not f.done():
-            f.set_result(ResponseMsg(msg_id=w.msg_id, deal_id=w.deal_id, proposal_version=w.proposal_version,
-                                     member_id=w.member_id, kind=w.kind, term=w.term,
-                                     preferred=json.loads(w.preferred_json) if w.preferred_json else None))
-
-
 class PrintHooks:
     async def proposal(self, plan, version, r, attempt, rationale, changed):
         print(f"v{version} round {r}: {plan.t} @ {plan.provider_id} ${plan.price_per_person:.0f}")
@@ -144,7 +101,8 @@ async def on_response(ctx: Context, sender: str, msg: ResponseWire):
 @mediator_agent.on_event("startup")
 async def start(ctx: Context):
     global transport
-    transport = UAgentsTransport(ctx)
+    transport = UAgentsTransport("d_bureau", ctx.send, {u: a.address for u, a in personal.items()},
+                                 rounds=5, mode="bureau")
 
     async def run():
         await asyncio.sleep(1.0)

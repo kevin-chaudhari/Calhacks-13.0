@@ -9,4 +9,4 @@ httpx>=0.27
 # optional adapters: install the ones you turn on
 # google-genai     # COMPILER=gemini
 # convex           # STORE=convex
-# uagents          # agents/bureau_demo.py, TRANSPORT=bureau
+# uagents          # TRANSPORT=agentverse, agents/run_agents.py, agents/bureau_demo.py (tested 0.26.1)

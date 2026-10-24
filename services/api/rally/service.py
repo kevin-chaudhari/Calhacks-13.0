@@ -7,6 +7,7 @@ validation, and every status change goes through store.transition().
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hashlib
 import json
 import logging
@@ -73,6 +74,7 @@ class Rally:
         prefs = json.loads((FIXTURES / "private_prefs.json").read_text(encoding="utf-8"))["prefs"]
         # personal-agent memory, keyed by intent id (one person can have several goals)
         self.agent_prefs = {k: _snake_prefs(p) for k, p in prefs.items() if not k.startswith("default:")}
+        self.fixture_intents = set(self.agent_prefs)     # their agents load these prefs themselves
         self.default_prefs = {k.split(":", 1)[1]: p for k, p in prefs.items() if k.startswith("default:")}
         self.providers = load_providers()
         board = []
@@ -87,10 +89,11 @@ class Rally:
                                   prefs_hash=prefs_hash(self.agent_prefs.get(it["id"], {})))
             self.store.intents[intent.id] = intent
             self.store.publish_row("intents", intent.id, intent.wire())
+        self._apply_agent_addresses()
 
     def provenance(self) -> dict[str, Any]:
         return {"compiler": self.s.compiler if self.s.gemini_api_key else "template",
-                "ranker": "local", "transport": "inproc", "providers": "seeded",
+                "ranker": "local", "transport": self.transport_mode(), "providers": "seeded",
                 "payments": self.s.payments, "store": self.s.store}
 
     def persona(self, user_id: str) -> Persona:
@@ -432,7 +435,7 @@ class Rally:
         brains = {m.user_id: PersonalAgentBrain(m.user_id, self.agent_prefs[m.intent_id], deal.max_rounds)
                   for m in members if m.intent_id in self.agent_prefs}
         await self._collect_price_sheets(deal_id, len(members))
-        transport = InProcTransport(brains)
+        transport = self._make_transport(deal_id, members, brains)
         self.transports[deal_id] = transport
         names = {m.user_id: m.name for m in self.store.members[deal_id]}
         names.update({p["id"]: p["name"] for p in self.providers})
@@ -473,6 +476,7 @@ class Rally:
                   payload: dict | None = None, latency_ms: float | None = None) -> None:
         """Record one message on the agent wire. Public fields only (see AgentMessage)."""
         log_ = self.store.agent_messages[deal_id]
+        frm, to = (self._real(frm), self._real(to))
         log_.append(AgentMessage(seq=len(log_) + 1, at=now_ms(), from_id=frm[0], from_label=frm[1],
                                  from_kind=frm[2], to_id=to[0], to_label=to[1], to_kind=to[2], type=type_,
                                  summary=summary, payload=payload or {}, latency_ms=latency_ms))
@@ -908,7 +912,7 @@ class Rally:
         return {"staff": staff.wire(), "provider": prov, "stages": stages, "requests": reqs,
                 "committedRevenue": sum(r["total"] or 0 for r in committed),
                 "peopleBooked": sum(r["groupSize"] for r in committed),
-                "agent": {"address": prov["agentAddress"], "transport": "inproc", "online": True,
+                "agent": {"address": prov["agentAddress"], "transport": self.transport_mode(), "online": True,
                           "mode": "auto-quote" if prov.get("autoQuote", True) else "staff approves quotes"}}
 
     def translate(self, text: str, source: str, target: str) -> dict:
@@ -957,14 +961,15 @@ class Rally:
 
     def diagnostics(self) -> dict:
         owners = {it.user_id for it_id, it in self.store.intents.items() if it_id in self.agent_prefs}
+        mode = self.transport_mode()
         agents = [{"address": p.agent_address, "name": f"{p.name}'s agent", "kind": "personal",
-                   "ownerUserId": p.id, "transport": "inproc", "capabilities": ["InviteMsg", "ProposalMsg→ResponseMsg"],
+                   "ownerUserId": p.id, "transport": mode, "capabilities": ["InviteMsg", "ProposalMsg→ResponseMsg"],
                    "hasPrefs": p.id in owners} for p in self.personas.values() if p.role == "customer"]
-        agents.append({"address": "mediator", "name": "Rally mediator", "kind": "mediator",
-                       "transport": "inproc", "capabilities": ["InviteMsg", "ProposalMsg", "QuoteRequestMsg"]})
+        agents.append({"address": self._mediator_address(), "name": "Rally mediator", "kind": "mediator",
+                       "transport": mode, "capabilities": ["InviteMsg", "ProposalMsg", "QuoteRequestMsg"]})
         for p in self.providers:
             agents.append({"address": p["agentAddress"], "name": f"{p['name']} agent", "kind": "provider",
-                           "transport": "inproc", "capabilities": ["QuoteRequestMsg→QuoteMsg", "FinalAgreementMsg"],
+                           "transport": mode, "capabilities": ["QuoteRequestMsg→QuoteMsg", "FinalAgreementMsg"],
                            "mode": "auto-quote" if p.get("autoQuote", True) else "staff approves"})
         messages = []
         for deal_id, msgs in self.store.agent_messages.items():
@@ -974,6 +979,91 @@ class Rally:
                 "deals": [{"id": d.id, "title": d.title, "status": d.status, "round": d.round,
                            "version": d.current_proposal_version} for d in self.store.deals.values()],
                 "adapters": self.provenance()}
+
+    # ================================================= agents network (Parikshit)
+
+    def _mediator_address(self) -> str:
+        if self.s.transport != "agentverse":
+            return "mediator"
+        from .negotiation import network
+        return network.address_of("mediator")
+
+    def _real(self, who: tuple) -> tuple:
+        """Show the mediator's real address in the agent conversation."""
+        return (self._mediator_address(), *who[1:]) if who[0] == "mediator" else who
+
+    def transport_mode(self) -> str:
+        """What the agents really run on: 'agentverse' only once the mediator agent is up."""
+        return "agentverse" if getattr(self, "_agent_ctx", None) is not None else "inproc"
+
+    def _apply_agent_addresses(self) -> None:
+        """TRANSPORT=agentverse: every persona and provider gets its real uAgents address."""
+        if self.s.transport != "agentverse":
+            return
+        from .negotiation import network
+        specs = network.by_key()
+        for p in self.personas.values():
+            if f"personal:{p.id}" in specs:
+                p.agent_address = specs[f"personal:{p.id}"].address
+        for prov in self.providers:
+            if f"provider:{prov['id']}" in specs:
+                prov["agentAddress"] = specs[f"provider:{prov['id']}"].address
+
+    def _make_transport(self, deal_id: str, members: list[Member], brains: dict[str, PersonalAgentBrain]):
+        if self.transport_mode() != "agentverse":
+            return InProcTransport(brains)
+        from .negotiation.transport import UAgentsTransport
+        live = {m.user_id: self.agent_prefs[m.intent_id] for m in members
+                if m.intent_id in self.agent_prefs and m.intent_id not in self.fixture_intents}
+        return UAgentsTransport(deal_id, self._agent_ctx.send, {m.user_id: m.agent_address for m in members},
+                                {m.user_id: m.intent_id for m in members}, self.s.max_rounds, live_prefs=live)
+
+    async def start_agents(self) -> None:
+        """Start the mediator agent inside the API's event loop (FastAPI lifespan)."""
+        if self.s.transport != "agentverse" or getattr(self, "_agent_task", None):
+            return
+        try:
+            from .negotiation import network
+            from .negotiation.transport import UAgentsTransport
+            from .negotiation.wire import ResponseWire
+        except ImportError as exc:
+            log.error("TRANSPORT=agentverse needs `pip install uagents` (%s); staying in-process", exc)
+            return
+        agent = network.make_agent(network.by_key()["mediator"], asyncio.get_running_loop())
+        ready = asyncio.Event()
+
+        @agent.on_event("startup")
+        async def _ready(ctx) -> None:
+            self._agent_ctx = ctx
+            ready.set()
+
+        @agent.on_message(model=ResponseWire)
+        async def _on_response(ctx, sender: str, msg: ResponseWire) -> None:
+            t = self.transports.get(msg.deal_id)
+            if isinstance(t, UAgentsTransport):
+                t.deliver(sender, msg)
+
+        self._agent_task = network.start_in_loop(agent)
+        try:
+            await asyncio.wait_for(ready.wait(), 15)
+            log.info("mediator agent %s up (%s)", agent.address, network.network_mode())
+        except asyncio.TimeoutError:
+            log.error("mediator agent did not start in 15 s; staying in-process")
+
+    async def stop_agents(self) -> None:
+        tasks, self._agent_task, self._agent_ctx = getattr(self, "_agent_task", None) or [], None, None
+        for t in tasks:
+            t.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+    def lifespan(self, _app):
+        @contextlib.asynccontextmanager
+        async def span():
+            await self.start_agents()
+            yield
+            await self.stop_agents()
+        return span()
 
 
 class _StoreHooks:
@@ -1014,6 +1104,7 @@ class _StoreHooks:
 
     async def responses(self, version, round_no, attempt, responses, outcome, accepted, active) -> None:
         names = self._names()
+        hop_ms = getattr(self.app.transports.get(self.deal_id), "latency_ms", {})
         async with self.store.locks[self.deal_id]:
             rnd = self.store.rounds[self.deal_id][-1]
             rnd.outcome, rnd.accepted, rnd.active = outcome, accepted, active
@@ -1030,7 +1121,8 @@ class _StoreHooks:
                 self.app.agent_msg(self.deal_id, self.app._pa(member), MEDIATOR, "ResponseMsg",
                                    f"v{version}: {say}",
                                    {"version": version, "kind": resp.kind, "term": resp.term,
-                                    "preferred": resp.preferred if resp.term != "price_per_person" else None})
+                                    "preferred": resp.preferred if resp.term != "price_per_person" else None},
+                                   latency_ms=hop_ms.get(uid))
                 member.agent_status = {"accept": "accepted", "change_request": "change_request",
                                        "reject_hard": "reject_hard", "withdraw": "withdrawn"}[resp.kind]
                 member.agent_term = resp.term
