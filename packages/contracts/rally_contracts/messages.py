@@ -74,3 +74,15 @@ class FinalAgreementMsg(RallyModel):
     proposal_version: int
     quote_id: str
     status: Literal["agreed", "confirmed", "cancelled"]
+
+
+class NudgeMsg(RallyModel):
+    """Provider agent -> mediator after a binding quote: n + extra_people people get a cheaper tier."""
+    msg_id: str
+    deal_id: str
+    provider_id: str
+    proposal_version: int
+    group_size: int
+    extra_people: int
+    new_price_per_person: float
+    saving_per_person: float

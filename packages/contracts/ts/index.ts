@@ -95,6 +95,8 @@ export interface Deal {
   activityLabel: string;
   vendorReview: Record<string, unknown> | null;
   bookedBy: string | null;
+  nudge: Nudge | null;
+  replacements: Replacement[];
 }
 
 export interface DealEvent {
@@ -177,6 +179,13 @@ export interface MissingField {
 export interface Money {
   amount: number;
   currency: string;
+}
+
+export interface Nudge {
+  providerId: string;
+  extraPeople: number;
+  newPricePerPerson: number;
+  savingPerPerson: number;
 }
 
 export interface Persona {
@@ -287,6 +296,12 @@ export interface QuoteRequestMsg {
   dateTo: string;
   groupSize: number;
   options: Record<string, (string | number | boolean)[]>;
+}
+
+export interface Replacement {
+  leftUserId: string;
+  invitedUserId: string;
+  at: number;
 }
 
 export interface ResponseMsg {

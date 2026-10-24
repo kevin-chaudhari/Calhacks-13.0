@@ -130,6 +130,20 @@ class DealEvent(RallyModel):
     at: int
 
 
+class Nudge(RallyModel):
+    """A provider agent's offer: this many more people move the group to a cheaper tier."""
+    provider_id: str
+    extra_people: int
+    new_price_per_person: float
+    saving_per_person: float
+
+
+class Replacement(RallyModel):
+    left_user_id: str
+    invited_user_id: str
+    at: int
+
+
 class Deal(RallyModel):
     id: str
     shape: Shape
@@ -154,3 +168,5 @@ class Deal(RallyModel):
     activity_label: str = ""
     vendor_review: dict[str, Any] | None = None   # provider agent drafted a quote; staff must approve
     booked_by: str | None = None
+    nudge: Nudge | None = None                    # provider agent: one more person is cheaper
+    replacements: list[Replacement] = []          # members invited to replace someone who left
