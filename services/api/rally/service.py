@@ -12,6 +12,7 @@ import json
 import logging
 import uuid
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 from rally_contracts import (ACTIVE, AgentMessage, Approval, ChatMessage, Commitment, Deal, DealSnapshot,
@@ -26,8 +27,9 @@ from .negotiation.engine import Plan, PublicConstraints, enumerate_plans
 from .negotiation.mediator import Mediator
 from .negotiation.personal import PersonalAgentBrain
 from .negotiation.transport import InProcTransport
+from .payments import PaymentError, make_rail
 from .providers import baseline_valid, load_providers, quote_for, rank_quotes, sheets
-from .store import MemoryStore, TransitionError, now_ms
+from .store import AgentPrefsVault, MemoryStore, TransitionError, now_ms
 
 log = logging.getLogger("rally.service")
 S = DealStatus
@@ -52,7 +54,12 @@ class Rally:
         self.agent_prefs: dict[str, dict] = {}       # personal-agent memory; never persisted or published
         self.tasks: dict[str, asyncio.Task] = {}
         self.transports: dict[str, InProcTransport] = {}
-        self.seed()
+        self.vault = AgentPrefsVault(Path(settings.runtime_dir) / "agent_prefs.json") if store.mirror else None
+        self.restored: dict[str, int] | None = None
+        self.rail = make_rail(settings)
+        self.paying: set[str] = set()                  # commitment ids with a payment in flight
+        if not (store.mirror and self.restore()):
+            self.seed()
 
     # ================================================================= demo kit
 
@@ -61,20 +68,8 @@ class Rally:
             t.cancel()
         self.tasks.clear()
         self.transports.clear()
-        self.auto_commit: dict[tuple[str, str], bool] = {}
         self.store.reset()
-        raw = json.loads((FIXTURES / "personas.json").read_text(encoding="utf-8"))["personas"]
-        self.personas = {}
-        for p in raw:
-            persona = Persona.model_validate(p)
-            persona.agent_address = f"agent1q-{persona.id[2:]}" if persona.role == "customer" else ""
-            persona.token = sign_persona(persona.id, self.s.secret)
-            self.personas[persona.id] = persona
-        prefs = json.loads((FIXTURES / "private_prefs.json").read_text(encoding="utf-8"))["prefs"]
-        # personal-agent memory, keyed by intent id (one person can have several goals)
-        self.agent_prefs = {k: _snake_prefs(p) for k, p in prefs.items() if not k.startswith("default:")}
-        self.default_prefs = {k.split(":", 1)[1]: p for k, p in prefs.items() if k.startswith("default:")}
-        self.providers = load_providers()
+        self.seed_static()                      # personas, providers, seeded agents' prefs (keyed by intent id)
         board = []
         for f in sorted(FIXTURES.glob("intents_*.json")):
             board += json.loads(f.read_text(encoding="utf-8"))["intents"]
@@ -86,12 +81,14 @@ class Rally:
                                   is_demo_persona=self.personas[it["userId"]].is_demo_persona,
                                   prefs_hash=prefs_hash(self.agent_prefs.get(it["id"], {})))
             self.store.intents[intent.id] = intent
-            self.store.publish_row("intents", intent.id, intent.wire())
+            self.store.publish_row("intents", intent.id, intent.wire(), [])
+        self._save_prefs()
+        self._publish_dashboards()
 
     def provenance(self) -> dict[str, Any]:
         return {"compiler": self.s.compiler if self.s.gemini_api_key else "template",
                 "ranker": "local", "transport": "inproc", "providers": "seeded",
-                "payments": self.s.payments, "store": self.s.store}
+                "payments": self.rail.mode, "store": self.s.store}
 
     def persona(self, user_id: str) -> Persona:
         if user_id not in self.personas:
@@ -117,7 +114,7 @@ class Rally:
                 or self._neutral_prefs(res.draft),
                 "_extracted": (extracted.model_dump() if extracted else None)}
         self.store.goals[goal_id] = goal
-        self.store.publish_row("goals", goal_id, self._public_goal(goal))
+        self.store.publish_row("goals", goal_id, self._stored_goal(goal), [user_id])
         return self._public_goal(goal)
 
     def _neutral_prefs(self, draft: IntentDraft) -> dict:
@@ -177,7 +174,7 @@ class Rally:
         goal["_extracted"] = x.model_dump()
         goal["draft"] = draft.wire()
         goal["status"] = "needs_input" if draft.missing else "ready"
-        self.store.publish_row("goals", goal_id, self._public_goal(goal))
+        self.store.publish_row("goals", goal_id, self._stored_goal(goal), [user_id])
         return self._public_goal(goal)
 
     @staticmethod
@@ -214,6 +211,7 @@ class Rally:
         engine_prefs = prefs.model_dump(by_alias=False)
         if goal["status"] == "published":
             self.agent_prefs[goal["intentId"]] = engine_prefs
+            self._save_prefs()
             return self.store.intents[goal["intentId"]].wire()
         intent = PublicIntent(id=f"i_{uuid.uuid4().hex[:8]}", goal_id=goal_id, user_id=user_id,
                               text=goal["text"], draft=draft, prefs_hash=prefs_hash(engine_prefs),
@@ -222,9 +220,10 @@ class Rally:
         self.store.intents[intent.id] = intent
         # "send to the personal agent": in TRANSPORT=inproc the agent lives in this process.
         self.agent_prefs[intent.id] = engine_prefs
+        self._save_prefs()
         goal["status"], goal["intentId"] = "published", intent.id
-        self.store.publish_row("intents", intent.id, intent.wire())
-        self.store.publish_row("goals", goal_id, self._public_goal(goal))
+        self.store.publish_row("intents", intent.id, intent.wire(), [])
+        self.store.publish_row("goals", goal_id, self._stored_goal(goal), [user_id])
         return intent.wire()
 
     def get_intent(self, intent_id: str) -> dict:
@@ -258,7 +257,7 @@ class Rally:
                "selectedIntentIds": [c.intent.id for c in chosen],
                "hardFilters": [c.label for c in seeker.draft.conditions if c.kind == "hard"]}
         self.store.matches[intent_id] = out
-        self.store.publish_row("matches", intent_id, out)
+        self.store.publish_row("matches", intent_id, out, [user_id])
         return out
 
     # ================================================================== deals
@@ -646,7 +645,8 @@ class Rally:
         if c.state == "committed":
             return
         if c.method != "simulated":
-            raise ApiError(501, "X402_NOT_IMPLEMENTED", "x402 testnet commitments are not implemented in this build.")
+            self._start_payment(deal_id, c, name)       # platform block: x402 runs outside the deal lock
+            return
         c.state, c.tx_ref = "committed", f"sim_{uuid.uuid4().hex[:12]}"
         self.store.append_event(deal_id, "commitment.committed", c.user_id,
                                 f"{name} committed ${c.amount:.0f} (simulated, no money moved)", {"txRef": c.tx_ref})
@@ -690,7 +690,10 @@ class Rally:
                 if c.state == "committed":
                     c.state = "refunded"
                     self.store.append_event(deal_id, "commitment.refunded", c.user_id,
-                                            f"Simulated refund recorded for {self.personas[c.user_id].name}")
+                                            f"Simulated refund recorded for {self.personas[c.user_id].name}"
+                                            if c.method == "simulated" else
+                                            f"Refund owed to {self.personas[c.user_id].name}: x402 has no automatic "
+                                            f"refunds, so Rally's testnet wallet sends it back separately")
                 elif c.state == "pending":
                     c.state = "cancelled"
             remaining = self._active(deal_id)
@@ -896,6 +899,9 @@ class Rally:
                 errors["availableDates"] = "Dates must be YYYY-MM-DD."
         if errors:
             raise ApiError(422, "INVALID_FIELDS", "Some pricing rules need fixing.", fields=errors)
+        self.store.publish_row("providers", prov["id"], prov, [s.id for s in self.personas.values()
+                                                                if s.provider_id == prov["id"]])
+        self._publish_dashboards([prov["id"]])
         return prov
 
     def vendor_dashboard(self, user_id: str) -> dict:
@@ -944,7 +950,10 @@ class Rally:
         return out
 
     def publish(self, deal_id: str) -> None:
-        self.store.publish(deal_id, self.snapshot(deal_id))
+        self._stamp_timing(deal_id)
+        self.store.publish(deal_id, self.snapshot(deal_id), self._access(deal_id))
+        if self.store.mirror:
+            self._publish_vendor_views(deal_id)
 
     def list_deals(self, user_id: str) -> list[dict]:
         out = []
@@ -974,6 +983,314 @@ class Rally:
                 "deals": [{"id": d.id, "title": d.title, "status": d.status, "round": d.round,
                            "version": d.current_proposal_version} for d in self.store.deals.values()],
                 "adapters": self.provenance()}
+
+
+# ====================================================================== platform (Kevin)
+# Restart recovery and Convex access lists. Kept in one block so the three branches merge cleanly.
+
+def _access(self: "Rally", deal_id: str) -> list[str]:
+    """Who may read this deal's snapshot in Convex: every member (any state) + the quoting vendor's staff."""
+    ids = [m.user_id for m in self.store.members[deal_id]]
+    deal = self.store.deals[deal_id]
+    providers = set()
+    if deal.vendor_review:
+        providers.add(deal.vendor_review.get("providerId"))
+    chosen = next((q for q in self.store.quotes[deal_id] if q.id == deal.chosen_quote_id), None)
+    if chosen:
+        providers.add(chosen.provider_id)
+    ids += [p.id for p in self.personas.values() if p.role == "vendor" and p.provider_id in providers]
+    return sorted(set(ids))
+
+
+def _publish_vendor_views(self: "Rally", deal_id: str) -> None:
+    """Mirror each contacted vendor's view of this deal, and their dashboard, for live vendor screens."""
+    deal = self.store.deals[deal_id]
+    for prov in self.providers:
+        if not self._involves(deal, prov):
+            continue
+        staff = self.staff_for(prov["id"])
+        if not staff:
+            continue
+        try:
+            view = self.vendor_request(staff.id, deal_id)
+            dash = self.vendor_dashboard(staff.id)
+        except ApiError:
+            continue
+        self.store.publish_row("vendor", f"{prov['id']}:{deal_id}", view, [staff.id])
+        self.store.publish_row("vendor", f"{prov['id']}:dashboard", dash, [staff.id])
+
+
+def _start_payment(self: "Rally", deal_id: str, c: Commitment, name: str) -> None:
+    """Kick off a real (testnet) payment for one commitment. Idempotent per commitment id."""
+    if c.id in self.paying or c.state != "pending":
+        return
+    self.paying.add(c.id)
+    self.store.append_event(deal_id, "commitment.paying", c.user_id,
+                            f"{name}'s agent is paying the testnet deposit with x402")
+    self.tasks[f"pay:{c.id}"] = asyncio.create_task(self._pay(deal_id, c.id, c.user_id, name))
+
+
+async def _pay(self: "Rally", deal_id: str, commitment_id: str, user_id: str, name: str) -> None:
+    try:
+        result = await self.rail.commit(deal_id, user_id)
+        error = None
+    except PaymentError as exc:
+        result, error = None, str(exc)
+    except Exception as exc:  # noqa: BLE001 - network, facilitator: never crash the deal
+        log.exception("payment failed")
+        result, error = None, f"Payment error: {str(exc)[:160]}"
+    finally:
+        self.paying.discard(commitment_id)
+    async with self.store.locks[deal_id]:
+        row = next((x for x in self.store.commitments[deal_id] if x.id == commitment_id), None)
+        if row is None or row.state != "pending":
+            return
+        if result is None:
+            self.store.append_event(deal_id, "commitment.failed", user_id,
+                                    f"{name}'s deposit didn't go through: {error}. Try Commit again.")
+        else:
+            row.state, row.tx_ref = "committed", result.tx_ref
+            row.explorer_url, row.network = result.explorer_url, result.network
+            self.store.append_event(deal_id, "commitment.committed", user_id,
+                                    f"{name} paid a {self.rail.price_usd} test-USDC deposit on Base Sepolia (x402)",
+                                    {"txRef": result.tx_ref, "explorerUrl": result.explorer_url})
+            if self.store.deals[deal_id].status == S.COMMITMENT_PENDING:
+                self._maybe_committed(deal_id)
+        self.publish(deal_id)
+
+
+def deposit_check(self: "Rally", deal_id: str, user_id: str) -> dict:
+    """The x402-protected handler: accept a deposit only for a commitment that is actually pending."""
+    deal = self.store.deals.get(deal_id)
+    row = next((c for c in self.store.commitments.get(deal_id, []) if c.user_id == user_id
+                and c.state == "pending"), None) if deal else None
+    if deal is None or row is None or deal.status != S.COMMITMENT_PENDING:
+        raise ApiError(409, "NO_PENDING_COMMITMENT", "Nothing to pay for: no pending commitment for this member.")
+    return {"ok": True, "dealId": deal_id, "userId": user_id, "commitmentId": row.id}
+
+
+SCENARIOS = {
+    "scuba": "I want to go scuba diving in Monterey next month for under $300. I am Open Water certified.",
+    "skydiving": "I want to go skydiving near Santa Cruz next month for under $400, first jump.",
+    "kayaking": "Sea kayaking in Monterey next month, under $120 per person.",
+}
+AGREED = {"deal.provider_quotes_pending", "deal.awaiting_approval"}
+
+
+def _stamp_timing(self: "Rally", deal_id: str) -> None:
+    """Measured, not estimated: wall time from 'negotiation started' to 'every agent accepted'."""
+    deal = self.store.deals[deal_id]
+    if deal.negotiation_ms is not None:
+        return
+    evs = self.store.events[deal_id]
+    start = next((e.at for e in evs if e.type == "deal.negotiating"), None)
+    end = next((e.at for e in evs if e.type in AGREED), None)
+    if start is not None and end is not None:
+        deal.negotiation_ms = end - start
+
+
+def metrics(self: "Rally") -> dict:
+    """Live numbers computed from the current state. Nothing here is estimated or hard-coded."""
+    from .negotiation.engine import Plan as _Plan
+    from .negotiation.engine import PublicConstraints
+    deals = list(self.store.deals.values())
+    by_status: dict[str, int] = {}
+    for d in deals:
+        by_status[str(d.status)] = by_status.get(str(d.status), 0) + 1
+    agreed = [d for d in deals if any(e.type in AGREED for e in self.store.events[d.id])]
+    rounds = [len([r for r in self.store.rounds[d.id]]) for d in agreed]
+    times = [d.negotiation_ms for d in agreed if d.negotiation_ms is not None]
+    # Re-check every proposal ever sent against its senders' public hard constraints.
+    checked = violations = 0
+    for d in deals:
+        intents = {m.user_id: self.store.intents.get(m.intent_id) for m in self.store.members[d.id]}
+        for p in self.store.proposals[d.id]:
+            plan = _Plan(tuple(sorted(p.terms.items())), p.provider_id, p.price_per_person)
+            for uid, it in intents.items():
+                if it is None:
+                    continue
+                c = PublicConstraints(it.draft.date_from.isoformat() if it.draft.date_from else None,
+                                      it.draft.date_to.isoformat() if it.draft.date_to else None,
+                                      it.draft.budget_max.amount if it.draft.budget_max else None)
+                checked += 1
+                violations += c.violated_by(plan) is not None and uid in {
+                    m.user_id for m in self.store.members[d.id] if m.state == "joined"}
+    committed = [d for d in deals if d.status == S.COMMITTED]
+    saved = 0.0
+    for d in committed:
+        q = next((x for x in self.store.quotes[d.id] if x.id == d.chosen_quote_id), None)
+        if q and q.solo_price_per_person > q.price_per_person:
+            saved += (q.solo_price_per_person - q.price_per_person) * q.group_size
+    msgs = sum(len(v) for v in self.store.agent_messages.values())
+    return {
+        "deals": len(deals), "byStatus": by_status, "agreed": len(agreed), "committed": len(committed),
+        "booked": sum(1 for d in committed if d.booking_status != "not_booked"),
+        "peopleCommitted": sum(sum(1 for c in self.store.commitments[d.id] if c.state == "committed") for d in deals),
+        "agentMessages": msgs, "chatMessages": sum(len(v) for v in self.store.chat.values()),
+        "meanRounds": round(sum(rounds) / len(rounds), 2) if rounds else None,
+        "meanSecondsToAgreement": round(sum(times) / len(times) / 1000, 1) if times else None,
+        "proposalsChecked": checked, "hardConstraintViolations": violations,
+        "groupSavingsUsd": round(saved, 2),
+        "x402Settled": getattr(self.rail, "settled", 0),
+        "agentsOnline": len([p for p in self.personas.values() if p.role == "customer"]) + 1 + len(self.providers),
+    }
+
+
+async def launch(self: "Rally", scenario: str, organizer: str = "u_kevin", auto_negotiate: bool = True) -> dict:
+    """One click from nothing to a live group room: compile, publish, match, invite, then negotiate."""
+    if scenario not in SCENARIOS:
+        raise ApiError(400, "UNKNOWN_SCENARIO", f"Pick one of: {', '.join(SCENARIOS)}.")
+    g = self.compile_goal(organizer, SCENARIOS[scenario])
+    if g["draft"]["missing"]:
+        g = self.patch_goal(organizer, g["id"], {"groupMax": 5, "groupMin": 2})
+    intent = self.publish_intent(organizer, g["id"], g["suggestedPrefs"])
+    m = self.run_matches(organizer, intent["id"])
+    deal = await self.create_deal(organizer, intent["id"], m["selectedIntentIds"])
+    if auto_negotiate:
+        self.tasks[f"launch:{deal['id']}"] = asyncio.create_task(self._negotiate_when_joined(organizer, deal["id"]))
+    return {"dealId": deal["id"], "goalId": g["id"], "intentId": intent["id"], "scenario": scenario}
+
+
+async def _negotiate_when_joined(self: "Rally", organizer: str, deal_id: str) -> None:
+    for _ in range(600):
+        if not any(m.state == "invited" for m in self.store.members[deal_id]):
+            break
+        await asyncio.sleep(0.05)
+    try:
+        await self.negotiate(organizer, deal_id)
+    except ApiError as exc:
+        log.warning("auto-negotiate %s: %s", deal_id, exc.message)
+
+
+def seats(self: "Rally", user_id: str, deal_id: str, web_url: str) -> list[dict]:
+    """Links that put a judge's phone into a member's (or the vendor's) seat. Demo identities only."""
+    deal = self._deal(deal_id)
+    if deal.created_by != user_id:
+        raise ApiError(403, "ORGANIZER_ONLY", "Only the organizer can hand out seats.")
+    out = []
+    for m in self.store.members[deal_id]:
+        p = self.personas[m.user_id]
+        out.append({"userId": p.id, "name": p.name, "role": "member", "state": m.state,
+                    "url": f"{web_url}/join?d={deal_id}&t={p.token}"})
+    review = deal.vendor_review or {}
+    chosen = next((q for q in self.store.quotes[deal_id] if q.id == deal.chosen_quote_id), None)
+    pid = review.get("providerId") or (chosen.provider_id if chosen else None)
+    staff = self.staff_for(pid) if pid else None
+    if staff:
+        out.append({"userId": staff.id, "name": staff.name, "role": "vendor", "state": "staff",
+                    "url": f"{web_url}/join?d={deal_id}&v={staff.id}"})
+    return out
+
+
+def _publish_dashboards(self: "Rally", provider_ids: list[str] | None = None) -> None:
+    """Every vendor dashboard exists in Convex from boot, so a vendor screen never starts empty."""
+    if not self.store.mirror:
+        return
+    for prov in self.providers:
+        staff = self.staff_for(prov["id"])
+        if staff and (provider_ids is None or prov["id"] in provider_ids):
+            self.store.publish_row("vendor", f"{prov['id']}:dashboard", self.vendor_dashboard(staff.id), [staff.id])
+
+
+def _stored_goal(self: "Rally", goal: dict) -> dict:
+    """The goal as Convex stores it: no preference weights of any kind (rebuilt from defaults on restore)."""
+    return {k: v for k, v in self._public_goal(goal).items() if k != "suggestedPrefs"}
+
+
+def _save_prefs(self: "Rally") -> None:
+    if self.vault:
+        self.vault.save(self.agent_prefs)
+
+
+def restore(self: "Rally") -> bool:
+    """Rebuild the working copy from Convex after a restart. False = Convex is empty (seed instead)."""
+    from rally_contracts import DealSnapshot
+    dump = self.store.mirror.load()
+    if not dump or not (dump.get("snapshots") or dump.get("rows")):
+        return False
+    self.seed_static()
+    self.store.reset(remote=False)
+    counts = {"deals": 0, "intents": 0, "goals": 0}
+    for r in dump["rows"]:
+        doc = r["doc"]
+        if r["table"] == "intents":
+            self.store.intents[r["rid"]] = PublicIntent.model_validate(doc)
+            counts["intents"] += 1
+        elif r["table"] == "goals":
+            draft = IntentDraft.model_validate(doc["draft"])
+            self.store.goals[r["rid"]] = {**doc, "_extracted": None, "suggestedPrefs":
+                                          self.default_prefs.get(catalog.canonical(draft.activity))
+                                          or self._neutral_prefs(draft)}
+            counts["goals"] += 1
+        elif r["table"] == "matches":
+            self.store.matches[r["rid"]] = doc
+        elif r["table"] == "providers":
+            self.providers = [doc if p["id"] == r["rid"] else p for p in self.providers]
+    for item in dump["snapshots"]:
+        snap = DealSnapshot.model_validate(item["snapshot"])
+        d = snap.deal
+        self.store.deals[d.id] = d
+        self.store.members[d.id] = list(snap.members)
+        self.store.proposals[d.id] = list(snap.proposals)
+        self.store.rounds[d.id] = list(snap.rounds)
+        self.store.quotes[d.id] = list(snap.quotes)
+        self.store.approvals[d.id] = list(snap.approvals)
+        self.store.commitments[d.id] = list(snap.commitments)
+        self.store.events[d.id] = list(snap.events)
+        self.store.agent_messages[d.id] = list(snap.agent_messages)
+        self.store.chat[d.id] = list(snap.chat)
+        for a in snap.approvals:                       # the UI always approves with auto-commit on
+            self.auto_commit[(d.id, a.user_id)] = True
+        counts["deals"] += 1
+    if self.vault:
+        self.agent_prefs.update(self.vault.load())
+    self.restored = counts
+    return True
+
+
+def resume(self: "Rally") -> list[str]:
+    """Restart the background work that was running when the API stopped. Call inside the event loop."""
+    resumed = []
+    for d in self.store.deals.values():
+        st = DealStatus(d.status)
+        if st == S.GROUP_FORMING and any(m.state == "invited" for m in self.store.members[d.id]):
+            self.tasks[d.id] = asyncio.create_task(self._collect_joins(d.id))
+        elif st == S.NEGOTIATING:
+            self.store.append_event(d.id, "deal.resumed", "mediator",
+                                    f"API restarted; mediator resumed after plan v{d.current_proposal_version}")
+            self.tasks[d.id] = asyncio.create_task(self._mediate(d.id))
+        elif st == S.PROVIDER_QUOTES_PENDING and not d.vendor_review and self.store.proposals[d.id]:
+            p = self.store.proposals[d.id][-1]
+            plan = Plan(tuple(sorted(p.terms.items())), p.provider_id, p.price_per_person)
+            self.store.append_event(d.id, "deal.resumed", "mediator", "API restarted; re-requesting the binding quote")
+            self.tasks[d.id] = asyncio.create_task(
+                self._request_binding_quote(d.id, plan, p.version, len(self._active(d.id))))
+        else:
+            continue
+        resumed.append(d.id)
+        self.publish(d.id)
+    return resumed
+
+
+def seed_static(self: "Rally") -> None:
+    """Personas, providers and seeded agents' private prefs: fixtures, identical on every boot."""
+    raw = json.loads((FIXTURES / "personas.json").read_text(encoding="utf-8"))["personas"]
+    self.personas = {}
+    for p in raw:
+        persona = Persona.model_validate(p)
+        persona.agent_address = f"agent1q-{persona.id[2:]}" if persona.role == "customer" else ""
+        persona.token = sign_persona(persona.id, self.s.secret)
+        self.personas[persona.id] = persona
+    prefs = json.loads((FIXTURES / "private_prefs.json").read_text(encoding="utf-8"))["prefs"]
+    self.agent_prefs = {k: _snake_prefs(p) for k, p in prefs.items() if not k.startswith("default:")}
+    self.default_prefs = {k.split(":", 1)[1]: p for k, p in prefs.items() if k.startswith("default:")}
+    self.providers = load_providers()
+    self.auto_commit = {}
+
+
+for _f in (_stamp_timing, metrics, launch, _negotiate_when_joined, seats, _start_payment, _pay, deposit_check, _access, _publish_vendor_views, _publish_dashboards, _stored_goal, _save_prefs, restore, resume, seed_static):
+    setattr(Rally, _f.__name__, _f)
+del _f
 
 
 class _StoreHooks:

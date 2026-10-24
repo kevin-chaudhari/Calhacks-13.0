@@ -10,6 +10,7 @@ import { usePersona } from "@/lib/persona";
 import { useDealSnapshot } from "@/lib/useDeal";
 import { Avatar, Button, Callout, Card, CardHeader, Chip, PageTitle, Skeleton } from "@/components/ui/primitives";
 import { ProvenanceBadge } from "@/components/rally/shell";
+import { DepositStatus, ExplanationCard } from "@/components/rally/platform";
 
 export default function Approve() {
   const { dealId } = useParams<{ dealId: string }>();
@@ -59,6 +60,20 @@ export default function Approve() {
     }
   }
 
+  const myRow = snap.commitments.find((c) => c.userId === me?.id && c.proposalVersion === v);
+  const canRetry = d.status === "COMMITMENT_PENDING" && myRow?.state === "pending";
+  async function retryCommit() {
+    setPending("commit");
+    setErr(null);
+    try {
+      await api(`/v1/deals/${dealId}/commitments`, { body: { proposalVersion: v } });
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : "Deposit failed.");
+    } finally {
+      setPending(null);
+    }
+  }
+
   async function leave() {
     try {
       await api(`/v1/deals/${dealId}/leave`, { body: { reason: "left from the approval page" } });
@@ -77,13 +92,16 @@ export default function Approve() {
       <div className="mb-5 flex items-start gap-3 rounded-[10px] border border-sim/30 bg-sim-soft px-5 py-3">
         <Info size={16} className="mt-0.5 shrink-0 text-sim" />
         <div className="text-[13px]">
-          <span className="font-semibold text-sim">{simulated ? "Simulated commitment. No money moves." : "Testnet payment (Base Sepolia). No real funds."}</span>{" "}
-          Committing records each member&apos;s share in an auditable ledger. It is not a booking; the provider still has to confirm.
+          <span className="font-semibold text-sim">{simulated ? "Simulated commitment. No money moves." : "Testnet deposit over x402 on Base Sepolia. Test USDC only, no real funds."}</span>{" "}
+          {simulated
+            ? "Committing records each member's share in an auditable ledger. It is not a booking; the provider still has to confirm."
+            : "After the last approval, each member's agent pays a small deposit over HTTP 402 and the transaction appears below. A deposit is a transfer, not escrow: if the vendor declines, Rally sends it back as a separate transfer."}
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-6">
+          {iAmMember && <ExplanationCard dealId={dealId} version={v} />}
           <Card>
             <CardHeader title="Final terms" meta={quote ? <span className="flex items-center gap-2">{quote.providerName} <ProvenanceBadge kind={quote.provenance} /></span> : undefined} />
             <dl className="divide-y divide-line">
@@ -129,6 +147,27 @@ export default function Approve() {
               ))}
             </ul>
           </Card>
+          {snap.commitments.some((c) => c.proposalVersion === v) && (
+            <Card>
+              <CardHeader title={simulated ? "Commitments" : "Deposits"} meta={<span className="num">{snap.commitments.filter((c) => c.proposalVersion === v && c.state === "committed").length} of {active.length}</span>} />
+              <ul className="divide-y divide-line">
+                {snap.commitments.filter((c) => c.proposalVersion === v).map((c) => {
+                  const name = snap.members.find((m) => m.userId === c.userId)?.name ?? c.userId;
+                  return (
+                    <li key={c.userId} className="flex items-center justify-between gap-3 px-5 py-2.5 text-[13px]">
+                      <span className="font-medium">{name}</span>
+                      <DepositStatus c={c} events={snap.events} name={name} />
+                    </li>
+                  );
+                })}
+              </ul>
+              {canRetry && (
+                <div className="border-t border-line p-3">
+                  <Button className="w-full" onClick={retryCommit} disabled={!!pending}>{pending === "commit" ? "Paying…" : simulated ? "Commit my share" : "Pay my deposit again"}</Button>
+                </div>
+              )}
+            </Card>
+          )}
           {err && <Callout tone="danger" title="Not approved">{err}</Callout>}
           <Button className="h-10 w-full" onClick={() => approve()} disabled={!!disabledReason || !!pending}>
             {pending === "me" ? "Sending…" : iApproved ? <><Check size={15} /> Approved v{v}</> : `Approve plan v${v}`}

@@ -8,5 +8,6 @@ __pycache__/
 .pytest_cache/
 .hypothesis/
 tests/e2e/shots/
-convex/_generated/
 .venv/
+data/runtime/
+*.tsbuildinfo

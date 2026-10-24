@@ -6,14 +6,14 @@ import { useState } from "react";
 import { money, termValue, orderedTerms } from "@/lib/format";
 import { usePersona, useVendorApi } from "@/lib/persona";
 import type { VendorDashboard } from "@/lib/types";
-import { useVendorPoll } from "@/lib/useVendor";
+import { useVendorDashboard } from "@/lib/useVendor";
 import { ButtonLink, Callout, Card, CardHeader, Chip, PageTitle, Skeleton } from "@/components/ui/primitives";
 import { STAGE, StagePill, Stat } from "@/components/rally/vendor";
 
 export default function VendorHome() {
   const { vendor } = usePersona();
   const vapi = useVendorApi();
-  const { data, error, refresh } = useVendorPoll<VendorDashboard>("/v1/vendor/dashboard", 1500);
+  const { data, error, refresh } = useVendorDashboard<VendorDashboard>(1500);
   const [saving, setSaving] = useState(false);
 
   if (error && !data) return <Callout tone="danger" title="Vendor portal unavailable">{error}</Callout>;

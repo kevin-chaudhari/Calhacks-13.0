@@ -1,0 +1,26 @@
+# Bare-metal alternative to docker compose. Install:
+#   sudo cp infra/systemd/rally-api.service /etc/systemd/system/ && sudo systemctl enable --now rally-api
+[Unit]
+Description=Rally API (FastAPI + agents)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=rally
+WorkingDirectory=/opt/rally
+EnvironmentFile=/opt/rally/.env
+Environment=PYTHONPATH=/opt/rally/services/api:/opt/rally/packages/contracts:/opt/rally
+Environment=RALLY_RUNTIME_DIR=/var/lib/rally
+Environment=RALLY_API_SELF_URL=http://127.0.0.1:8000
+ExecStart=/opt/rally/.venv/bin/uvicorn rally.main:app --host 127.0.0.1 --port 8000 --proxy-headers
+Restart=always
+RestartSec=2
+StateDirectory=rally
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/rally
+
+[Install]
+WantedBy=multi-user.target

@@ -7,6 +7,7 @@ import { money, orderedTerms, TERM_LABELS, termValue, time } from "@/lib/format"
 import { useDealSnapshot } from "@/lib/useDeal";
 import { Avatar, Callout, Card, CardHeader, Chip, Skeleton } from "@/components/ui/primitives";
 import { ProvenanceBadge } from "@/components/rally/shell";
+import { CalendarAndShare, DepositStatus, NegotiationReplay, ReplacementNotes } from "@/components/rally/platform";
 
 export default function Confirmed() {
   const { dealId } = useParams<{ dealId: string }>();
@@ -38,13 +39,14 @@ export default function Confirmed() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-[28px] font-semibold leading-[34px] tracking-[-0.01em]">Committed</h1>
-            <Chip tone="sim">{sim ? "Simulated, no money moved" : "Testnet"}</Chip>
+            <Chip tone="sim">{sim ? "Simulated, no money moved" : "x402 testnet deposits, Base Sepolia"}</Chip>
             {d.bookingStatus === "not_booked" ? <Chip tone="warn">Booking: waiting for the vendor</Chip> : <Chip tone="accent">Booked by {d.bookedBy}</Chip>}
           </div>
           <p className="mt-2 text-muted">
             {committed.length} people committed to plan v{d.currentProposalVersion} after {roundsUsed} negotiation round{roundsUsed === 1 ? "" : "s"}.
-            {d.bookingStatus === "not_booked" ? <>Next: {quote?.providerName ?? "the provider"} confirms the booking from their vendor portal.</> : <>{quote?.providerName} confirmed the booking. See you on the water.</>}
+            {" "}{d.bookingStatus === "not_booked" ? <>Next: {quote?.providerName ?? "the provider"} confirms the booking from their vendor portal.</> : <>{quote?.providerName} confirmed the booking. See you on the water.</>}
           </p>
+          <div className="mt-4"><CalendarAndShare snap={snap} /></div>
         </div>
       </div>
 
@@ -67,7 +69,7 @@ export default function Confirmed() {
               <li key={c.id} className="flex items-center gap-3 px-5 py-2.5">
                 <Avatar initials={names[c.userId]?.initials ?? "?"} demo={names[c.userId]?.isDemoPersona} size={28} />
                 <span className="flex-1 font-medium">{names[c.userId]?.name}</span>
-                <span className="num font-mono text-[11px] text-muted">{c.txRef}</span>
+                <DepositStatus c={c} events={snap.events} name={names[c.userId]?.name ?? c.userId} />
                 <span className="num font-semibold">{money(c.amount)}</span>
               </li>
             ))}
@@ -79,6 +81,7 @@ export default function Confirmed() {
         <CardHeader title="Negotiation summary" />
         <div className="space-y-2 px-5 py-4 text-[13px]">
           <div className="num">{roundsUsed} rounds · {snap.proposals.length} plan versions · {snap.deal.attempt > 1 ? "one restart after a removal" : "no restarts"}</div>
+          <ReplacementNotes snap={snap} />
           {removed.map((m) => (
             <div key={m.userId} className="text-muted">{m.name}: {m.removedReason ?? m.state}</div>
           ))}
@@ -89,6 +92,8 @@ export default function Confirmed() {
           )}
         </div>
       </Card>
+
+      <div className="mt-6"><NegotiationReplay snap={snap} /></div>
 
       <Card className="mt-6">
         <CardHeader title="Audit timeline" meta={`${snap.events.length} events, append-only`} />

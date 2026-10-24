@@ -8,7 +8,7 @@ import { ApiError } from "@/lib/api";
 import { money, orderedTerms, TERM_LABELS, termValue, time } from "@/lib/format";
 import { usePersona, useVendorApi } from "@/lib/persona";
 import type { VendorRequest } from "@/lib/types";
-import { useVendorPoll } from "@/lib/useVendor";
+import { useVendorRequest } from "@/lib/useVendor";
 import { Avatar, Button, Callout, Card, CardHeader, Chip, Skeleton } from "@/components/ui/primitives";
 import { AgentConversation, WorkflowStepper } from "@/components/rally/agents";
 import { ChatPanel } from "@/components/rally/chat";
@@ -84,7 +84,7 @@ export default function VendorRequestPage() {
   const { dealId } = useParams<{ dealId: string }>();
   const { vendor } = usePersona();
   const vapi = useVendorApi();
-  const { data: req, error, refresh } = useVendorPoll<VendorRequest>(`/v1/vendor/requests/${dealId}`, 900);
+  const { data: req, error, refresh } = useVendorRequest<VendorRequest>(dealId);
   const [bookErr, setBookErr] = useState<string | null>(null);
   const [booking, setBooking] = useState(false);
 

@@ -130,6 +130,29 @@ class DealEvent(RallyModel):
     at: int
 
 
+class Nudge(RallyModel):
+    """A provider agent's offer: this many more people moves the group to a cheaper tier."""
+    provider_id: str
+    provider_name: str = ""
+    extra_people: int
+    current_price_per_person: float
+    new_price_per_person: float
+    saving_per_person: float
+    candidate_user_id: str | None = None      # next eligible person from the stored matches
+    candidate_name: str | None = None
+    at: int = 0
+    status: Literal["open", "accepted", "dismissed", "expired"] = "open"
+
+
+class Replacement(RallyModel):
+    """A member left and the mediator invited the next eligible person in their place."""
+    left_user_id: str
+    left_name: str = ""
+    invited_user_id: str
+    invited_name: str = ""
+    at: int
+
+
 class Deal(RallyModel):
     id: str
     shape: Shape
@@ -154,3 +177,6 @@ class Deal(RallyModel):
     activity_label: str = ""
     vendor_review: dict[str, Any] | None = None   # provider agent drafted a quote; staff must approve
     booked_by: str | None = None
+    nudge: Nudge | None = None                  # owner: agents (Parikshit); UI: platform (Kevin)
+    replacements: list[Replacement] = []        # owner: agents (Parikshit); UI: platform (Kevin)
+    negotiation_ms: int | None = None           # wall time from negotiate to agreement, for live metrics

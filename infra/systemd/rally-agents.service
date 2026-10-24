@@ -1,0 +1,18 @@
+# Optional: the Fetch.ai Bureau / Agentverse mailbox agents as their own process (Parikshit's TRANSPORT).
+[Unit]
+Description=Rally uAgents bureau
+After=rally-api.service
+Requires=rally-api.service
+
+[Service]
+User=rally
+WorkingDirectory=/opt/rally
+EnvironmentFile=/opt/rally/.env
+Environment=PYTHONPATH=/opt/rally/services/api:/opt/rally/packages/contracts:/opt/rally
+ExecStart=/opt/rally/.venv/bin/python agents/bureau_demo.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

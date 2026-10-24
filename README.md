@@ -21,6 +21,8 @@ python scripts/rally.py dev       # API on :8000, web on :3000
 
 Open http://localhost:3000, click **Scuba trip in Monterey**, then **Find my people**. Answer "5" for group size, publish, start the group, start negotiation, approve. Switch identity in the header to approve as Ana and Ravi (teammates do this from their own laptops); use **Approve as demo** for the two seeded personas.
 
+**On stage:** open http://localhost:3000/demo (the control room). It shows which sponsor adapters are live, launches a whole scenario in one click (scuba, skydiving, kayaking), measures results live (hard-constraint violations, agent messages, time to agreement, savings), and the group room's **Phone seats** button gives every member and the vendor's staff a QR code so judges act from their own phones.
+
 `python scripts/rally.py reset` restores the scenario between rehearsals. (`make dev`, `make test`, etc. do the same on macOS/Linux.)
 
 ## Two sides: customers and vendors
@@ -54,8 +56,8 @@ The UI labels every simulated thing on screen; this table is the same informatio
 | Matching | Real hard filters with reasons; local TF-IDF ranker. Moss adapter **not written** | "Ranked locally" |
 | Negotiation | Real mediator + personal-agent logic. In the API, agents run in-process (`TRANSPORT=inproc`). `agents/bureau_demo.py` runs the same logic over **real uAgents messages** in a local Bureau | "Agents: inproc" |
 | Providers | Six fictional vendors (2 per activity) with fixture price rules that staff can edit; provider agents run in-process | "Simulated" |
-| Commitment | Simulated ledger with idempotency, voiding and refunds. x402 **not written** | "Simulated, no money moved" |
-| State | In-process store; optional write-through to Convex (`STORE=convex`) **not yet run against a deployment** | n/a |
+| Commitment | Simulated ledger by default. `PAYMENTS=x402_testnet`: each member's agent pays a real x402 deposit in test USDC on Base Sepolia (tested end to end with real EIP-3009 signatures against a stand-in facilitator; **not yet run against x402.org with funded wallets**). Mainnet refused | "Simulated, no money moved" / "Testnet deposit" + explorer link |
+| State | `STORE=convex`: batched write-through, membership-checked browser reads, vendor portal live, restart recovery (groups resume mid-negotiation). Verified with convex-test and a fake client; **not yet run against a deployment** | Control room light |
 | Identity | Demo personas with HMAC tokens | "Demo identity" |
 
 ## Measured results (reproducible, nothing estimated)
@@ -95,5 +97,7 @@ The browser sends commands to FastAPI and reads state from one `DealSnapshot` do
 - **B (AI):** set `GEMINI_API_KEY`, `COMPILER=gemini`, confirm the model id and run the 30-goal eval set (not written yet). Moss adapter behind `RANKER=moss`.
 - **C (data/infra):** `npx convex dev`, set `RALLY_SERVER_KEY` in Convex and `.env`, run with `STORE=convex`, confirm the room updates live. Then Apify listed prices, then x402 testnet.
 - **D (frontend):** polish on the live flow; second goal (tennis) end to end; demo video.
+
+Deploying (Vultr + Caddy + Vercel + Convex): see `infra/DEPLOY.md`.
 
 See `docs/decisions.md` for what this build changed from the plan.

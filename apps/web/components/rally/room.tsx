@@ -324,7 +324,7 @@ export function DealHeader({ snap }: { snap: DealSnapshot }) {
       <div className="flex flex-wrap items-center gap-2">
         <StatusPill status={d.status} />
         <Chip title="The group expires if not committed by then"><Clock size={12} /> until {deadline.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}</Chip>
-        <Chip tone="sim" title="Agent transport in use">Agents: {snap.provenance.transport as string}</Chip>
+        <Chip tone={snap.provenance.transport === "agentverse" ? "accent" : "sim"} title={snap.provenance.transport === "agentverse" ? "Every member and vendor agent is a registered Fetch.ai uAgent on Agentverse" : "Agent transport in use"}>Agents: {snap.provenance.transport as string}</Chip>
       </div>
     </div>
   );

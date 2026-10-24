@@ -58,6 +58,8 @@ export interface Commitment {
   state: "pending" | "committed" | "cancelled" | "refunded";
   method: "simulated" | "x402_testnet";
   txRef: string | null;
+  explorerUrl: string | null;
+  network: string | null;
   idempotencyKey: string;
   at: number;
 }
@@ -95,6 +97,9 @@ export interface Deal {
   activityLabel: string;
   vendorReview: Record<string, unknown> | null;
   bookedBy: string | null;
+  nudge: Nudge | null;
+  replacements: Replacement[];
+  negotiationMs: number | null;
 }
 
 export interface DealEvent {
@@ -177,6 +182,30 @@ export interface MissingField {
 export interface Money {
   amount: number;
   currency: string;
+}
+
+export interface Nudge {
+  providerId: string;
+  providerName: string;
+  extraPeople: number;
+  currentPricePerPerson: number;
+  newPricePerPerson: number;
+  savingPerPerson: number;
+  candidateUserId: string | null;
+  candidateName: string | null;
+  at: number;
+  status: "open" | "accepted" | "dismissed" | "expired";
+}
+
+export interface NudgeMsg {
+  msgId: string;
+  dealId: string;
+  providerId: string;
+  proposalVersion: number;
+  groupSize: number;
+  extraPeople: number;
+  currentPricePerPerson: number;
+  newPricePerPerson: number;
 }
 
 export interface Persona {
@@ -287,6 +316,14 @@ export interface QuoteRequestMsg {
   dateTo: string;
   groupSize: number;
   options: Record<string, (string | number | boolean)[]>;
+}
+
+export interface Replacement {
+  leftUserId: string;
+  leftName: string;
+  invitedUserId: string;
+  invitedName: string;
+  at: number;
 }
 
 export interface ResponseMsg {

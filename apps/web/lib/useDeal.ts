@@ -9,10 +9,12 @@ import type { DealSnapshot } from "./types";
 
 export const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || "";
 
-/** Convex mode: a live subscription to the snapshot document FastAPI writes. */
+/** Convex mode: a live subscription to the snapshot document FastAPI writes. Convex checks the
+ *  persona token and the deal's access list, so a guessed deal id shows nothing. */
 function useConvexSnapshot(dealId: string): { snap: DealSnapshot | null; error: string | null } {
-  const doc = useQuery(anyApi.rally.dealSnapshot, { dealId }) as DealSnapshot | null | undefined;
-  return { snap: doc ?? null, error: doc === null ? "Deal not found." : null };
+  const { me } = usePersona();
+  const doc = useQuery(anyApi.rally.dealSnapshot, me ? { dealId, token: me.token } : "skip") as DealSnapshot | null | undefined;
+  return { snap: doc ?? null, error: doc === null ? "This group doesn't exist or you're not in it." : null };
 }
 
 /** Local dev mode (no Convex): poll the API snapshot. Same shape, same components. */

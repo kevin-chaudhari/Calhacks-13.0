@@ -1,0 +1,26 @@
+# Vultr VM: API behind Caddy (automatic HTTPS). Run from the repo root:
+#   API_DOMAIN=api.example.com docker compose -f infra/docker-compose.yml up -d --build
+services:
+  api:
+    build: { context: .., dockerfile: infra/Dockerfile.api }
+    env_file: ../.env
+    environment:
+      RALLY_API_SELF_URL: http://127.0.0.1:8000    # x402 deposits call our own paid route
+    volumes: [rally-data:/data]
+    restart: unless-stopped
+    expose: ["8000"]
+
+  caddy:
+    image: caddy:2.8
+    depends_on: [api]
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN to the DNS name pointing at this VM}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    restart: unless-stopped
+
+volumes:
+  rally-data:
+  caddy-data:
