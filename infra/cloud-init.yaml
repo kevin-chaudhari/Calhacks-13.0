@@ -1,0 +1,11 @@
+#cloud-config
+# Paste into Vultr "Cloud-Init User-Data" when creating an Ubuntu 24.04 instance.
+# Afterwards: ssh in, write /opt/rally/.env (see .env.example), then
+#   cd /opt/rally && API_DOMAIN=api.example.com docker compose -f infra/docker-compose.yml up -d --build
+package_update: true
+packages: [git, ufw, docker.io, docker-compose-v2]
+runcmd:
+  - ufw allow OpenSSH && ufw allow 80/tcp && ufw allow 443/tcp && ufw --force enable
+  - systemctl enable --now docker
+  - git clone https://github.com/kevin-chaudhari/Calhacks-13.0.git /opt/rally
+  - touch /opt/rally/.env && chmod 600 /opt/rally/.env

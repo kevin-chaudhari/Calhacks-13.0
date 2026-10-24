@@ -1,20 +1,23 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-// Interim schema for the first PR (see docs/decisions.md, D2).
-// FastAPI is the only writer. It mirrors each row it changes into `rows`, and writes one
-// denormalised DealSnapshot per deal into `snapshots`, which the group room subscribes to.
-// The typed per-table schema in plan section 11.3 replaces `rows` once the vertical slice is stable.
+// FastAPI is the only writer (server key). The browser subscribes to:
+//   snapshots  one DealSnapshot per deal (group room)            access = members + quoting vendor staff
+//   rows       goals | intents | matches | vendor views           access = owner / staff, or [] = any signed-in persona
+// On restart, the API rebuilds its working copy from these two tables (rally:dumpAll), so Convex is the
+// system of record for everything except private preferences, which never leave the personal agent.
 export default defineSchema({
   snapshots: defineTable({
     dealId: v.string(),
     snapshot: v.any(),          // DealSnapshot (packages/contracts/rally_contracts/snapshot.py)
+    access: v.optional(v.array(v.string())),
     updatedAt: v.number(),
   }).index("by_deal", ["dealId"]),
   rows: defineTable({
-    table: v.string(),          // goals | intents | matches
-    rid: v.string(),            // Rally id (g_…, i_…)
+    table: v.string(),          // goals | intents | matches | vendor
+    rid: v.string(),            // Rally id (g_…, i_…, <providerId>:<dealId>, <providerId>:dashboard)
     doc: v.any(),
+    access: v.optional(v.array(v.string())),
     updatedAt: v.number(),
   }).index("by_table_rid", ["table", "rid"]),
 });

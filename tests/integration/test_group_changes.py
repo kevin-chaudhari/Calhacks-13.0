@@ -40,8 +40,12 @@ def test_provider_agent_nudges_when_one_more_person_is_cheaper(client):
     assert quote["groupSize"] == 4
     nudge = snap["deal"]["nudge"]
     # same plan, same provider, same add-ons: only the tier base changes (200 -> 170)
-    assert nudge == {"providerId": quote["providerId"], "extraPeople": 1,
-                     "newPricePerPerson": quote["pricePerPerson"] - 30, "savingPerPerson": 30}
+    assert {k: nudge[k] for k in ("providerId", "extraPeople", "currentPricePerPerson", "newPricePerPerson",
+                                  "savingPerPerson", "status")} == {
+        "providerId": quote["providerId"], "extraPeople": 1, "currentPricePerPerson": quote["pricePerPerson"],
+        "newPricePerPerson": quote["pricePerPerson"] - 30, "savingPerPerson": 30, "status": "open"}
+    member_ids = {m["userId"] for m in snap["members"]}
+    assert nudge["candidateUserId"] and nudge["candidateUserId"] not in member_ids and nudge["candidateName"]
     msg = next(m for m in snap["agentMessages"] if m["type"] == "NudgeMsg")
     assert msg["fromKind"] == "provider" and "saves $30" in msg["summary"]
 

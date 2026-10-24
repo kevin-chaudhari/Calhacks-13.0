@@ -9,6 +9,7 @@ import { usePersona } from "@/lib/persona";
 import type { DealSummary, Goal } from "@/lib/types";
 import { Button, Callout, Card, Skeleton } from "@/components/ui/primitives";
 import { StatusPill } from "@/components/rally/shell";
+import { AsiOneCard, VendorSearch } from "@/components/rally/platform";
 
 const EXAMPLES = [
   { label: "Scuba trip in Monterey", text: "I want to go scuba diving in Monterey next month for under $300. I am Open Water certified." },
@@ -113,6 +114,7 @@ export default function Home() {
       </div>
 
       <aside className="space-y-6">
+        <AsiOneCard />
         <Card>
           <div className="border-b border-line px-5 py-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Your deals</div>
           <ul className="divide-y divide-line">
@@ -171,6 +173,7 @@ export default function Home() {
             ))}
           </ul>
         </Card>
+        <VendorSearch />
       </aside>
     </div>
   );

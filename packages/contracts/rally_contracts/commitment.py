@@ -34,5 +34,7 @@ class Commitment(RallyModel):
     state: Literal["pending", "committed", "cancelled", "refunded"] = "pending"
     method: Literal["simulated", "x402_testnet"] = "simulated"
     tx_ref: str | None = None
+    explorer_url: str | None = None            # x402 testnet: link to the settled transaction
+    network: str | None = None                  # e.g. "base-sepolia"; None when simulated
     idempotency_key: str
     at: int

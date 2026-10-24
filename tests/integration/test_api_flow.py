@@ -173,6 +173,7 @@ def test_leaving_voids_approvals_and_renegotiates(client):
     [rep] = snap2["deal"]["replacements"]
     newcomer = next(m for m in snap2["members"] if m["userId"] == rep["invitedUserId"])
     assert rep["leftUserId"] == "u_ana" and newcomer["state"] == "joined"
+    assert rep["leftName"] == "Ana" and rep["invitedName"] == newcomer["name"]
     assert any(e["type"] == "member.replaced" and newcomer["name"] in e["summary"] for e in snap2["events"])
 
 

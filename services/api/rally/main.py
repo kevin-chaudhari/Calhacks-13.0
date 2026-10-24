@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict
+from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import Depends, FastAPI, Header, Request
@@ -28,9 +29,24 @@ mirror = ConvexMirror(settings.convex_url, settings.convex_server_key) \
     if settings.store == "convex" and settings.convex_url else None
 rally = Rally(settings, MemoryStore(mirror))
 
-app = FastAPI(title="Rally API", version="0.1.0", lifespan=rally.lifespan,
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    await rally.start_agents()        # TRANSPORT=agentverse: mediator agent first, so resumed deals can use it
+    resumed = rally.resume()          # restart recovery: mediators, invites and quote requests in flight
+    if rally.restored:
+        logging.getLogger("rally").info("restored from Convex: %s; resumed %s", rally.restored, resumed)
+    yield
+    await rally.stop_agents()
+    if mirror:
+        mirror.close()
+
+
+app = FastAPI(title="Rally API", version="0.1.0", lifespan=lifespan,
               description="Commands for the Rally group-deal engine. The UI reads state from Convex "
                           "(or GET /v1/deals/{id}/snapshot in local dev).")
+rally.rail.install(app, rally)          # x402: payment middleware + POST /v1/x402/deposits/{deal}/{user}
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=False,
                    allow_methods=["*"], allow_headers=["*"])
 
@@ -125,8 +141,9 @@ class ResetBody(BaseModel):
 @app.get("/v1/health")
 def health():
     return {"ok": True, "adapters": rally.provenance(),
-            "convex": {"enabled": mirror is not None, "errors": mirror.errors if mirror else 0,
-                       "lastError": mirror.last_error if mirror else None},
+            "convex": mirror.stats() if mirror else {"enabled": False},
+            "restored": rally.restored,
+            "payments": rally.rail.status(),
             "agents": {"personal": len(rally.agent_prefs), "providers": len(rally.providers)}}
 
 
@@ -144,6 +161,7 @@ def reset(body: ResetBody):
     if body.scenario != "scuba":
         raise ApiError(400, "UNKNOWN_SCENARIO", "Only the scuba scenario is seeded.")
     rally.seed()
+    _buckets.clear()                  # a fresh rehearsal starts with fresh rate limits
     return {"ok": True, "intents": len(rally.store.intents)}
 
 
@@ -355,3 +373,33 @@ async def vendor_booking(deal_id: str, uid: str = Depends(user)):
 @app.patch("/v1/vendor/provider")
 def vendor_update(body: dict[str, Any], uid: str = Depends(user)):
     return rally.vendor_update(uid, body)
+
+
+# ------------------------------------------------------- platform: demo control room
+
+class LaunchBody(BaseModel):
+    scenario: str = "scuba"
+    autoNegotiate: bool = True
+
+
+@app.get("/v1/metrics")
+def metrics():
+    """Live numbers for the control room and the pitch. Computed from current state, never estimated."""
+    return rally.metrics()
+
+
+@app.post("/v1/demo/launch")
+async def launch(body: LaunchBody, uid: str = Depends(user)):
+    """One click from nothing to a live group room, for repeated expo demos."""
+    if not settings.allow_demo_routes:
+        raise ApiError(403, "DISABLED", "Demo routes are disabled.")
+    limited(uid, "cmd", 30)
+    return await rally.launch(body.scenario, organizer=uid, auto_negotiate=body.autoNegotiate)
+
+
+@app.get("/v1/demo/seats/{deal_id}")
+def seats(deal_id: str, uid: str = Depends(user)):
+    """QR links that put a judge's phone in a member's or the vendor's seat (demo identities only)."""
+    if not settings.allow_demo_routes:
+        raise ApiError(403, "DISABLED", "Demo routes are disabled.")
+    return rally.seats(uid, deal_id, settings.web_url)

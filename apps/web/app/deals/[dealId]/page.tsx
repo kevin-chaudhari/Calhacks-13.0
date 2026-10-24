@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Play } from "lucide-react";
+import { Play, QrCode } from "lucide-react";
 import { useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { usePersona } from "@/lib/persona";
@@ -11,6 +11,7 @@ import { ActivityFeed, DealHeader, MemberRail, NextStepBar, PlanCard, QuoteMini,
 import { AgentConversation, WorkflowStepper } from "@/components/rally/agents";
 import { ChatPanel } from "@/components/rally/chat";
 import { cx } from "@/components/ui/primitives";
+import { ExplanationCard, NegotiationReplay, NudgeCard, ReplacementNotes, SeatsPanel } from "@/components/rally/platform";
 
 export default function GroupRoom() {
   const { dealId } = useParams<{ dealId: string }>();
@@ -19,6 +20,7 @@ export default function GroupRoom() {
   const [tab, setTab] = useState<"plan" | "members" | "activity">("plan");
   const [cmdErr, setCmdErr] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [seats, setSeats] = useState(false);
 
   if (error && !snap) return <Callout tone="danger" title="Can't open this group">{error}</Callout>;
   if (!snap)
@@ -89,15 +91,27 @@ export default function GroupRoom() {
           </div>
         )}
         {cmdErr && <Callout tone="danger" title="Not started">{cmdErr}</Callout>}
+        <NudgeCard snap={snap} meId={me?.id} />
+        {isOrganizer && (
+          <div className="flex justify-end">
+            <Button variant="secondary" onClick={() => setSeats(!seats)}><QrCode size={14} /> {seats ? "Hide phone seats" : "Phone seats"}</Button>
+          </div>
+        )}
+        {seats && isOrganizer && <SeatsPanel dealId={dealId} />}
       </div>
       {tabs}
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)_340px]">
         <div className={cx(tab !== "members" && "hidden lg:block")}>
           <MemberRail snap={snap} />
+          {(snap.deal.replacements?.length ?? 0) > 0 && (
+            <div className="mt-3 rounded-[10px] border border-line bg-surface px-4 py-3"><ReplacementNotes snap={snap} /></div>
+          )}
         </div>
         <div className={cx("space-y-4", tab !== "plan" && "hidden lg:block")}>
+          {isMember && <ExplanationCard dealId={dealId} version={snap.deal.currentProposalVersion ?? 0} />}
           <PlanCard snap={snap} providerName={providerName} />
           <RoundTimeline snap={snap} />
+          <NegotiationReplay snap={snap} />
         </div>
         <div className={cx("space-y-4", tab !== "activity" && "hidden lg:block")}>
           {snap.quotes.length > 0 && (

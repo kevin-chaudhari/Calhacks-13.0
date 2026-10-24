@@ -1,0 +1,13 @@
+{$API_DOMAIN} {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		-Server
+	}
+	# Docker compose: the api service. Bare-metal (systemd) install: replace with 127.0.0.1:8000.
+	reverse_proxy {$UPSTREAM:api:8000} {
+		# x402 headers (PAYMENT-REQUIRED / PAYMENT-SIGNATURE / PAYMENT-RESPONSE) pass through untouched
+		flush_interval -1
+	}
+}

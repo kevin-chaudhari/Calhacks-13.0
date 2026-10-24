@@ -33,7 +33,9 @@ def agents():
     if network.network_mode() != "local":
         yield None                                   # mailbox: agents/run_agents.py is already running
         return
-    proc = subprocess.Popen([sys.executable, str(ROOT / "agents/run_agents.py")], cwd=ROOT,
+    # the child would otherwise read .env (pytest doesn't): pin it to the seeds this process derives addresses from
+    env = {**os.environ, "AGENT_SEED_PREFIX": network.seed_prefix(), "AGENT_NETWORK": "local"}
+    proc = subprocess.Popen([sys.executable, str(ROOT / "agents/run_agents.py")], cwd=ROOT, env=env,
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ports = [s.port for s in network.directory() if s.kind in {"personal", "provider"}]
     end = time.time() + 60

@@ -18,7 +18,7 @@ from pydantic.json_schema import models_json_schema  # noqa: E402
 
 import rally_contracts as c  # noqa: E402
 
-MODELS = [c.DealSnapshot, c.IntentDraft, c.PrivatePrefs, c.PublicIntent, c.ApprovalRequest, c.Persona,
+MODELS = [c.DealSnapshot, c.NudgeMsg, c.IntentDraft, c.PrivatePrefs, c.PublicIntent, c.ApprovalRequest, c.Persona,
           c.ProposalMsg, c.ResponseMsg, c.QuoteRequestMsg, c.QuoteMsg, c.FinalAgreementMsg]
 
 

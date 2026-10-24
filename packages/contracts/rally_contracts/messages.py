@@ -77,12 +77,12 @@ class FinalAgreementMsg(RallyModel):
 
 
 class NudgeMsg(RallyModel):
-    """Provider agent -> mediator after a binding quote: n + extra_people people get a cheaper tier."""
+    """Provider agent -> mediator: one more person drops everyone to the next price tier."""
     msg_id: str
     deal_id: str
     provider_id: str
     proposal_version: int
     group_size: int
     extra_people: int
+    current_price_per_person: float
     new_price_per_person: float
-    saving_per_person: float
