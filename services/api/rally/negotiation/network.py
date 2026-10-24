@@ -89,7 +89,8 @@ def directory() -> list[AgentSpec]:
                              f"Provider agent for {p['name']} ({p['location']['label']}). Answers group quote "
                              "requests from its price tiers.", port))
     out.append(AgentSpec("concierge", "concierge", "", "Rally concierge",
-                         "Type a group trip goal; Rally finds your people and negotiates one plan.", port + 1))
+                         "Group trips: tell Rally a goal (scuba, skydiving, kayaking) and it finds people, "
+                         "negotiates one shared plan with vendors and gets the group discount.", port + 1))
     return out
 
 

@@ -2,6 +2,7 @@
 
     # .env: AGENTVERSE_API_KEY (agentverse.ai → Profile → API keys), AGENT_SEED_PREFIX (private)
     python agents/run_agents.py               # terminal 1: personal + provider agents
+    python agents/concierge.py                # terminal 1b: the ASI:One concierge
     TRANSPORT=agentverse python scripts/rally.py api    # terminal 2: mediator agent inside the API
     python agents/connect_agentverse.py       # terminal 3: registers each agent, prints the README table
     python agents/connect_agentverse.py --table   # only print the table (no network)
@@ -48,7 +49,7 @@ def table(specs: list[network.AgentSpec]) -> str:
 
 
 def main() -> int:
-    specs = [s for s in network.directory() if s.kind != "concierge" or "--concierge" in sys.argv]
+    specs = network.directory()
     if "--table" not in sys.argv:
         token = os.environ.get("AGENTVERSE_API_KEY", "").strip()
         if not token:
