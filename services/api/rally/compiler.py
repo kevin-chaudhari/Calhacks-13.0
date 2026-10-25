@@ -202,7 +202,10 @@ template_id must be one of: trip_activity, shared_rental, partner_match, carpool
 certification (diving only) must be one of: none, open_water, advanced, rescue, divemaster.
 Copy relative date wording (e.g. "next month") into date_phrase; do not convert it to dates.
 Today is {today}.
-<user_goal>{text}</user_goal>"""
+<user_goal>{text}</user_goal>
+For template_id trip_activity, activity must be exactly one of:
+scuba_diving, skydiving, kayaking.
+Use these identifiers, not display labels."""
 
 
 def extract_gemini(text: str, today: str, api_key: str, model: str) -> Extracted:
@@ -220,7 +223,32 @@ def extract_gemini(text: str, today: str, api_key: str, model: str) -> Extracted
                 "temperature": 0},
     )
     data = json.loads(resp.text)
-    return Extracted.model_validate(data)
+    extracted = Extracted.model_validate(data)
+
+    if extracted.template_id == "trip_activity":
+        aliases = {}
+
+        for key, activity_info in catalog.activities().items():
+            names = [
+                key,
+                activity_info["label"],
+                *activity_info.get("synonyms", []),
+            ]
+            for name in names:
+                aliases[name.strip().casefold()] = key
+
+        canonical_activity = aliases.get(
+            extracted.activity.strip().casefold()
+        )
+
+        if canonical_activity is None:
+            raise ValueError(
+                f"Unsupported trip activity: {extracted.activity!r}"
+            )
+
+        extracted.activity = canonical_activity
+
+    return extracted
 
 
 # ------------------------------------------------------------------- resolve
@@ -361,6 +389,34 @@ def assemble(x: Extracted, text: str, today: date) -> IntentDraft:
     )
 
 
+def budget_is_stated(text: str, amount: float) -> bool:
+    """Match an extracted amount to an explicit USD or budget expression.
+
+    An unrelated number, such as a group size or year, is not budget evidence.
+    This validates the amount only; currency and per-person/total semantics
+    require separate validation.
+    """
+    from decimal import Decimal
+
+    expected = Decimal(str(amount))
+    if not expected.is_finite() or expected <= 0:
+        return False
+
+    number = r"(?:[0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)(?:\.[0-9]{1,2})?"
+    start = r"(?<![\w.,+\-])"
+    end = r"(?!\w|[.,][0-9])"
+    patterns = [
+        start + r"(?:US\$|\$|USD(?![A-Za-z]))\s*(" + number + r")" + end,
+        start + r"(" + number + r")\s*(?:USD|dollars?)\b",
+        r"\bbudget(?:\s+(?:of|is))?\s*[:=]?\s*(" + number + r")" + end,
+    ]
+    for pattern in patterns:
+        for match in re.finditer(pattern, text, flags=re.IGNORECASE):
+            if Decimal(match.group(1).replace(",", "")) == expected:
+                return True
+    return False
+
+
 def compile_goal(text: str, today: str, mode: str, api_key: str = "", model: str = "") -> CompileResult:
     clean = sanitize(text)
     warnings = []
@@ -372,8 +428,11 @@ def compile_goal(text: str, today: str, mode: str, api_key: str = "", model: str
         for attempt in range(2):                       # one repair retry, then template fallback
             try:
                 x = extract_gemini(clean, today, api_key, model)
-                if x.budget_amount is not None and "$" not in clean and not re.search(r"\d", clean):
-                    x.budget_amount = None             # never accept an invented budget
+                if x.budget_amount is not None and not budget_is_stated(clean, x.budget_amount):
+                    x.budget_amount = None
+                    x.budget_currency = None
+                    x.budget_per = None
+                    warnings.append("Unverified budget omitted; please confirm the amount.")
                 return CompileResult(assemble(x, clean, t), "gemini", warnings)
             except Exception as exc:  # noqa: BLE001
                 log.warning("gemini compile attempt %d failed: %s", attempt + 1, exc)
