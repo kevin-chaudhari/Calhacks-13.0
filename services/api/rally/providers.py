@@ -27,7 +27,7 @@ def sheets(providers: list[dict], pool: bool = False) -> list[ProviderSheet]:
     return [ProviderSheet(id=p["id"], name=p["name"], offers=p["offers"], available_dates=p["availableDates"],
                           tiers=p["tiers"], modifiers=p.get("modifiers", {}),
                           provenance=p.get("provenance", "simulated"), open_groups=p.get("openGroups", {}),
-                          pool=pool) for p in providers]
+                          pool=pool, format_tiers=p.get("formatTiers", {})) for p in providers]
 
 
 def open_group_seats(provider: dict, plan_terms: dict) -> int:
@@ -48,6 +48,13 @@ def quote_for(provider: dict, plan_terms: dict, group_size: int, version: int, b
         if value is True and provider.get("modifiers", {}).get(key, {}).get("true", 0) > 0:
             includes.append(key.replace("_included", "").replace("_", " ") + " (add-on)")
     available = price is not None
+    evidence = None
+    if provider.get("source") == "web" and price is not None:      # which listed offer gave this price
+        from .discovery import per_person
+        for o in provider.get("listedOffers", []):
+            if per_person(o, group_size) is not None and abs(per_person(o, group_size) - price) < 0.01:
+                evidence = o["evidence"]
+                break
     t = now_ms()
     return Quote(
         id=f"q_{uuid.uuid4().hex[:8]}", provider_id=provider["id"], provider_name=provider["name"],
@@ -56,7 +63,7 @@ def quote_for(provider: dict, plan_terms: dict, group_size: int, version: int, b
         total=round((price or 0.0) * group_size, 2), currency="USD", includes=includes,
         available=available, binding=binding and available, provenance=provider.get("provenance", "simulated"),
         expires_at=t + QUOTE_TTL_MS, tiers=provider["tiers"], source_url=provider.get("url"),
-        last_verified_at=t,
+        last_verified_at=provider.get("fetchedAt", t) if provider.get("source") == "web" else t, evidence=evidence,
     )
 
 

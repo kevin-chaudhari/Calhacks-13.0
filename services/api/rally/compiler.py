@@ -30,6 +30,8 @@ def _md(d) -> str:
     """'Nov 7' (strftime %-d is not supported on Windows)."""
     return f"{d:%b} {d.day}"
 
+MONTHS = {m.lower(): i for i, m in enumerate(calendar.month_name) if m}
+
 GAZETTEER = {
     "monterey": ("Monterey, CA", 36.6002, -121.8947),
     "carmel": ("Carmel, CA", 36.5552, -121.9233),
@@ -44,9 +46,51 @@ GAZETTEER = {
     "capitola": ("Capitola, CA", 36.9752, -121.9533),
     "elkhorn": ("Moss Landing, CA", 36.8044, -121.7869),
     "santa cruz": ("Santa Cruz, CA", 36.9741, -122.0308),
+    # wider coverage for any activity (lat/lng let matching measure real distance)
+    "bay area": ("San Francisco, CA", 37.7749, -122.4194),
+    "palo alto": ("Palo Alto, CA", 37.4419, -122.1430), "san jose": ("San Jose, CA", 37.3382, -121.8863),
+    "sausalito": ("Sausalito, CA", 37.8591, -122.4853), "marin": ("Marin County, CA", 38.0834, -122.7633),
+    "mill valley": ("Mill Valley, CA", 37.9060, -122.5450), "point reyes": ("Point Reyes, CA", 38.0690, -122.8069),
+    "half moon bay": ("Half Moon Bay, CA", 37.4636, -122.4286), "pacifica": ("Pacifica, CA", 37.6138, -122.4869),
+    "big sur": ("Big Sur, CA", 36.2704, -121.8081), "napa": ("Napa, CA", 38.2975, -122.2869),
+    "sonoma": ("Sonoma, CA", 38.2919, -122.4580), "bodega bay": ("Bodega Bay, CA", 38.3332, -123.0481),
+    "yosemite": ("Yosemite Valley, CA", 37.7456, -119.5936), "mammoth": ("Mammoth Lakes, CA", 37.6485, -118.9721),
+    "south lake tahoe": ("South Lake Tahoe, CA", 38.9399, -119.9772), "truckee": ("Truckee, CA", 39.3280, -120.1833),
+    "sacramento": ("Sacramento, CA", 38.5816, -121.4944), "fresno": ("Fresno, CA", 36.7378, -119.7871),
+    "santa barbara": ("Santa Barbara, CA", 34.4208, -119.6982), "los angeles": ("Los Angeles, CA", 34.0522, -118.2437),
+    "la": ("Los Angeles, CA", 34.0522, -118.2437), "malibu": ("Malibu, CA", 34.0259, -118.7798),
+    "santa monica": ("Santa Monica, CA", 34.0195, -118.4912), "huntington beach": ("Huntington Beach, CA", 33.6595, -117.9988),
+    "san diego": ("San Diego, CA", 32.7157, -117.1611), "la jolla": ("La Jolla, CA", 32.8328, -117.2713),
+    "las vegas": ("Las Vegas, NV", 36.1699, -115.1398), "phoenix": ("Phoenix, AZ", 33.4484, -112.0740),
+    "sedona": ("Sedona, AZ", 34.8697, -111.7610), "moab": ("Moab, UT", 38.5733, -109.5498),
+    "salt lake city": ("Salt Lake City, UT", 40.7608, -111.8910), "denver": ("Denver, CO", 39.7392, -104.9903),
+    "boulder": ("Boulder, CO", 40.0150, -105.2705), "seattle": ("Seattle, WA", 47.6062, -122.3321),
+    "portland": ("Portland, OR", 45.5152, -122.6784), "austin": ("Austin, TX", 30.2672, -97.7431),
+    "chicago": ("Chicago, IL", 41.8781, -87.6298), "miami": ("Miami, FL", 25.7617, -80.1918),
+    "new york": ("New York, NY", 40.7128, -74.0060), "nyc": ("New York, NY", 40.7128, -74.0060),
+    "brooklyn": ("Brooklyn, NY", 40.6782, -73.9442), "long island": ("Long Island, NY", 40.7891, -73.1350),
+    "stony brook": ("Stony Brook, NY", 40.9257, -73.1409), "boston": ("Boston, MA", 42.3601, -71.0589),
+    "honolulu": ("Honolulu, HI", 21.3069, -157.8583), "maui": ("Maui, HI", 20.7984, -156.3319),
 }
 
-MONTHS = {m.lower(): i for i, m in enumerate(calendar.month_name) if m}
+_NOT_PLACES = {"i", "im", "i'm", "me", "my", "a", "the", "next", "this", "under", "for", "with", "and", "our"}
+
+
+def find_place(text: str) -> str | None:
+    """A place the user named: a known one first, else a capitalised name after in/at/near."""
+    low = text.lower()
+    known = sorted((k for k in GAZETTEER if re.search(rf"\b{re.escape(k)}\b", low)), key=len, reverse=True)
+    if known:
+        return known[0]
+    for m in re.finditer(r"\b(?:in|at|near|around|by|to)\s+((?:[A-Z][\w'.-]+)(?:\s+(?:[A-Z][\w'.-]+|of|de|del|la|el))*)",
+                         text):
+        cand = m.group(1).strip(" .,'")
+        words = cand.split()
+        if words[0].lower() in MONTHS or words[0].lower() in _NOT_PLACES:
+            continue
+        return cand
+    return None
+
 INJECTION = re.compile(r"ignore (all|previous|the) (rules|instructions)|system prompt|set (the )?budget to",
                        re.I)
 
@@ -94,13 +138,21 @@ TEMPLATES: dict[str, dict[str, Any]] = {
         "terms": {"shipping": ("categorical", ["ship to one address", "ship individually"], "Shipping")},
         "synonyms": {},
     },
-    "generic": {"category": "generic", "shape": "group", "default_radius_km": 25, "terms": {}, "synonyms": {}},
+    # Anything not in the catalog: still negotiable (when, format) and priced by real vendors found on the web.
+    "generic": {
+        "category": "generic", "shape": "group_provider", "default_radius_km": 30,
+        "terms": {
+            "time_of_day": ("categorical", ["Morning", "Afternoon", "Evening"], "Time of day"),
+            "format": ("categorical", ["Group", "Private"], "Format"),
+        },
+        "synonyms": {},
+    },
 }
 
 KEYWORDS = [
+    ("shared_rental", "ski_trip", r"\b(cabin|chalet|split a (house|place|rental))\b"),
     *[("trip_activity", key, a["keywords"]) for key, a in catalog.activities().items()],
-    ("shared_rental", "ski_trip", r"\b(ski|cabin|snowboard)"),
-    ("partner_match", "tennis", r"\b(tennis|pickleball|squash)\b"),
+    ("partner_match", "tennis", r"\b(tennis|squash)\b"),
     ("carpool", "carpool", r"\b(carpool|ride share|rideshare)\b"),
     ("group_buy", "group_buy", r"\b(bulk[- ]?buy|group buy|buy .* together)\b"),
 ]
@@ -139,6 +191,21 @@ def sanitize(text: str) -> str:
 
 # ----------------------------------------------------------- regex extractor
 
+_NOT_ACTIVITIES = {"going", "something", "morning", "evening", "evenings", "thing", "nothing", "anything",
+                   "everything", "looking", "wanting", "spring", "bring", "during", "king", "ring", "sing",
+                   "willing", "planning", "thinking", "hoping", "including", "starting", "staying", "meeting"}
+
+
+def generic_activity(low: str) -> str:
+    """Best guess at an activity the catalog doesn't know: a gerund ("wakeboarding"), else what
+    follows go/do/try/play/learn/book ("try stargazing", "learn glassblowing")."""
+    for w in re.findall(r"\b([a-z]{4,}ing)\b", low):
+        if w not in _NOT_ACTIVITIES:
+            return w
+    m = re.search(r"\b(?:go|do|play|try|learn|book)\s+(?:some\s+|a\s+|an\s+|to\s+)?([a-z][a-z-]+)", low)
+    return m.group(1) if m and m.group(1) not in {"to", "the", "out", "for"} else "activity"
+
+
 def extract_template(text: str) -> Extracted:
     low = text.lower()
     template_id, activity = "generic", "activity"
@@ -147,10 +214,9 @@ def extract_template(text: str) -> Extracted:
             template_id, activity = tid, act
             break
     if template_id == "generic":
-        m = re.search(r"\b(?:go|do|play|try|find)\s+(\w+)", low)
-        activity = m.group(1) if m else "activity"
+        activity = generic_activity(low)
 
-    place = next((k for k in GAZETTEER if re.search(rf"\b{re.escape(k)}\b", low)), None)
+    place = find_place(text)
     budget = re.search(r"(?:under|below|less than|max|up to|budget(?: of)?|for)?\s*\$\s?(\d[\d,]*)", low)
     per = None
     if budget and re.search(r"\$\s?\d[\d,]*\s*(each|per person|pp|a head)", low):
@@ -203,9 +269,11 @@ certification (diving only) must be one of: none, open_water, advanced, rescue, 
 Copy relative date wording (e.g. "next month") into date_phrase; do not convert it to dates.
 Today is {today}.
 <user_goal>{text}</user_goal>
-For template_id trip_activity, activity must be exactly one of:
-scuba_diving, skydiving, kayaking.
-Use these identifiers, not display labels."""
+For template_id trip_activity, activity must be exactly one of these identifiers:
+{activities}.
+If the activity is a leisure activity not in that list, use template_id generic and put a short
+snake_case name of the activity in activity (for example "hot_springs" or "stargazing").
+Copy the place name exactly as the user wrote it into place."""
 
 
 def extract_gemini(text: str, today: str, api_key: str, model: str) -> Extracted:
@@ -218,7 +286,7 @@ def extract_gemini(text: str, today: str, api_key: str, model: str) -> Extracted
     client = genai.Client(api_key=api_key)
     resp = client.models.generate_content(
         model=model,
-        contents=GEMINI_PROMPT.format(today=today, text=text),
+        contents=GEMINI_PROMPT.format(today=today, text=text, activities=", ".join(catalog.activities())),
         config={"response_mime_type": "application/json", "response_schema": Extracted,
                 "temperature": 0},
     )
@@ -241,12 +309,11 @@ def extract_gemini(text: str, today: str, api_key: str, model: str) -> Extracted
             extracted.activity.strip().casefold()
         )
 
-        if canonical_activity is None:
-            raise ValueError(
-                f"Unsupported trip activity: {extracted.activity!r}"
-            )
-
-        extracted.activity = canonical_activity
+        if canonical_activity is None:                 # a real activity outside the catalog
+            extracted.template_id = "generic"
+            extracted.activity = re.sub(r"[^a-z0-9]+", "_", extracted.activity.casefold()).strip("_") or "activity"
+        else:
+            extracted.activity = canonical_activity
 
     return extracted
 
@@ -287,24 +354,50 @@ def weekend_days(start: date, end: date) -> list[str]:
     return out
 
 
+def _near_home(place: str | None, home: dict) -> bool:
+    if not place:
+        return True                                   # no place yet: keep the curated terms
+    key = place.lower().strip()
+    key = key if key in GAZETTEER else (find_place(place) or key)
+    if key not in GAZETTEER:
+        return False
+    _, lat, lng = GAZETTEER[key]
+    import math
+    p1, p2 = math.radians(lat), math.radians(home["lat"])
+    dp, dl = p2 - p1, math.radians(home["lng"] - lng)
+    h = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * 6371 * math.asin(math.sqrt(h)) <= home["radiusKm"]
+
+
+def all_days(start: date, end: date) -> list[str]:
+    return [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
+
+
 # ------------------------------------------------------------------ assemble
 
 def assemble(x: Extracted, text: str, today: date) -> IntentDraft:
     tpl = dict(TEMPLATES.get(x.template_id, TEMPLATES["generic"]))
     act = catalog.info(x.activity) if x.template_id == "trip_activity" else None
     if act:                                   # per-activity vocabulary from the catalog
-        tpl["terms"] = {t["key"]: (t["type"], t["options"], t["label"]) for t in act["terms"]}
+        terms = act["terms"]
+        if act.get("home") and not _near_home(x.place, act["home"]):
+            # curated options are local (Monterey dive sites, drop zones): elsewhere use general terms
+            terms = catalog.family_terms(act["fallbackFamily"])
+        tpl["terms"] = {t["key"]: (t["type"], t["options"], t["label"]) for t in terms}
         tpl["default_radius_km"] = act["defaultRadiusKm"]
     missing: list[MissingField] = []
     conditions: list[Condition] = []
 
     location = None
     radius = None
-    if x.place and x.place.lower() in GAZETTEER:
-        label, lat, lng = GAZETTEER[x.place.lower()]
+    key = (x.place or "").lower().strip()
+    if key and key not in GAZETTEER:
+        key = find_place(x.place) or key            # "Lake Tahoe, CA" -> "tahoe"
+    if key in GAZETTEER:
+        label, lat, lng = GAZETTEER[key]
         location = Place(label=label, lat=lat, lng=lng)
     elif x.place:
-        location = Place(label=x.place)
+        location = Place(label=x.place.strip())
     if tpl["default_radius_km"] is not None:
         if location is None:
             missing.append(MissingField(field="location", question="Where should this happen?",
@@ -367,8 +460,9 @@ def assemble(x: Extracted, text: str, today: date) -> IntentDraft:
         group_min = group_min or 2
 
     terms: list[TermSpec] = []
-    if d_from and tpl["shape"] != "pair" and x.template_id in {"trip_activity", "shared_rental"}:
-        terms.append(TermSpec(key="date", type="date", options=weekend_days(d_from, d_to), label="Date"))
+    if d_from and tpl["shape"] != "pair" and x.template_id in {"trip_activity", "shared_rental", "generic"}:
+        days = all_days(d_from, d_to) if (d_to - d_from).days <= 14 else weekend_days(d_from, d_to)
+        terms.append(TermSpec(key="date", type="date", options=days or all_days(d_from, d_to), label="Date"))
     elif tpl["shape"] == "pair":
         terms.append(TermSpec(key="day", type="categorical", options=["Mon", "Tue", "Wed", "Thu", "Fri"], label="Day"))
     for key, (typ, options, label) in tpl["terms"].items():
@@ -385,7 +479,7 @@ def assemble(x: Extracted, text: str, today: date) -> IntentDraft:
         shape=tpl["shape"], location=location, radius_km=radius, date_from=d_from, date_to=d_to,
         budget_max=budget, group_min=group_min, group_max=group_max, conditions=conditions,
         negotiable_terms=terms, missing=missing, confidence=round(0.4 + 0.15 * stated, 2),
-        limited_support=x.template_id == "generic",
+        limited_support=x.template_id == "generic" and not catalog.info(x.activity),
     )
 
 

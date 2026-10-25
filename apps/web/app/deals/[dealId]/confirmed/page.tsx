@@ -42,13 +42,23 @@ export default function Confirmed() {
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-[30px] font-semibold leading-[36px] tracking-[-0.02em]">You&apos;re going!</h1>
             <Chip tone="sim">{sim ? "Simulated, no money moved" : "x402 testnet deposits, Base Sepolia"}</Chip>
-            {d.bookingStatus === "not_booked" ? <Chip tone="warn">Booking: waiting for the vendor</Chip> : <Chip tone="accent">Booked by {d.bookedBy}</Chip>}
+            {quote?.provenance === "cached" ? <Chip tone="warn">Book with the shop</Chip>
+              : d.bookingStatus === "not_booked" ? <Chip tone="warn">Booking: waiting for the vendor</Chip> : <Chip tone="accent">Booked by {d.bookedBy}</Chip>}
           </div>
           <p className="mt-2 text-muted">
             {committed.length} people committed to plan v{d.currentProposalVersion} after {roundsUsed} negotiation round{roundsUsed === 1 ? "" : "s"}.
-            {" "}{d.bookingStatus === "not_booked" ? <>Next: {quote?.providerName ?? "the provider"} confirms the booking from their vendor portal.</> : <>{quote?.providerName} confirmed the booking. See you on the water.</>}
+            {" "}{quote?.provenance === "cached"
+              ? <>{quote.providerName} isn&apos;t on Parley yet, so book on their website at the listed price; your plan, date and group size are below.</>
+              : d.bookingStatus === "not_booked" ? <>Next: {quote?.providerName ?? "the provider"} confirms the booking from their vendor portal.</> : <>{quote?.providerName} confirmed the booking. Have a great trip.</>}
           </p>
-          <div className="mt-4"><CalendarAndShare snap={snap} /></div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {quote?.provenance === "cached" && quote.sourceUrl && (
+              <a href={quote.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center rounded-[8px] bg-ink px-4 text-[13px] font-medium text-bg">
+                Book on {quote.sourceUrl.split("//")[1]?.split("/")[0]?.replace(/^www\./, "")}
+              </a>
+            )}
+            <CalendarAndShare snap={snap} />
+          </div>
         </div>
       </div>
 

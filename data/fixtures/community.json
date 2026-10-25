@@ -1,0 +1,629 @@
+{
+ "_note": "Demo community for the social feed: people, their open plans (compiled by the real compiler at startup) and trip recaps. All fictional, labelled as demo people.",
+ "people": [
+  {
+   "id": "c_lena",
+   "name": "Lena Park",
+   "initials": "LP",
+   "homeArea": "San Francisco, CA",
+   "bio": "Weekend climber, weekday coder. Always up for a sunrise start.",
+   "interests": [
+    "rock_climbing",
+    "hiking",
+    "yoga"
+   ]
+  },
+  {
+   "id": "c_marco",
+   "name": "Marco Rossi",
+   "initials": "MR",
+   "homeArea": "Santa Cruz, CA",
+   "bio": "Learned to surf at 30. Now I can't stop.",
+   "interests": [
+    "surfing",
+    "stand_up_paddleboarding",
+    "mountain_biking"
+   ]
+  },
+  {
+   "id": "c_aisha",
+   "name": "Aisha Bello",
+   "initials": "AB",
+   "homeArea": "Oakland, CA",
+   "bio": "Hoops at lunch, pottery on Sundays.",
+   "interests": [
+    "basketball",
+    "pottery",
+    "dance_class"
+   ]
+  },
+  {
+   "id": "c_tom",
+   "name": "Tom Becker",
+   "initials": "TB",
+   "homeArea": "Berkeley, CA",
+   "bio": "Grad student. Cheap thrills and good company.",
+   "interests": [
+    "basketball",
+    "escape_room",
+    "bowling"
+   ]
+  },
+  {
+   "id": "c_sofia",
+   "name": "Sofia Alvarez",
+   "initials": "SA",
+   "homeArea": "Napa, CA",
+   "bio": "Wine country local; I know the good tasting rooms.",
+   "interests": [
+    "wine_tasting",
+    "hot_air_balloon",
+    "cycling"
+   ]
+  },
+  {
+   "id": "c_jun",
+   "name": "Jun Tanaka",
+   "initials": "JT",
+   "homeArea": "San Jose, CA",
+   "bio": "Pickleball convert, golf on Sundays.",
+   "interests": [
+    "pickleball",
+    "golf",
+    "bowling"
+   ]
+  },
+  {
+   "id": "c_nina",
+   "name": "Nina Kowalski",
+   "initials": "NK",
+   "homeArea": "Sausalito, CA",
+   "bio": "On the water whenever the fog lifts.",
+   "interests": [
+    "stand_up_paddleboarding",
+    "sailing",
+    "whale_watching"
+   ]
+  },
+  {
+   "id": "c_raj",
+   "name": "Raj Mehta",
+   "initials": "RM",
+   "homeArea": "Palo Alto, CA",
+   "bio": "Cricket on Saturdays, golf when I can.",
+   "interests": [
+    "cricket",
+    "golf",
+    "hiking"
+   ]
+  },
+  {
+   "id": "c_emma",
+   "name": "Emma Collins",
+   "initials": "EC",
+   "homeArea": "Mill Valley, CA",
+   "bio": "Trail runner, mountain biker, coffee snob.",
+   "interests": [
+    "mountain_biking",
+    "hiking",
+    "yoga"
+   ]
+  },
+  {
+   "id": "c_kofi",
+   "name": "Kofi Mensah",
+   "initials": "KM",
+   "homeArea": "San Francisco, CA",
+   "bio": "New to the Bay, looking for a crew.",
+   "interests": [
+    "soccer",
+    "basketball",
+    "escape_room"
+   ]
+  },
+  {
+   "id": "c_isabel",
+   "name": "Isabel Cruz",
+   "initials": "IC",
+   "homeArea": "San Francisco, CA",
+   "bio": "Salsa Thursdays, boxing Mondays.",
+   "interests": [
+    "dance_class",
+    "boxing",
+    "yoga"
+   ]
+  },
+  {
+   "id": "c_owen",
+   "name": "Owen Price",
+   "initials": "OP",
+   "homeArea": "South Lake Tahoe, CA",
+   "bio": "Ski bum in winter, kayak bum in summer.",
+   "interests": [
+    "skiing",
+    "snowboarding",
+    "kayaking"
+   ]
+  },
+  {
+   "id": "c_mira",
+   "name": "Mira Shah",
+   "initials": "MS",
+   "homeArea": "Truckee, CA",
+   "bio": "Snowboarder, snowshoer, hot cocoa enthusiast.",
+   "interests": [
+    "snowboarding",
+    "snowshoeing",
+    "skiing"
+   ]
+  },
+  {
+   "id": "c_leo",
+   "name": "Leo Martin",
+   "initials": "LM",
+   "homeArea": "Monterey, CA",
+   "bio": "Marine biology nerd. Whales > everything.",
+   "interests": [
+    "whale_watching",
+    "snorkeling",
+    "scuba_diving"
+   ]
+  },
+  {
+   "id": "c_grace",
+   "name": "Grace Liu",
+   "initials": "GL",
+   "homeArea": "Brooklyn, NY",
+   "bio": "Ceramics and cooking classes, mostly for the snacks.",
+   "interests": [
+    "pottery",
+    "cooking_class",
+    "yoga"
+   ]
+  },
+  {
+   "id": "c_dan",
+   "name": "Dan O'Brien",
+   "initials": "DO",
+   "homeArea": "New York, NY",
+   "bio": "Escape rooms and axe throwing after work.",
+   "interests": [
+    "escape_room",
+    "axe_throwing",
+    "bowling"
+   ]
+  },
+  {
+   "id": "c_priyanka",
+   "name": "Priyanka Rao",
+   "initials": "PR",
+   "homeArea": "Stony Brook, NY",
+   "bio": "Grad student at Stony Brook; hiking and kayaking on weekends.",
+   "interests": [
+    "hiking",
+    "kayaking",
+    "stand_up_paddleboarding"
+   ]
+  },
+  {
+   "id": "c_sam",
+   "name": "Sam Rivera",
+   "initials": "SR",
+   "homeArea": "San Diego, CA",
+   "bio": "Snorkel, surf, repeat.",
+   "interests": [
+    "snorkeling",
+    "surfing",
+    "jet_skiing"
+   ]
+  },
+  {
+   "id": "c_hannah",
+   "name": "Hannah Weiss",
+   "initials": "HW",
+   "homeArea": "Los Angeles, CA",
+   "bio": "Paragliding off the cliffs is my meditation.",
+   "interests": [
+    "paragliding",
+    "hiking",
+    "rock_climbing"
+   ]
+  },
+  {
+   "id": "c_victor",
+   "name": "Victor Huang",
+   "initials": "VH",
+   "homeArea": "San Francisco, CA",
+   "bio": "Go-karts, paintball, laser tag. I'm competitive.",
+   "interests": [
+    "go_karting",
+    "paintball",
+    "laser_tag"
+   ]
+  },
+  {
+   "id": "c_zoe",
+   "name": "Zoe Adams",
+   "initials": "ZA",
+   "homeArea": "Berkeley, CA",
+   "bio": "Yoga teacher who also loves volleyball.",
+   "interests": [
+    "yoga",
+    "volleyball",
+    "pilates"
+   ]
+  },
+  {
+   "id": "c_ali",
+   "name": "Ali Hassan",
+   "initials": "AH",
+   "homeArea": "Oakland, CA",
+   "bio": "Badminton club captain.",
+   "interests": [
+    "badminton",
+    "pickleball",
+    "soccer"
+   ]
+  },
+  {
+   "id": "c_chloe",
+   "name": "Chloe Martin",
+   "initials": "CM",
+   "homeArea": "Big Sur, CA",
+   "bio": "Dark-sky chaser and horse rider.",
+   "interests": [
+    "horseback_riding",
+    "hiking",
+    "stargazing"
+   ]
+  },
+  {
+   "id": "c_ben",
+   "name": "Ben Carter",
+   "initials": "BC",
+   "homeArea": "Yosemite Valley, CA",
+   "bio": "Climbing guide on my days off too.",
+   "interests": [
+    "rock_climbing",
+    "hiking",
+    "white_water_rafting"
+   ]
+  },
+  {
+   "id": "c_tara",
+   "name": "Tara Singh",
+   "initials": "TS",
+   "homeArea": "Sacramento, CA",
+   "bio": "River rafting every summer, ziplines all year.",
+   "interests": [
+    "white_water_rafting",
+    "ziplining",
+    "archery"
+   ]
+  },
+  {
+   "id": "c_felipe",
+   "name": "Felipe Ortiz",
+   "initials": "FO",
+   "homeArea": "Half Moon Bay, CA",
+   "bio": "Fishing charters and food tours.",
+   "interests": [
+    "fishing",
+    "food_tour",
+    "sailing"
+   ]
+  }
+ ],
+ "plans": [
+  {
+   "userId": "c_lena",
+   "text": "Rock climbing in Yosemite next month under $250, beginner friendly please",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_ben",
+   "text": "Rock climbing in Yosemite next month, up to $300, happy to climb with newer folks",
+   "groupMax": 5
+  },
+  {
+   "userId": "c_hannah",
+   "text": "Rock climbing in Yosemite next month under $350",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_marco",
+   "text": "Surf lessons in Santa Cruz next month under $120",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_sam",
+   "text": "Surfing in Santa Cruz next month under $150, intermediate",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_aisha",
+   "text": "Pickup basketball near Oakland next month, $15 for court time",
+   "groupMax": 8
+  },
+  {
+   "userId": "c_tom",
+   "text": "Basketball in Berkeley next month, split a court, under $20",
+   "groupMax": 8
+  },
+  {
+   "userId": "c_kofi",
+   "text": "Basketball in Berkeley next month under $25",
+   "groupMax": 8
+  },
+  {
+   "userId": "c_sofia",
+   "text": "Hot air balloon ride in Napa next month under $350",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_sofia",
+   "text": "Wine tasting in Napa next month under $90",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_jun",
+   "text": "Pickleball in San Jose next month under $20",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_ali",
+   "text": "Pickleball in San Jose next month, under $25 per person",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_nina",
+   "text": "Paddleboarding in Sausalito next month under $70",
+   "groupMax": 5
+  },
+  {
+   "userId": "c_nina",
+   "text": "Whale watching in Monterey next month under $90",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_leo",
+   "text": "Whale watching in Monterey next month under $100",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_raj",
+   "text": "Golf in Palo Alto next month under $110, 18 holes",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_jun",
+   "text": "Golf in Palo Alto next month under $120",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_emma",
+   "text": "Mountain biking in Marin next month under $90",
+   "groupMax": 5
+  },
+  {
+   "userId": "c_emma",
+   "text": "Hiking in Marin next month, free or cheap guided hike under $40",
+   "groupMax": 8
+  },
+  {
+   "userId": "c_kofi",
+   "text": "Escape room in San Francisco next month, $45 each",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_victor",
+   "text": "Escape room in San Francisco next month under $50",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_isabel",
+   "text": "Salsa dance class in San Francisco next month under $30",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_isabel",
+   "text": "Boxing class in San Francisco next month under $35",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_owen",
+   "text": "Skiing in Tahoe in December under $200",
+   "groupMax": 5
+  },
+  {
+   "userId": "c_mira",
+   "text": "Snowboarding in Tahoe in December under $180",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_grace",
+   "text": "Pottery class in Brooklyn next month under $80",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_grace",
+   "text": "Cooking class in Brooklyn next month under $100",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_dan",
+   "text": "Escape room in New York next month under $45",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_dan",
+   "text": "Axe throwing in Brooklyn next month under $50",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_priyanka",
+   "text": "Kayaking near Stony Brook next month under $70",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_priyanka",
+   "text": "Hiking near Stony Brook next month, guided, under $40",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_sam",
+   "text": "Snorkeling in La Jolla next month under $80",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_hannah",
+   "text": "Paragliding in Los Angeles next month under $250",
+   "groupMax": 3
+  },
+  {
+   "userId": "c_victor",
+   "text": "Go karting in San Francisco next month under $60",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_zoe",
+   "text": "Yoga in Berkeley next month, drop-in under $25",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_zoe",
+   "text": "Volleyball in Berkeley next month, court split under $15",
+   "groupMax": 8
+  },
+  {
+   "userId": "c_chloe",
+   "text": "Horseback riding in Big Sur next month under $150",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_chloe",
+   "text": "I want to try stargazing near Big Sur next month under $80",
+   "groupMax": 4
+  },
+  {
+   "userId": "c_tara",
+   "text": "White water rafting near Sacramento next month under $150",
+   "groupMax": 6
+  },
+  {
+   "userId": "c_felipe",
+   "text": "Fishing charter in Half Moon Bay next month under $160",
+   "groupMax": 5
+  }
+ ],
+ "posts": [
+  {
+   "userId": "c_lena",
+   "activity": "rock_climbing",
+   "place": "Yosemite Valley, CA",
+   "text": "First multi-pitch in the Valley with two people I met here. Hands still shaking, in the best way.",
+   "likes": 34,
+   "hoursAgo": 3,
+   "comments": 3
+  },
+  {
+   "userId": "c_marco",
+   "activity": "surfing",
+   "place": "Santa Cruz, CA",
+   "text": "Stood up on my third wave at Cowell's. Group lesson split four ways came to $78 each.",
+   "likes": 21,
+   "hoursAgo": 10,
+   "comments": 2
+  },
+  {
+   "userId": "c_sofia",
+   "activity": "hot_air_balloon",
+   "place": "Napa, CA",
+   "text": "Sunrise balloon over the vineyards. Our agents found a shared basket for $289 instead of $345.",
+   "likes": 48,
+   "hoursAgo": 17,
+   "comments": 6
+  },
+  {
+   "userId": "c_aisha",
+   "activity": "basketball",
+   "place": "Oakland, CA",
+   "text": "Thursday run is on. 6 of us split a court for $12 each. Need 2 more.",
+   "likes": 15,
+   "hoursAgo": 24,
+   "comments": 4
+  },
+  {
+   "userId": "c_nina",
+   "activity": "whale_watching",
+   "place": "Monterey, CA",
+   "text": "Humpbacks breaching right next to the boat. Worth every cold minute.",
+   "likes": 56,
+   "hoursAgo": 31,
+   "comments": 5
+  },
+  {
+   "userId": "c_grace",
+   "activity": "pottery",
+   "place": "Brooklyn, NY",
+   "text": "Made a mug. It's lopsided. I love it.",
+   "likes": 29,
+   "hoursAgo": 38,
+   "comments": 3
+  },
+  {
+   "userId": "c_owen",
+   "activity": "skiing",
+   "place": "South Lake Tahoe, CA",
+   "text": "Early-season groomers are skiing well. Lesson plus rental for $189 through a shop the agent found.",
+   "likes": 19,
+   "hoursAgo": 45,
+   "comments": 1
+  },
+  {
+   "userId": "c_kofi",
+   "activity": "escape_room",
+   "place": "San Francisco, CA",
+   "text": "Escaped with 4 minutes left. Strangers yesterday, team today.",
+   "likes": 23,
+   "hoursAgo": 52,
+   "comments": 2
+  },
+  {
+   "userId": "c_priyanka",
+   "activity": "kayaking",
+   "place": "Stony Brook, NY",
+   "text": "Paddled West Meadow Creek at golden hour. Anyone from campus want to join next weekend?",
+   "likes": 17,
+   "hoursAgo": 59,
+   "comments": 3
+  },
+  {
+   "userId": "c_sam",
+   "activity": "snorkeling",
+   "place": "La Jolla, CA",
+   "text": "Garibaldi everywhere at the cove. Bring a 3mm wetsuit, water's 62°F.",
+   "likes": 26,
+   "hoursAgo": 66,
+   "comments": 1
+  },
+  {
+   "userId": "c_jun",
+   "activity": "pickleball",
+   "place": "San Jose, CA",
+   "text": "Doubles round robin, we're 3 short of two courts. Ping me.",
+   "likes": 11,
+   "hoursAgo": 73,
+   "comments": 2
+  },
+  {
+   "userId": "c_chloe",
+   "activity": "horseback_riding",
+   "place": "Big Sur, CA",
+   "text": "Trail ride to the beach at Andrew Molera. Booked solo and got put on an existing group's ride for less.",
+   "likes": 31,
+   "hoursAgo": 80,
+   "comments": 2
+  }
+ ]
+}

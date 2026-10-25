@@ -293,6 +293,7 @@ export interface Quote {
   tiers: Record<string, unknown>[];
   sourceUrl: string | null;
   lastVerifiedAt: number;
+  evidence: string | null;
 }
 
 export interface QuoteMsg {

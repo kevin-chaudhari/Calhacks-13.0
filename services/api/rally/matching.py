@@ -46,6 +46,20 @@ def haversine_km(a, b) -> float:
     return 2 * r * math.asin(math.sqrt(h))
 
 
+def _area(label: str) -> str:
+    return label.split(",")[0].strip().casefold()
+
+
+def _same_area(a, b) -> bool:
+    """With coordinates on both sides distance decides; without them only the same named place counts
+    (before this, a missing coordinate meant 0 km and everyone matched everywhere)."""
+    if a is None or b is None:
+        return True                                   # no place on one side: the date/budget filters decide
+    if a.lat is not None and b.lat is not None:
+        return True
+    return _area(a.label) == _area(b.label)
+
+
 def _cert(intent: PublicIntent, key: str = "certification") -> str | None:
     for c in intent.draft.conditions:
         if c.key == key and c.value is not None:
@@ -74,6 +88,8 @@ def hard_filter(seeker: PublicIntent, cand: PublicIntent) -> tuple[str | None, s
     if overlap_days(seeker, cand) < 1:
         when = f"{_md(c.date_from)}–{_md(c.date_to)}" if c.date_from else "no dates set"
         return "date", f"Only free {when}"
+    if not _same_area(s.location, c.location):
+        return "distance", f"Somewhere else ({c.location.label if c.location else 'no place set'})"
     dist = haversine_km(s.location, c.location)
     limit = min(s.radius_km or 1e9, c.radius_km or 1e9)
     if dist > limit:

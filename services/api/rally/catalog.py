@@ -28,3 +28,11 @@ def info(activity: str) -> dict | None:
 def label(activity: str) -> str:
     i = info(activity)
     return i["label"] if i else activity.replace("_", " ").capitalize()
+
+
+def family_terms(family: str) -> list[dict]:
+    """The general terms an activity family negotiates (first activity in the catalog with that family)."""
+    for info in activities().values():
+        if info.get("family") == family:
+            return info["terms"]
+    return []

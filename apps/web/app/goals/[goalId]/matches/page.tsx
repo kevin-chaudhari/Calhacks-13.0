@@ -116,7 +116,10 @@ export default function Matches() {
         if (!g.intentId) throw new ApiError(409, "NOT_PUBLISHED", "Publish this goal first.");
         const m = await api<MatchResult>(`/v1/intents/${g.intentId}/matches`, { body: {} });
         setRes(m);
-        setPicked(readMode() === "solo" ? [] : m.selectedIntentIds);
+        const withId = new URLSearchParams(window.location.search).get("with");
+        const base = readMode() === "solo" && !withId ? [] : m.selectedIntentIds;
+        setPicked(withId && m.matches.some((c) => c.intentId === withId) && !base.includes(withId)
+          ? [withId, ...base].slice(0, Math.max(1, (g.draft.groupMax ?? 2) - 1)) : base);
       } catch (e) {
         setErr(e instanceof ApiError ? e.message : "Matching failed.");
       }

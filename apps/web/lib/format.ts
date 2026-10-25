@@ -25,6 +25,10 @@ export const TERM_LABELS: Record<string, string> = {
   launch: "Launch point",
   tour_type: "Tour",
   wetsuit_included: "Wetsuit",
+  time_of_day: "Time of day",
+  format: "Format",
+  level: "Level",
+  duration: "Duration",
   price_per_person: "Price per person",
   group_size: "Group size",
 };
@@ -72,4 +76,17 @@ export const STATUS_LABEL: Record<string, string> = {
   closed: "Closed",
   ready: "Ready to publish",
   published: "Published",
+};
+
+/** "3 h ago", "Oct 22" */
+export function ago(ms: number) {
+  const s = Math.max(0, (Date.now() - ms) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  return new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+export const UNIT_LABEL: Record<string, string> = {
+  per_person: "per person", per_group: "per group", per_hour: "per hour", per_day: "per day", per_session: "per session",
 };

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Anchor, ArrowRight, CircleCheckBig, CornerDownLeft, Handshake, Luggage, MessageSquareText, Plane, Sparkles, Target, User, Users, Waves,
+  Anchor, ArrowRight, CircleCheckBig, CircleDot, CornerDownLeft, Handshake, Luggage, MessageSquareText, Mountain, Newspaper,
+  Palette, Plane, Sparkles, Target, User, Users, Waves,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError, newKey } from "@/lib/api";
@@ -16,8 +17,11 @@ import { MODE_KEY, type Mode } from "@/lib/mode";
 
 const EXAMPLES = [
   { label: "Scuba in Monterey", hint: "Certified diver, under $300", icon: Anchor, text: "I want to go scuba diving in Monterey next month for under $300. I am Open Water certified." },
-  { label: "Skydiving, Santa Cruz", hint: "First jump, under $400", icon: Plane, text: "I want to go skydiving near Santa Cruz next month for under $400, first jump." },
-  { label: "Sea kayaking", hint: "Monterey, under $120", icon: Waves, text: "Sea kayaking in Monterey next month, under $120 per person." },
+  { label: "Climbing in Yosemite", hint: "Beginner, under $250", icon: Mountain, text: "Rock climbing in Yosemite next month under $250, I'm a beginner." },
+  { label: "Surf lessons", hint: "Santa Cruz, under $120", icon: Waves, text: "Surf lessons in Santa Cruz next month under $120." },
+  { label: "Balloon over Napa", hint: "Sunrise, under $350", icon: Plane, text: "Hot air balloon ride in Napa next month for under $350." },
+  { label: "Pickup basketball", hint: "Berkeley, under $20", icon: CircleDot, text: "Pickup basketball in Berkeley next month, under $20 for court time." },
+  { label: "Pottery class", hint: "Brooklyn, under $80", icon: Palette, text: "Pottery class in Brooklyn next month under $80." },
 ];
 
 const HOW = [
@@ -37,6 +41,32 @@ const MODES: Record<Mode, { label: string; icon: typeof Users; line: string; cta
   },
 };
 
+function HappeningNow() {
+  const { me } = usePersona();
+  const [items, setItems] = useState<{ id: string; type: string; user: { id: string; name: string; initials: string }; activityLabel: string | null; place: string | null }[] | null>(null);
+  useEffect(() => {
+    if (!me) return;
+    api<{ items: NonNullable<typeof items> }>("/v1/feed").then((f) => setItems(f.items.filter((i) => i.type === "plan" && i.user.id !== me.id).slice(0, 4))).catch(() => setItems([]));
+  }, [me]);
+  if (!items?.length) return null;
+  return (
+    <Card>
+      <CardHeader icon={<Newspaper size={16} />} title="Happening now" meta="Plans people just posted" />
+      <ul className="divide-y divide-line">
+        {items.map((i) => (
+          <li key={i.id}>
+            <Link href="/explore" className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-2">
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[11px] font-semibold text-accent">{i.user.initials}</span>
+              <span className="min-w-0 text-[13px]"><strong className="font-medium">{i.user.name.split(" ")[0]}</strong> wants {i.activityLabel?.toLowerCase()}{i.place && <> in {i.place.split(",")[0]}</>}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link href="/explore" className="block border-t border-line px-5 py-2.5 text-[13px] font-medium text-accent">See everything on Explore</Link>
+    </Card>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
   const { me } = usePersona();
@@ -51,6 +81,8 @@ export default function Home() {
     try {
       if (localStorage.getItem(MODE_KEY) === "solo") setModeState("solo");
     } catch {}
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) setText(q);
   }, []);
   const setMode = (m: Mode) => {
     setModeState(m);
@@ -95,8 +127,8 @@ export default function Home() {
             Tell your agent where you want to go.
           </h1>
           <p className="mt-4 max-w-[56ch] text-[17px] leading-7 text-muted">
-            It finds people to go with and bargains with the shops for you, so you get a group price even on your own.
-            Nothing is booked until you say yes.
+            Any sport, class or adventure. It finds people to go with, reads real shops&apos; prices off their own
+            websites and bargains for you, so you get a group price even on your own. Nothing is booked until you say yes.
           </p>
 
           <div role="radiogroup" aria-label="Who is going" className="mt-8 inline-flex rounded-full border border-line bg-surface p-1 shadow-card">
@@ -198,6 +230,7 @@ export default function Home() {
       </div>
 
       <aside className="space-y-6">
+        <HappeningNow />
         <Card>
           <CardHeader icon={<Luggage size={16} />} title="Your trips" meta={deals?.length ? `${deals.length} so far` : undefined} />
           <ul className="divide-y divide-line">

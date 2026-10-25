@@ -58,6 +58,8 @@ class Settings:
     gear_prices: str = field(default_factory=lambda: _env("GEAR_PRICES", "estimate"))   # brightdata | estimate
     brightdata_api_key: str = field(default_factory=lambda: os.environ.get("BRIGHTDATA_API_KEY", "").strip())
     brightdata_serp_zone: str = field(default_factory=lambda: os.environ.get("BRIGHTDATA_SERP_ZONE", "").strip())
+    brightdata_unlocker_zone: str = field(default_factory=lambda: os.environ.get("BRIGHTDATA_UNLOCKER_ZONE", "").strip())
+    vendor_discovery: str = field(default_factory=lambda: _env("VENDOR_DISCOVERY", "brightdata"))   # brightdata | off
     brightdata_walmart_dataset_id: str = field(
         default_factory=lambda: os.environ.get("BRIGHTDATA_WALMART_DATASET_ID", "").strip())
     allow_demo_routes: bool = field(default_factory=lambda: _env("ALLOW_DEMO_ROUTES", "1") == "1")

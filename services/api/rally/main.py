@@ -146,6 +146,7 @@ def health():
             "restored": rally.restored,
             "payments": rally.rail.status(),
             "gear": rally.gear.status(),
+            "discovery": rally.finder.status(),
             "agents": {"personal": len(rally.agent_prefs), "providers": len(rally.providers)}}
 
 
@@ -398,6 +399,81 @@ async def activity_gear(activity: str, request: Request, uid: str = Depends(user
     limited(uid, "gear", 20)
     terms = {k: v.lower() == "true" if v.lower() in ("true", "false") else v for k, v in request.query_params.items()}
     return await rally.gear_for_activity(activity, terms)
+
+
+@app.get("/v1/discover")
+async def discover(q: str = "", activity: str = "", place: str = "", refresh: bool = False,
+                   uid: str = Depends(user)):
+    """Real vendors + web deals for any activity near any place: /v1/discover?q=surf+lessons+in+Santa+Cruz"""
+    limited(uid, "discover", 12)
+    return await rally.discover(q, activity, place, refresh)
+
+
+class PostBody(BaseModel):
+    text: str
+    activity: str = ""
+    place: str = ""
+    dealId: str = ""
+
+
+class CommentBody(BaseModel):
+    text: str
+
+
+@app.get("/v1/feed")
+def feed(scope: str = "all", activity: str = "", category: str = "", uid: str = Depends(user)):
+    return rally.social_feed(uid, scope, activity, category)
+
+
+@app.post("/v1/posts")
+def create_post(body: PostBody, uid: str = Depends(user)):
+    limited(uid, "post", 20)
+    return rally.social_create_post(uid, body.text, body.activity, body.place, body.dealId)
+
+
+@app.post("/v1/feed/{item_id}/like")
+def like(item_id: str, uid: str = Depends(user)):
+    return rally.social_toggle_like(uid, item_id)
+
+
+@app.get("/v1/feed/{item_id}/comments")
+def comments(item_id: str, uid: str = Depends(user)):
+    return rally.social_comments(item_id)
+
+
+@app.post("/v1/feed/{item_id}/comments")
+def comment(item_id: str, body: CommentBody, uid: str = Depends(user)):
+    limited(uid, "comment", 30)
+    return rally.social_add_comment(uid, item_id, body.text)
+
+
+@app.post("/v1/feed/plans/{intent_id}/join")
+def join_plan(intent_id: str, uid: str = Depends(user)):
+    limited(uid, "cmd", 30)
+    return rally.social_join_plan(uid, intent_id)
+
+
+@app.get("/v1/people")
+def people(q: str = "", uid: str = Depends(user)):
+    return rally.social_people(uid, q)
+
+
+@app.get("/v1/people/{person_id}")
+def person(person_id: str, uid: str = Depends(user)):
+    return rally.social_profile(uid, person_id)
+
+
+@app.post("/v1/people/{person_id}/follow")
+def follow(person_id: str, uid: str = Depends(user)):
+    return rally.social_toggle_follow(uid, person_id)
+
+
+@app.get("/v1/activities")
+def activities():
+    """Every activity Parley understands, grouped for the UI."""
+    from . import catalog
+    return [{"key": k, "label": v["label"], "category": v.get("category", "other")}
+            for k, v in catalog.activities().items()]
 
 
 @app.get("/v1/metrics")

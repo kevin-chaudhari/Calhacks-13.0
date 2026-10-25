@@ -1,6 +1,6 @@
 # Parley
 
-**Say where you want to go. Your AI agent finds people to go with and bargains with the shops for you.**
+**Say what you want to do: any sport, class or adventure, anywhere. Your AI agent finds people to go with, finds real shops and their real prices, and bargains for you.**
 
 Built at **Cal Hacks 13.0** by Kevin (website, payments, hosting), Parikshit (AI agents and Fetch.ai) and Dev (AI, search and data).
 
@@ -21,6 +21,19 @@ shops and haggle.
 5. **You say yes (or no).** Nothing is booked and no money moves until every real person approves the exact plan and price.
 
 Think of it like a group chat where helpful robots do the planning and haggling, and the humans just make the final call.
+
+### Not just scuba
+
+It works for **48 activities out of the box** (surfing, rock climbing, hot air balloons, pickup basketball, pottery, escape
+rooms, golf, wine tasting and many more) and for **anything else you can name**, like stargazing or wakeboarding.
+For any of them, your agent searches the web for real shops near you, reads the prices on each shop's own website,
+and only uses a price it can quote back to you, word for word. Shops that don't list a price are shown, but never guessed.
+
+### It's social
+
+**Explore** is a feed of what people want to do and where they're going: open plans, booked trips and recaps.
+See a plan you like? Tap **I'm in too** and your agent joins it and starts the group. Follow people, like and comment,
+and check anyone's profile for their plans and trips.
 
 ### Two promises
 
@@ -60,6 +73,8 @@ Think of it like a group chat where helpful robots do the planning and haggling,
 | **Vendor** / **shop** | The business running the trip, like a dive shop. It has its own agent and its own staff page. |
 | **Quote** | A shop's price offer for the exact plan. |
 | **Solo mode** | Going alone. Your agent bargains for you and tries to slot you into a group that's already booked. |
+| **Listed price** | A price read from the shop's own website. It's real, but the shop hasn't confirmed your booking yet. |
+| **I'm in too** | Join someone's plan from the feed. Your agent publishes the same plan and starts a group with them. |
 | **Simulated** | Pretend. Anything pretend says so right on the screen. |
 
 ## Try it yourself
@@ -84,12 +99,18 @@ python scripts/rally.py dev
 
 - **Go with others:** pick **With others**, tap **Scuba in Monterey**, then **Find my people**. Check the details, tap the people you want, and start the group. Use the name menu at the top right to switch to another person and approve as them.
 - **Go alone:** pick **Just me**, tap **Scuba in Monterey**, then **Find my deal**. Your agent bargains with the dive shops and finds a boat that's already going.
+- **Anything else:** type something like *Surf lessons in Santa Cruz next month under $120*. With Bright Data keys set, real shops are found and their prices read.
+- **Find deals:** search *rock climbing in Yosemite* to see real shops, their prices, and the sentence each price came from.
+- **Explore:** scroll the feed, tap **I'm in too** on someone's plan, follow people.
 
 ### Finding your way around
 
 | Where | What's there |
 |---|---|
-| **Plan a trip** (home) | Type a goal, see your trips and goals |
+| **Plan a trip** (home) | Type a goal, see your trips and goals, and what people just posted |
+| **Explore** | The social feed: plans, trips and recaps for every activity. Join, like, comment, follow |
+| **Find deals** | Real shops and their real prices for any activity near any place |
+| **Profile** | Anyone's plans, trips, posts and interests |
 | **Trip page** | The next step is always at the top. Tabs: **Plan**, **Chat**, **Agent talk** (every message between agents) and **Replay** (step through how the deal changed) |
 | **Agents** | Every agent and every message, live |
 | **For shops** | What a dive shop sees: requests, quotes to approve, price rules |
@@ -109,8 +130,9 @@ Open **http://localhost:3000/demo** on the big screen.
 4. **The shop.** Another judge takes the shop seat and approves the price, or offers a discount.
 5. **Everyone approves.** Deposits go through; add the trip to a calendar or share it.
 6. **Replay.** Step through every version of the plan and see why it changed.
-7. **Solo diver.** Nobody to go with, yet the agent joins a boat that's already booked and pays the group price.
-8. **The numbers:** zero broken must-haves, how many agent messages, time to agreement, money saved. All measured live.
+7. **Any activity.** Open **Find deals** and search "rock climbing in Yosemite": real shops with ratings, and every price shown with the sentence it came from on the shop's own website. Then on **Explore**, tap **I'm in too** on Lena's climbing plan: four climbers, one group, negotiated on those real prices.
+8. **Solo diver.** Nobody to go with, yet the agent joins a boat that's already booked and pays the group price.
+9. **The numbers:** zero broken must-haves, how many agent messages, time to agreement, money saved. All measured live.
 
 ---
 
@@ -139,6 +161,8 @@ Everything below is the technical reference.
 - **Private preferences never leave your agent.** The mediator sees accept, "change this term" or "can't do this". It never sees weights or ideal values. Tests enforce this on every snapshot.
 - **Groups or solo.** With others, a mediator gets everyone's agent to one plan. Alone, your agent negotiates with every shop directly and hunts for **trips already running that you can join at the group rate**, the main lever a solo traveller actually has.
 - **Both sides are real.** Vendors have their own portal, their own agent with editable price rules, and staff who can review a quote, offer a discount (never a higher price) and confirm the booking.
+- **Any activity, real shops.** Bright Data finds the businesses near you (Google's map pack) and reads each shop's own website; Gemini pulls out the offers. **Every price must appear in a sentence that exists word for word on the shop's page**, or it's thrown away, so agents never negotiate over an invented number.
+- **Social.** A feed of open plans, trips and recaps across every activity; profiles, follows, likes, comments; and **"I'm in too"**, which turns someone's plan into a real group in one tap.
 - **Honest labels.** Anything simulated says so on screen: "Simulated", "Listed price, not a quote", "Typical price, not live", "Testnet".
 
 ## Features
@@ -146,7 +170,10 @@ Everything below is the technical reference.
 ### For travellers (`/`)
 | Feature | What it does |
 |---|---|
-| Goal compiler | One sentence becomes a structured intent: activity, place, dates, budget, certification, negotiable terms. Gemini when configured, an offline template otherwise. Asks when something is missing; never invents a budget or date. |
+| Goal compiler | One sentence becomes a structured intent: activity (48 in the catalog, plus anything else, such as "stargazing" or "wakeboarding"), place (read from the sentence; about 80 places with coordinates, any other name accepted), dates, budget and negotiable terms (date, time of day, format, level). Gemini when configured, an offline template otherwise. Asks when something is missing; never invents a budget or date. |
+| **Find deals** | `/discover`: search "surf lessons in Santa Cruz" and see real vendors (rating, reviews, phone, map, website), each listed offer with the sentence it came from, web deals (Groupon, Viator and others), and a one-click "Plan this trip". |
+| **Explore** | `/explore`: the social feed. Open plans, trips and recaps across all activities; filter by kind or activity; Everyone or Following; post, like, comment; **I'm in too** joins a plan and builds the group. |
+| **Profiles** | `/people/{id}`: bio, home area, interests, followers, open plans, trips and posts; follow from anywhere. |
 | Review | Hard conditions ("must have") vs. private preferences (sliders only your agent sees). |
 | Matching | Hard filters with a reason for every rejection; ranking only reorders people who passed. |
 | **Solo mode** | "Just me" on the home page, or **Go solo** when nobody fits. The agent negotiates with every shop's agent alone and prices you into trips already running (`openGroups`) at their group rate. |
@@ -180,7 +207,7 @@ Sponsor lights, one-click scenarios (scuba, skydiving, kayaking, **solo diver**)
 | **Moss** | Semantic ranking of matches and vendor search: **planned** (Dev); the local TF-IDF ranker runs until then | `services/api/rally/matching.py` |
 | **Convex** | Live state for every screen, membership-checked reads, restart recovery | `convex/`, `services/api/rally/store.py` |
 | **Coinbase x402** | Per-member deposits as real HTTP 402 payments in test USDC on Base Sepolia | `services/api/rally/payments.py` |
-| **Bright Data** | Live store prices for the gear each person must bring (SERP API → Google Shopping; Walmart Web Scraper API) | `services/api/rally/gear.py`, `docs/brightdata.md` |
+| **Bright Data** | Real vendors for any activity (SERP API: Google local pack + deal search), vendors' own price pages (Web Unlocker), and live gear prices (Google Shopping, Walmart) | `services/api/rally/discovery.py`, `gear.py`, `docs/brightdata.md` |
 | **Apify** | Vendors' public listed prices, labelled "Listed price, not a quote": **planned** (Dev); the UI badge is ready | `services/api/rally/providers.py` |
 | **Vultr** | API and agents host behind Caddy HTTPS | `infra/` |
 
@@ -192,7 +219,8 @@ Sponsor lights, one-click scenarios (scuba, skydiving, kayaking, **solo diver**)
 | Matching | Real hard filters with reasons; local TF-IDF ranker. Moss adapter **not written yet** (`RANKER=moss` falls back to local and says so) | "Ranked locally" |
 | Negotiation | Real mediator and personal-agent logic, in-process or over real uAgents (`TRANSPORT=agentverse`); measured over Agentverse mailboxes: same result as in-process | "Agents: agentverse" / "Agents: inproc" |
 | Solo negotiation | Real: same mediator with one member; vendors' open trips priced from `openGroups` in the provider fixtures | "Solo", "joins a booked group of N (group rate)" |
-| Vendors | Six fictional shops (two per activity) with editable fixture price rules | "Simulated" |
+| Vendors | Real vendors from the web for any activity (`VENDOR_DISCOVERY=brightdata`), with offers read from their own sites and an evidence check on every price; tested against mocked Bright Data and model responses, **not yet with a real key**. Plus six fictional demo shops (Monterey and Santa Cruz) with editable prices | "Listed price, not a quote" + source sentence / "Simulated" |
+| People | 26 demo community profiles with 40 open plans across 30 activities (California and New York), plus the original scuba, skydiving and kayaking boards | "Demo profile" |
 | Payments | Simulated ledger by default. `PAYMENTS=x402_testnet`: real x402 deposits in test USDC, verified end to end with real signatures against a stand-in facilitator; **not yet run against x402.org with funded wallets**. Mainnet refused at startup | "Simulated, no money moved" / "Testnet deposit" |
 | State | In-memory by default; `STORE=convex` mirrors to Convex. Verified with convex-test and a fake client; **not yet run against a live deployment** | Control room light |
 | Gear prices | `GEAR_PRICES=brightdata`: live; tested against mocked Bright Data responses, **not yet with a real key** | "Bright Data" / "Typical prices, not live" |
@@ -208,8 +236,9 @@ Copy `.env.example` to `.env` in the project root (git-ignored; the API loads it
 | `NEXT_PUBLIC_CONVEX_URL` | | Live reads from Convex instead of polling | Kevin |
 | `STORE`, `CONVEX_URL`, `RALLY_SERVER_KEY` | `memory` | `convex`: system of record in Convex | Kevin |
 | `PAYMENTS`, `X402_*` | `simulated` | `x402_testnet`: real testnet deposits (`python scripts/x402_wallets.py` makes wallets) | Kevin |
-| `GEAR_PRICES`, `BRIGHTDATA_API_KEY`, `BRIGHTDATA_SERP_ZONE`, `BRIGHTDATA_WALMART_DATASET_ID` | `estimate` | `brightdata`: live gear prices (`docs/brightdata.md`) | Kevin |
-| `COMPILER`, `GEMINI_API_KEY`, `GEMINI_MODEL` | `template` | `gemini`: Gemini goal compiler and chat translation | Dev |
+| `BRIGHTDATA_API_KEY`, `BRIGHTDATA_SERP_ZONE`, `BRIGHTDATA_UNLOCKER_ZONE`, `VENDOR_DISCOVERY` | `brightdata` (active once the key and SERP zone are set) | Real vendors and deals for any activity; the Unlocker zone reads vendors' own pages (`docs/brightdata.md`) | Kevin |
+| `GEAR_PRICES`, `BRIGHTDATA_WALMART_DATASET_ID` | `estimate` | `brightdata`: live gear prices | Kevin |
+| `COMPILER`, `GEMINI_API_KEY`, `GEMINI_MODEL` | `template` | `gemini`: Gemini goal compiler and chat translation. With a key set, vendor pages are also read by Gemini | Dev / Kevin |
 | `RANKER`, `MOSS_PROJECT_ID`, `MOSS_PROJECT_KEY` | `local` | `moss`: semantic ranking (planned) | Dev |
 | `PROVIDERS`, `APIFY_TOKEN` | `seeded` | `seeded+apify`: listed prices (planned) | Dev |
 | `TRANSPORT`, `AGENT_NETWORK`, `AGENT_SEED_PREFIX`, `AGENTVERSE_API_KEY`, `AGENT_DIRECT` | `inproc` | `agentverse`: agents over real uAgents messaging | Parikshit |
@@ -229,7 +258,8 @@ Copy `.env.example` to `.env` in the project root (git-ignored; the API loads it
    │  compiler.py ─ Gemini / template      matching.py ─ hard filters + ranker (local; Moss planned)
    │  negotiation/ ─ mediator, personal-agent brain, engine (plan space, pricing, open groups)
    │  providers.py ─ vendor sheets, binding quotes      payments.py ─ simulated / x402 testnet
-   │  gear.py ─ Bright Data prices
+   │  discovery.py ─ Bright Data vendors + pages, Gemini offers, evidence check   gear.py ─ gear prices
+   │  social.py ─ feed, profiles, follows, likes, comments, "I'm in too"
    ▼
  uAgents (agents/run_agents.py): 20 personal + 6 vendor agents; mediator inside the API;
  concierge.py on Agentverse for ASI:One
@@ -255,6 +285,11 @@ All commands take `Authorization: Bearer <persona token>` (from `GET /v1/demo/pe
 | `POST /v1/deals/{id}/nudge/accept` | Invite one more person after a vendor's group-size offer |
 | `GET /v1/deals/{id}/explanation` | Why this plan works for you (private). *Dev's branch; the UI hides the card until it exists* |
 | `GET /v1/deals/{id}/gear`, `GET /v1/gear/{activity}` | What to bring, with live prices |
+| `GET /v1/discover?q=` | Real vendors + web deals for any activity near any place, every price with its source sentence |
+| `GET /v1/activities` | The activity catalog |
+| `GET /v1/feed`, `POST /v1/posts`, `POST /v1/feed/{id}/like`, `GET/POST /v1/feed/{id}/comments` | Social feed, posts, likes, comments |
+| `POST /v1/feed/plans/{intentId}/join` | "I'm in too": publish the same plan as yours and match with them |
+| `GET /v1/people`, `GET /v1/people/{id}`, `POST /v1/people/{id}/follow` | People search, profiles, follow |
 | `POST /v1/deals/{id}/messages` | Group chat |
 | `GET /v1/vendor/requests`, `POST /v1/vendor/requests/{id}/quote` | Vendor portal: requests, approve or discount a quote |
 | `GET /v1/providers/search?q=` | Vendor search. *Dev's branch; the search box hides itself until it exists* |

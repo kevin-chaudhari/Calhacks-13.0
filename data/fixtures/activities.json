@@ -1,43 +1,1671 @@
 {
-  "_note": "Activity catalog: canonical vocabulary per activity (plan 14.4). Options are public. Used by the compiler, matcher, mediator and UI.",
+  "_note": "Activity catalog: canonical vocabulary per activity. Order matters: the first keyword match wins, so specific activities come before general ones. 'family' picks the negotiable terms; 'searchQuery' is what vendor discovery searches for.",
   "activities": {
-    "scuba_diving": {
-      "label": "Scuba diving",
-      "keywords": "\\b(scuba|dive|diving|snorkel)",
-      "synonyms": ["boat_dive", "shore_dive"],
-      "defaultRadiusKm": 40,
-      "minPlausiblePrice": 95,
-      "minCertification": "open_water",
-      "terms": [
-        { "key": "site", "type": "categorical", "label": "Dive site", "options": ["Breakwater Cove", "Lovers Point", "Point Lobos"] },
-        { "key": "dive_type", "type": "categorical", "label": "Boat or shore", "options": ["shore", "boat"] },
-        { "key": "gear_included", "type": "boolean", "label": "Gear", "options": [true, false] }
-      ]
-    },
     "skydiving": {
       "label": "Skydiving",
       "keywords": "\\b(sky ?div\\w*|skydive|freefall|tandem jump|parachut\\w*)",
-      "synonyms": ["tandem_skydive"],
+      "synonyms": [
+        "tandem_skydive"
+      ],
       "defaultRadiusKm": 60,
       "minPlausiblePrice": 200,
       "minCertification": null,
       "terms": [
-        { "key": "dropzone", "type": "categorical", "label": "Drop zone", "options": ["Watsonville", "Hollister"] },
-        { "key": "altitude", "type": "categorical", "label": "Jump altitude", "options": ["10,000 ft", "13,000 ft"] },
-        { "key": "video_package", "type": "boolean", "label": "Video package", "options": [true, false] }
+        {
+          "key": "dropzone",
+          "type": "categorical",
+          "label": "Drop zone",
+          "options": [
+            "Watsonville",
+            "Hollister"
+          ]
+        },
+        {
+          "key": "altitude",
+          "type": "categorical",
+          "label": "Jump altitude",
+          "options": [
+            "10,000 ft",
+            "13,000 ft"
+          ]
+        },
+        {
+          "key": "video_package",
+          "type": "boolean",
+          "label": "Video package",
+          "options": [
+            true,
+            false
+          ]
+        }
+      ],
+      "category": "air",
+      "searchQuery": "tandem skydiving",
+      "home": {
+        "lat": 36.75,
+        "lng": -121.9,
+        "radiusKm": 150,
+        "label": "Monterey Bay"
+      },
+      "fallbackFamily": "tour"
+    },
+    "snorkeling": {
+      "label": "Snorkeling",
+      "category": "water",
+      "family": "tour",
+      "keywords": "\\bsnorkel\\w*",
+      "synonyms": [],
+      "searchQuery": "snorkeling tours",
+      "defaultRadiusKm": 40,
+      "minPlausiblePrice": 30,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "scuba_diving": {
+      "label": "Scuba diving",
+      "keywords": "\\b(scuba|scuba[- ]div\\w*|(?<!sky )(?<!sky)diving|dive)\\b",
+      "synonyms": [
+        "boat_dive",
+        "shore_dive"
+      ],
+      "defaultRadiusKm": 40,
+      "minPlausiblePrice": 95,
+      "minCertification": "open_water",
+      "terms": [
+        {
+          "key": "site",
+          "type": "categorical",
+          "label": "Dive site",
+          "options": [
+            "Breakwater Cove",
+            "Lovers Point",
+            "Point Lobos"
+          ]
+        },
+        {
+          "key": "dive_type",
+          "type": "categorical",
+          "label": "Boat or shore",
+          "options": [
+            "shore",
+            "boat"
+          ]
+        },
+        {
+          "key": "gear_included",
+          "type": "boolean",
+          "label": "Gear",
+          "options": [
+            true,
+            false
+          ]
+        }
+      ],
+      "category": "water",
+      "searchQuery": "scuba diving charters",
+      "home": {
+        "lat": 36.75,
+        "lng": -121.9,
+        "radiusKm": 150,
+        "label": "Monterey Bay"
+      },
+      "fallbackFamily": "lesson"
+    },
+    "stand_up_paddleboarding": {
+      "label": "Stand-up paddleboarding",
+      "category": "water",
+      "family": "rental",
+      "keywords": "stand[- ]?up paddl\\w*|paddle ?board\\w*|\\bsup\\b",
+      "synonyms": [],
+      "searchQuery": "paddleboard rental",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 20,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Rental only",
+            "Guided"
+          ]
+        },
+        {
+          "key": "duration",
+          "type": "categorical",
+          "label": "Duration",
+          "options": [
+            "2 hours",
+            "Half day",
+            "Full day"
+          ]
+        }
       ]
     },
     "kayaking": {
       "label": "Sea kayaking",
       "keywords": "\\b(kayak\\w*|paddl\\w*|canoe)",
-      "synonyms": ["sea_kayaking"],
+      "synonyms": [
+        "sea_kayaking"
+      ],
       "defaultRadiusKm": 40,
       "minPlausiblePrice": 50,
       "minCertification": null,
       "terms": [
-        { "key": "launch", "type": "categorical", "label": "Launch point", "options": ["Monterey Harbor", "Elkhorn Slough", "Stillwater Cove"] },
-        { "key": "tour_type", "type": "categorical", "label": "Tour", "options": ["guided", "self-guided"] },
-        { "key": "wetsuit_included", "type": "boolean", "label": "Wetsuit", "options": [true, false] }
+        {
+          "key": "launch",
+          "type": "categorical",
+          "label": "Launch point",
+          "options": [
+            "Monterey Harbor",
+            "Elkhorn Slough",
+            "Stillwater Cove"
+          ]
+        },
+        {
+          "key": "tour_type",
+          "type": "categorical",
+          "label": "Tour",
+          "options": [
+            "guided",
+            "self-guided"
+          ]
+        },
+        {
+          "key": "wetsuit_included",
+          "type": "boolean",
+          "label": "Wetsuit",
+          "options": [
+            true,
+            false
+          ]
+        }
+      ],
+      "category": "water",
+      "searchQuery": "kayak tours",
+      "home": {
+        "lat": 36.75,
+        "lng": -121.9,
+        "radiusKm": 150,
+        "label": "Monterey Bay"
+      },
+      "fallbackFamily": "tour"
+    },
+    "surfing": {
+      "label": "Surfing",
+      "category": "water",
+      "family": "lesson",
+      "keywords": "\\bsurf(ing|er|s)?\\b|surf lesson",
+      "synonyms": [],
+      "searchQuery": "surf lessons",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 40,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group lesson",
+            "Private lesson"
+          ]
+        },
+        {
+          "key": "level",
+          "type": "categorical",
+          "label": "Level",
+          "options": [
+            "Beginner",
+            "Intermediate",
+            "Advanced"
+          ]
+        }
+      ]
+    },
+    "whale_watching": {
+      "label": "Whale watching",
+      "category": "water",
+      "family": "tour",
+      "keywords": "\\bwhale",
+      "synonyms": [],
+      "searchQuery": "whale watching tours",
+      "defaultRadiusKm": 50,
+      "minPlausiblePrice": 40,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "sailing": {
+      "label": "Sailing",
+      "category": "water",
+      "family": "tour",
+      "keywords": "\\bsail(ing|boat)?\\b",
+      "synonyms": [],
+      "searchQuery": "sailing charter",
+      "defaultRadiusKm": 40,
+      "minPlausiblePrice": 50,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "jet_skiing": {
+      "label": "Jet skiing",
+      "category": "water",
+      "family": "rental",
+      "keywords": "jet[- ]?ski\\w*|waverunner",
+      "synonyms": [],
+      "searchQuery": "jet ski rental",
+      "defaultRadiusKm": 40,
+      "minPlausiblePrice": 60,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Rental only",
+            "Guided"
+          ]
+        },
+        {
+          "key": "duration",
+          "type": "categorical",
+          "label": "Duration",
+          "options": [
+            "2 hours",
+            "Half day",
+            "Full day"
+          ]
+        }
+      ]
+    },
+    "white_water_rafting": {
+      "label": "White-water rafting",
+      "category": "water",
+      "family": "tour",
+      "keywords": "rafting|white[- ]?water",
+      "synonyms": [],
+      "searchQuery": "white water rafting trips",
+      "defaultRadiusKm": 80,
+      "minPlausiblePrice": 60,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "fishing": {
+      "label": "Fishing charter",
+      "category": "water",
+      "family": "tour",
+      "keywords": "\\bfishing\\b",
+      "synonyms": [],
+      "searchQuery": "fishing charter",
+      "defaultRadiusKm": 50,
+      "minPlausiblePrice": 60,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "paragliding": {
+      "label": "Paragliding",
+      "category": "air",
+      "family": "tour",
+      "keywords": "paraglid\\w*",
+      "synonyms": [],
+      "searchQuery": "tandem paragliding",
+      "defaultRadiusKm": 80,
+      "minPlausiblePrice": 120,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "hot_air_balloon": {
+      "label": "Hot air balloon ride",
+      "category": "air",
+      "family": "tour",
+      "keywords": "hot[- ]air|balloon ride",
+      "synonyms": [],
+      "searchQuery": "hot air balloon rides",
+      "defaultRadiusKm": 60,
+      "minPlausiblePrice": 150,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "ziplining": {
+      "label": "Ziplining",
+      "category": "air",
+      "family": "tour",
+      "keywords": "zip[- ]?lin\\w*",
+      "synonyms": [],
+      "searchQuery": "zipline tours",
+      "defaultRadiusKm": 60,
+      "minPlausiblePrice": 50,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "rock_climbing": {
+      "label": "Rock climbing",
+      "category": "mountain",
+      "family": "lesson",
+      "keywords": "rock[- ]?climb\\w*|\\bclimbing\\b|boulder\\w*",
+      "synonyms": [],
+      "searchQuery": "rock climbing guide",
+      "defaultRadiusKm": 60,
+      "minPlausiblePrice": 30,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group lesson",
+            "Private lesson"
+          ]
+        },
+        {
+          "key": "level",
+          "type": "categorical",
+          "label": "Level",
+          "options": [
+            "Beginner",
+            "Intermediate",
+            "Advanced"
+          ]
+        }
+      ]
+    },
+    "hiking": {
+      "label": "Guided hiking",
+      "category": "mountain",
+      "family": "tour",
+      "keywords": "\\bhik(e|es|ing)\\b|\\btrek\\w*",
+      "synonyms": [],
+      "searchQuery": "guided hiking tours",
+      "defaultRadiusKm": 60,
+      "minPlausiblePrice": null,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "mountain_biking": {
+      "label": "Mountain biking",
+      "category": "mountain",
+      "family": "rental",
+      "keywords": "mountain[- ]?bik\\w*|\\bmtb\\b",
+      "synonyms": [],
+      "searchQuery": "mountain bike rental",
+      "defaultRadiusKm": 60,
+      "minPlausiblePrice": 30,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Rental only",
+            "Guided"
+          ]
+        },
+        {
+          "key": "duration",
+          "type": "categorical",
+          "label": "Duration",
+          "options": [
+            "2 hours",
+            "Half day",
+            "Full day"
+          ]
+        }
+      ]
+    },
+    "cycling": {
+      "label": "Cycling tour",
+      "category": "mountain",
+      "family": "rental",
+      "keywords": "\\bcycling\\b|bike (ride|tour)|road bik\\w*",
+      "synonyms": [],
+      "searchQuery": "bike tours",
+      "defaultRadiusKm": 40,
+      "minPlausiblePrice": 25,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Rental only",
+            "Guided"
+          ]
+        },
+        {
+          "key": "duration",
+          "type": "categorical",
+          "label": "Duration",
+          "options": [
+            "2 hours",
+            "Half day",
+            "Full day"
+          ]
+        }
+      ]
+    },
+    "horseback_riding": {
+      "label": "Horseback riding",
+      "category": "mountain",
+      "family": "tour",
+      "keywords": "horse(back)?[- ]?rid\\w*|trail ride",
+      "synonyms": [],
+      "searchQuery": "horseback riding trail rides",
+      "defaultRadiusKm": 60,
+      "minPlausiblePrice": 50,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "skiing": {
+      "label": "Skiing",
+      "category": "snow",
+      "family": "lesson",
+      "keywords": "\\bski(ing|s)?\\b",
+      "synonyms": [],
+      "searchQuery": "ski lessons",
+      "defaultRadiusKm": 80,
+      "minPlausiblePrice": 80,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group lesson",
+            "Private lesson"
+          ]
+        },
+        {
+          "key": "level",
+          "type": "categorical",
+          "label": "Level",
+          "options": [
+            "Beginner",
+            "Intermediate",
+            "Advanced"
+          ]
+        }
+      ]
+    },
+    "snowboarding": {
+      "label": "Snowboarding",
+      "category": "snow",
+      "family": "lesson",
+      "keywords": "snowboard\\w*",
+      "synonyms": [],
+      "searchQuery": "snowboard lessons",
+      "defaultRadiusKm": 80,
+      "minPlausiblePrice": 80,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group lesson",
+            "Private lesson"
+          ]
+        },
+        {
+          "key": "level",
+          "type": "categorical",
+          "label": "Level",
+          "options": [
+            "Beginner",
+            "Intermediate",
+            "Advanced"
+          ]
+        }
+      ]
+    },
+    "snowshoeing": {
+      "label": "Snowshoeing",
+      "category": "snow",
+      "family": "tour",
+      "keywords": "snowshoe\\w*",
+      "synonyms": [],
+      "searchQuery": "guided snowshoe tours",
+      "defaultRadiusKm": 80,
+      "minPlausiblePrice": 30,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "ice_skating": {
+      "label": "Ice skating",
+      "category": "snow",
+      "family": "venue",
+      "keywords": "ice[- ]?skat\\w*",
+      "synonyms": [],
+      "searchQuery": "ice skating rink",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 10,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "basketball": {
+      "label": "Basketball",
+      "category": "court",
+      "family": "court",
+      "keywords": "basketball|\\bhoops\\b",
+      "synonyms": [],
+      "searchQuery": "basketball court rental",
+      "defaultRadiusKm": 15,
+      "minPlausiblePrice": null,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Drop-in",
+            "Court rental"
+          ]
+        }
+      ]
+    },
+    "soccer": {
+      "label": "Soccer",
+      "category": "court",
+      "family": "court",
+      "keywords": "\\bsoccer\\b|futsal",
+      "synonyms": [],
+      "searchQuery": "soccer field rental",
+      "defaultRadiusKm": 20,
+      "minPlausiblePrice": null,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Drop-in",
+            "Court rental"
+          ]
+        }
+      ]
+    },
+    "volleyball": {
+      "label": "Volleyball",
+      "category": "court",
+      "family": "court",
+      "keywords": "volleyball",
+      "synonyms": [],
+      "searchQuery": "volleyball court",
+      "defaultRadiusKm": 20,
+      "minPlausiblePrice": null,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Drop-in",
+            "Court rental"
+          ]
+        }
+      ]
+    },
+    "pickleball": {
+      "label": "Pickleball",
+      "category": "court",
+      "family": "court",
+      "keywords": "pickleball",
+      "synonyms": [],
+      "searchQuery": "pickleball courts",
+      "defaultRadiusKm": 15,
+      "minPlausiblePrice": null,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Drop-in",
+            "Court rental"
+          ]
+        }
+      ]
+    },
+    "badminton": {
+      "label": "Badminton",
+      "category": "court",
+      "family": "court",
+      "keywords": "badminton",
+      "synonyms": [],
+      "searchQuery": "badminton court",
+      "defaultRadiusKm": 20,
+      "minPlausiblePrice": null,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Drop-in",
+            "Court rental"
+          ]
+        }
+      ]
+    },
+    "cricket": {
+      "label": "Cricket",
+      "category": "court",
+      "family": "court",
+      "keywords": "\\bcricket\\b",
+      "synonyms": [],
+      "searchQuery": "cricket nets",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": null,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Drop-in",
+            "Court rental"
+          ]
+        }
+      ]
+    },
+    "mini_golf": {
+      "label": "Mini golf",
+      "category": "fun",
+      "family": "venue",
+      "keywords": "mini[- ]?golf|putt[- ]?putt",
+      "synonyms": [],
+      "searchQuery": "mini golf",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 10,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "golf": {
+      "label": "Golf",
+      "category": "fun",
+      "family": "golf",
+      "keywords": "\\bgolf(ing)?\\b|tee time",
+      "synonyms": [],
+      "searchQuery": "golf course tee times",
+      "defaultRadiusKm": 40,
+      "minPlausiblePrice": 25,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Tee time",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Twilight"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Round",
+          "options": [
+            "9 holes",
+            "18 holes"
+          ]
+        }
+      ]
+    },
+    "bowling": {
+      "label": "Bowling",
+      "category": "fun",
+      "family": "venue",
+      "keywords": "bowling",
+      "synonyms": [],
+      "searchQuery": "bowling alley",
+      "defaultRadiusKm": 25,
+      "minPlausiblePrice": 10,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "go_karting": {
+      "label": "Go-karting",
+      "category": "fun",
+      "family": "venue",
+      "keywords": "go[- ]?kart\\w*|karting",
+      "synonyms": [],
+      "searchQuery": "go kart racing",
+      "defaultRadiusKm": 40,
+      "minPlausiblePrice": 25,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "paintball": {
+      "label": "Paintball",
+      "category": "fun",
+      "family": "venue",
+      "keywords": "paintball",
+      "synonyms": [],
+      "searchQuery": "paintball park",
+      "defaultRadiusKm": 50,
+      "minPlausiblePrice": 30,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "laser_tag": {
+      "label": "Laser tag",
+      "category": "fun",
+      "family": "venue",
+      "keywords": "laser[- ]?tag",
+      "synonyms": [],
+      "searchQuery": "laser tag",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 10,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "escape_room": {
+      "label": "Escape room",
+      "category": "fun",
+      "family": "venue",
+      "keywords": "escape[- ]?room",
+      "synonyms": [],
+      "searchQuery": "escape room",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 20,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "axe_throwing": {
+      "label": "Axe throwing",
+      "category": "fun",
+      "family": "venue",
+      "keywords": "axe[- ]?throw\\w*",
+      "synonyms": [],
+      "searchQuery": "axe throwing",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 25,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "trampoline_park": {
+      "label": "Trampoline park",
+      "category": "fun",
+      "family": "venue",
+      "keywords": "trampoline",
+      "synonyms": [],
+      "searchQuery": "trampoline park",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 15,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "archery": {
+      "label": "Archery",
+      "category": "fun",
+      "family": "lesson",
+      "keywords": "archery",
+      "synonyms": [],
+      "searchQuery": "archery range lessons",
+      "defaultRadiusKm": 40,
+      "minPlausiblePrice": 20,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group lesson",
+            "Private lesson"
+          ]
+        },
+        {
+          "key": "level",
+          "type": "categorical",
+          "label": "Level",
+          "options": [
+            "Beginner",
+            "Intermediate",
+            "Advanced"
+          ]
+        }
+      ]
+    },
+    "roller_skating": {
+      "label": "Roller skating",
+      "category": "fun",
+      "family": "venue",
+      "keywords": "roller[- ]?skat\\w*|rollerblad\\w*",
+      "synonyms": [],
+      "searchQuery": "roller skating rink",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 10,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Standard",
+            "Group package"
+          ]
+        }
+      ]
+    },
+    "yoga": {
+      "label": "Yoga",
+      "category": "class",
+      "family": "class",
+      "keywords": "\\byoga\\b",
+      "synonyms": [],
+      "searchQuery": "yoga classes",
+      "defaultRadiusKm": 20,
+      "minPlausiblePrice": 10,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group class",
+            "Private session"
+          ]
+        }
+      ]
+    },
+    "pilates": {
+      "label": "Pilates",
+      "category": "class",
+      "family": "class",
+      "keywords": "pilates",
+      "synonyms": [],
+      "searchQuery": "pilates studio",
+      "defaultRadiusKm": 20,
+      "minPlausiblePrice": 15,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group class",
+            "Private session"
+          ]
+        }
+      ]
+    },
+    "pottery": {
+      "label": "Pottery class",
+      "category": "class",
+      "family": "class",
+      "keywords": "pottery|ceramic\\w*|wheel throwing",
+      "synonyms": [],
+      "searchQuery": "pottery classes",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 30,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group class",
+            "Private session"
+          ]
+        }
+      ]
+    },
+    "cooking_class": {
+      "label": "Cooking class",
+      "category": "class",
+      "family": "class",
+      "keywords": "cooking (class|lesson)|cook(ing)? together",
+      "synonyms": [],
+      "searchQuery": "cooking classes",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 40,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group class",
+            "Private session"
+          ]
+        }
+      ]
+    },
+    "dance_class": {
+      "label": "Dance class",
+      "category": "class",
+      "family": "class",
+      "keywords": "danc(e|ing) (class|lesson)s?|salsa|bachata|swing danc\\w*",
+      "synonyms": [],
+      "searchQuery": "dance classes",
+      "defaultRadiusKm": 25,
+      "minPlausiblePrice": 15,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group class",
+            "Private session"
+          ]
+        }
+      ]
+    },
+    "boxing": {
+      "label": "Boxing class",
+      "category": "class",
+      "family": "class",
+      "keywords": "\\bboxing\\b|kickbox\\w*|muay thai",
+      "synonyms": [],
+      "searchQuery": "boxing gym classes",
+      "defaultRadiusKm": 25,
+      "minPlausiblePrice": 20,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Evening"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Group class",
+            "Private session"
+          ]
+        }
+      ]
+    },
+    "wine_tasting": {
+      "label": "Wine tasting",
+      "category": "tour",
+      "family": "tour",
+      "keywords": "wine[- ]?(tasting|tour)|winer(y|ies)|vineyard",
+      "synonyms": [],
+      "searchQuery": "wine tasting tours",
+      "defaultRadiusKm": 60,
+      "minPlausiblePrice": 25,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
+      ]
+    },
+    "food_tour": {
+      "label": "Food tour",
+      "category": "tour",
+      "family": "tour",
+      "keywords": "food (tour|crawl)|tasting tour",
+      "synonyms": [],
+      "searchQuery": "food tours",
+      "defaultRadiusKm": 30,
+      "minPlausiblePrice": 40,
+      "minCertification": null,
+      "terms": [
+        {
+          "key": "time_of_day",
+          "type": "categorical",
+          "label": "Time of day",
+          "options": [
+            "Morning",
+            "Afternoon",
+            "Sunset"
+          ]
+        },
+        {
+          "key": "format",
+          "type": "categorical",
+          "label": "Format",
+          "options": [
+            "Shared tour",
+            "Private tour"
+          ]
+        }
       ]
     }
   }

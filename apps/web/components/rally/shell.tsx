@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, Compass, MonitorPlay, Store, Tags, UserRound, Inbox } from "lucide-react";
+import { Bot, Compass, MonitorPlay, Newspaper, Store, Tag, Tags, UserRound, Inbox } from "lucide-react";
 import { usePersona } from "@/lib/persona";
 import { STATUS_LABEL } from "@/lib/format";
 import { Chip, cx } from "@/components/ui/primitives";
@@ -24,7 +24,7 @@ export function Logo() {
 function IdentitySwitcher({ vendorSide }: { vendorSide: boolean }) {
   const { personas, me, vendor, choose, chooseVendor, error } = usePersona();
   if (error) return <Chip tone="danger" title={error}>API offline</Chip>;
-  const list = personas.filter((p) => (vendorSide ? p.role === "vendor" : p.role === "customer" && (p.isTeammate || p.isDemoPersona)));
+  const list = personas.filter((p) => (vendorSide ? p.role === "vendor" : p.role === "customer" && !p.id.startsWith("c_") && (p.isTeammate || p.isDemoPersona)));
   const current = vendorSide ? vendor : me;
   return (
     <label className="flex items-center gap-2 text-[13px]">
@@ -50,6 +50,7 @@ function IdentitySwitcher({ vendorSide }: { vendorSide: boolean }) {
 
 export function AppHeader() {
   const path = usePathname();
+  const { me } = usePersona();
   const vendorSide = path.startsWith("/vendor");
   const nav = vendorSide
     ? [
@@ -59,9 +60,12 @@ export function AppHeader() {
       ]
     : [
         { href: "/", label: "Plan a trip", icon: Compass, exact: true },
+        { href: "/explore", label: "Explore", icon: Newspaper },
+        { href: "/discover", label: "Find deals", icon: Tag },
         { href: "/diagnostics", label: "Agents", icon: Bot },
         { href: "/vendor", label: "For shops", icon: Store },
         { href: "/demo", label: "Demo", icon: MonitorPlay },
+        ...(me ? [{ href: `/people/${me.id}`, label: "Profile", icon: UserRound }] : []),
       ];
   const isOn = (n: (typeof nav)[number]) => (n.exact ? path === n.href : path.startsWith(n.href));
   const links = (mobile: boolean) =>

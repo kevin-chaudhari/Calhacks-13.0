@@ -199,7 +199,8 @@ def test_other_activities_reach_approval(client, goal, vendor_auto):
     intent = c.post("/v1/intents", json={"goalId": g["id"], "privatePrefs": g["suggestedPrefs"]},
                     headers=h(c, "u_kevin")).json()
     m = c.post(f"/v1/intents/{intent['id']}/matches", json={}, headers=h(c, "u_kevin")).json()
-    assert len(m["selectedIntentIds"]) == 4 and len(m["rejections"]) == 3
+    assert len(m["selectedIntentIds"]) == 4
+    assert len([r for r in m["rejections"] if not r["userId"].startswith("c_")]) == 3   # community people elsewhere are extra rejections
     deal = c.post("/v1/deals", json={"intentId": intent["id"], "candidateIntentIds": m["selectedIntentIds"]},
                   headers=h(c, "u_kevin")).json()
     time.sleep(0.3)

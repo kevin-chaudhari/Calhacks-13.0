@@ -254,7 +254,21 @@ export function QuoteMini({ q, chosen }: { q: Quote; chosen: boolean }) {
       ) : (
         <div className="mt-1 text-[13px] text-muted">Can&apos;t serve this plan</div>
       )}
-      <div className="mt-1 text-[12px] text-muted">{chosen ? "Binding quote for the agreed plan" : q.available ? "Price sheet, same plan" : ""}</div>
+      <div className="mt-1 text-[12px] text-muted">
+        {q.provenance === "cached"
+          ? chosen ? "Listed price for the agreed plan; the shop confirms when you book" : q.available ? "Listed price, same plan" : ""
+          : chosen ? "Binding quote for the agreed plan" : q.available ? "Price sheet, same plan" : ""}
+      </div>
+      {q.evidence && (
+        <blockquote className="mt-2 border-l-2 border-buoy pl-2 text-[12px] leading-[18px] text-ink/80">
+          &ldquo;{q.evidence}&rdquo;
+          {q.sourceUrl && (
+            <a href={q.sourceUrl} target="_blank" rel="noreferrer" className="ml-1 whitespace-nowrap text-muted underline">
+              {q.sourceUrl.split("//")[1]?.split("/")[0] ?? "source"}
+            </a>
+          )}
+        </blockquote>
+      )}
     </div>
   );
 }

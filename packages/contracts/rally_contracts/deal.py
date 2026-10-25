@@ -119,6 +119,7 @@ class Quote(RallyModel):
     tiers: list[dict] = []
     source_url: str | None = None
     last_verified_at: int = 0
+    evidence: str | None = None            # listed prices: the sentence on the vendor's page that states it
 
 
 class DealEvent(RallyModel):

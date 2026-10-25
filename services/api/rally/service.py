@@ -11,6 +11,7 @@ import contextlib
 import hashlib
 import json
 import logging
+import re
 import uuid
 from datetime import date
 from pathlib import Path
@@ -18,7 +19,7 @@ from typing import Any
 
 from rally_contracts import (ACTIVE, AgentMessage, Approval, ChatMessage, Commitment, Deal, DealSnapshot,
                              DealStatus, IntentDraft, Member, Nudge, Persona, PrivatePrefs, Proposal,
-                             PublicIntent, Quote, Replacement, Round, RoundResponse)
+                             Place, PublicIntent, Quote, Replacement, Round, RoundResponse)
 
 from . import catalog
 from . import compiler as compiler_mod
@@ -28,7 +29,11 @@ from .negotiation.engine import Plan, PublicConstraints, enumerate_plans
 from .negotiation.mediator import Mediator
 from .negotiation.personal import PersonalAgentBrain
 from .negotiation.transport import InProcTransport
+from .discovery import VendorFinder
+from .social import Social
+from .social import install as install_social
 from .gear import GearPricer
+from .matching import haversine_km
 from .gear import load_catalog as load_gear_catalog
 from .payments import PaymentError, make_rail
 from .providers import baseline_valid, load_providers, quote_for, rank_quotes, sheets
@@ -61,6 +66,9 @@ class Rally:
         self.restored: dict[str, int] | None = None
         self.rail = make_rail(settings)
         self.gear = GearPricer(settings)
+        self.finder = VendorFinder(settings)
+        self.social = Social()
+        self.deal_vendors: dict[str, list[str]] = {}      # deal -> web vendor ids found for its place
         self.paying: set[str] = set()                  # commitment ids with a payment in flight
         if not (store.mirror and self.restore()):
             self.seed()
@@ -86,13 +94,15 @@ class Rally:
                                   prefs_hash=prefs_hash(self.agent_prefs.get(it["id"], {})))
             self.store.intents[intent.id] = intent
             self.store.publish_row("intents", intent.id, intent.wire(), [])
+        self.seed_community()                   # people, open plans and posts across many activities
         self._save_prefs()
         self._publish_dashboards()
 
     def provenance(self) -> dict[str, Any]:
         return {"compiler": self.s.compiler if self.s.gemini_api_key else "template",
                 "ranker": "local", "transport": self.transport_mode(), "providers": "seeded",
-                "payments": self.rail.mode, "store": self.s.store, "gear": self.gear.mode}
+                "payments": self.rail.mode, "store": self.s.store, "gear": self.gear.mode,
+                "vendors": "brightdata" if self.finder.mode == "brightdata" else "seeded"}
 
     def persona(self, user_id: str) -> Persona:
         if user_id not in self.personas:
@@ -122,9 +132,20 @@ class Rally:
         return self._public_goal(goal)
 
     def _neutral_prefs(self, draft: IntentDraft) -> dict:
-        keys = [t.key for t in draft.negotiable_terms]
-        return {"weights": {k: round(1 / len(keys), 3) for k in keys} if keys else {}, "best": {},
-                "reservation": 0.35, "patience": 1.0}
+        """Starting preferences for an activity with no curated defaults: price matters most, the other
+        terms share the rest, and the first option of each is the starting favourite. The owner edits
+        these on the review page; only their agent ever sees them."""
+        terms = [t for t in draft.negotiable_terms if t.type != "numeric"]
+        has_price = any(t.type == "numeric" for t in draft.negotiable_terms)
+        share = 0.7 if has_price else 1.0
+        weights = {t.key: round(share / len(terms), 3) for t in terms} if terms else {}
+        if has_price:
+            weights["price_per_person"] = 0.3
+        best = {t.key: t.options[0] for t in terms if t.options}
+        prefs = {"weights": weights, "best": best, "reservation": 0.35, "patience": 1.0}
+        if draft.budget_max:
+            prefs["priceWorst"] = draft.budget_max.amount
+        return prefs
 
     def _public_goal(self, goal: dict) -> dict:
         return {k: v for k, v in goal.items() if not k.startswith("_")}
@@ -409,7 +430,7 @@ class Rally:
             if ts["key"] == "date" and window:
                 opts = [o for o in opts if window[0].isoformat() <= o <= window[1].isoformat()]
             options[ts["key"]] = opts
-        plans = enumerate_plans(options, sheets(self.activity_providers(deal.activity), pool=deal.solo), len(members))
+        plans = enumerate_plans(options, sheets(self.activity_providers(deal.activity, deal_id), pool=deal.solo), len(members))
         constraints = {}
         for m, it in zip(members, intents):
             constraints[m.user_id] = PublicConstraints(
@@ -437,7 +458,18 @@ class Rally:
         deal = self.store.deals[deal_id]
         deal.nudge = None                                   # a new negotiation makes any earlier offer stale
         members = self._active(deal_id)
+        await self._find_vendors(deal_id)
         plans, constraints = self._plan_space(deal_id, members)
+        if not plans and deal.shape == "group_provider":
+            async with self.store.locks[deal_id]:
+                place = self._deal_place(deal_id)
+                why = (f"No vendor with a listed price was found for {deal.activity_label.lower()} near "
+                       f"{place.label if place else 'this place'}"
+                       + ("" if self.finder.mode == "brightdata" else " (connect Bright Data to search the web)"))
+                deal.conflicts = [why]
+                self.store.transition(deal_id, S.NEGOTIATING, S.NO_AGREEMENT, "mediator", why, {"conflicts": [why]})
+                self.publish(deal_id)
+            return
         brains = {m.user_id: PersonalAgentBrain(m.user_id, self.agent_prefs[m.intent_id], deal.max_rounds)
                   for m in members if m.intent_id in self.agent_prefs}
         await self._collect_price_sheets(deal_id, len(members))
@@ -509,9 +541,31 @@ class Rally:
             raise ApiError(404, "NOT_FOUND", "Provider not found.")
         return p
 
-    def activity_providers(self, activity: str) -> list[dict]:
+    def activity_providers(self, activity: str, deal_id: str | None = None) -> list[dict]:
+        """Vendors for an activity. With a deal: the seeded shops near its place, plus the real vendors
+        found on the web for it (priced ones only; 'call for price' vendors can't be negotiated)."""
         a = catalog.canonical(activity)
-        return [p for p in self.providers if catalog.canonical(p["activity"]) == a]
+        out = [p for p in self.providers if catalog.canonical(p["activity"]) == a and p.get("source") != "web"]
+        if deal_id is None:
+            return out
+        place = self._deal_place(deal_id)
+        if place and place.lat is not None:
+            out = [p for p in out if p.get("location", {}).get("lat") is None
+                   or haversine_km(place, Place(label="", lat=p["location"]["lat"], lng=p["location"]["lng"])) <= 120]
+        elif place:
+            out = [p for p in out if p.get("location", {}).get("label", "").split(",")[0].casefold()
+                   == place.label.split(",")[0].casefold()]
+        web = [self.web_vendor(pid) for pid in self.deal_vendors.get(deal_id, [])]
+        return out + [w for w in web if w and w.get("priced")]
+
+    def web_vendor(self, pid: str) -> dict | None:
+        return next((p for p in self.providers if p["id"] == pid), None)
+
+    def _deal_place(self, deal_id: str):
+        deal = self.store.deals.get(deal_id)
+        org = next((m for m in self.store.members.get(deal_id, []) if deal and m.user_id == deal.created_by), None)
+        intent = self.store.intents.get(org.intent_id) if org else None
+        return intent.draft.location if intent else None
 
     @staticmethod
     def _terms_text(terms: dict) -> str:
@@ -529,11 +583,20 @@ class Rally:
         """Mediator asks every provider agent for this activity for its price sheet (QuoteRequestMsg -> QuoteMsg)."""
         deal = self.store.deals[deal_id]
         async with self.store.locks[deal_id]:
-            for p in self.activity_providers(deal.activity):
+            for p in self.activity_providers(deal.activity, deal_id):
                 self.agent_msg(deal_id, MEDIATOR, self._prov(p), "QuoteRequestMsg",
                                f"Price sheet please: {deal.activity_label.lower()}, group of {n}",
                                {"kind": "price_sheet", "groupSize": n})
                 prices = [t["pricePerPerson"] for t in p["tiers"]]
+                if p.get("source") == "web":
+                    best = min(p["listedOffers"], key=lambda o: o["price"])
+                    site = (p.get("url") or "").split("//")[-1].split("/")[0] or "their listing"
+                    self.agent_msg(deal_id, self._prov(p), MEDIATOR, "QuoteMsg",
+                                   f"Listed on {site}: {best['title']} ${best['price']:.0f} "
+                                   f"{best['unit'].replace('_', ' ')}. Source: “{best['evidence'][:140]}”",
+                                   {"kind": "listed", "offers": p["listedOffers"], "rating": p.get("rating"),
+                                    "reviews": p.get("reviews"), "url": p.get("url")}, latency_ms=0.0)
+                    continue
                 self.agent_msg(deal_id, self._prov(p), MEDIATOR, "QuoteMsg",
                                f"Price sheet: ${min(prices)}–${max(prices)} pp across {len(p['tiers'])} group tiers, "
                                f"{len(p['availableDates'])} dates; offers " + "; ".join(
@@ -548,7 +611,7 @@ class Rally:
                                    + ". Joining one gets that group's rate.",
                                    {"kind": "open_groups", "openGroups": p["openGroups"]}, latency_ms=2.0)
             self.store.append_event(deal_id, "quotes.sheets", "mediator",
-                                    f"Collected price sheets from {len(self.activity_providers(deal.activity))} provider agents")
+                                    f"Collected price sheets from {len(self.activity_providers(deal.activity, deal_id))} vendors")
             self.publish(deal_id)
 
     async def _request_binding_quote(self, deal_id: str, plan: Plan, version: int, n: int) -> None:
@@ -559,8 +622,11 @@ class Rally:
             self.agent_msg(deal_id, MEDIATOR, self._prov(prov), "QuoteRequestMsg",
                            f"Binding quote for plan v{version}: {self._terms_text(plan.t)}, group of {n}",
                            {"kind": "binding", "version": version, "terms": plan.t, "groupSize": n})
-            draft = quote_for(prov, plan.t, n, version, binding=True, pool=deal.solo)
-            if prov.get("autoQuote", True):
+            draft = quote_for(prov, plan.t, n, version, binding=prov.get("source") != "web", pool=deal.solo)
+            if prov.get("source") == "web":
+                draft.source_url = prov.get("url")
+                self._issue_quote(deal_id, prov, draft, by="listing")
+            elif prov.get("autoQuote", True):
                 self._issue_quote(deal_id, prov, draft, by="agent")
             else:
                 staff = self._staff(prov)
@@ -581,27 +647,34 @@ class Rally:
         plan = self.store.proposals[deal_id][-1]
         n = quote.group_size
         others = [quote_for(p, plan.terms, n, quote.proposal_version, binding=False, pool=deal.solo)
-                  for p in self.activity_providers(deal.activity) if p["id"] != prov["id"]]
+                  for p in self.activity_providers(deal.activity, deal_id) if p["id"] != prov["id"]]
         wanted = {k for k, v in plan.terms.items() if v is True}
         quotes = rank_quotes([quote] + others, wanted)
         self.store.quotes[deal_id] = quotes
         deal.chosen_quote_id = quote.id
         deal.vendor_review = None
         who = "approved by staff" if by == "staff" else "sent automatically by the agent"
-        self.agent_msg(deal_id, self._prov(prov), MEDIATOR, "QuoteMsg",
-                       f"Binding quote ${quote.price_per_person:.0f} pp, ${quote.total:.0f} total, valid 30 min ({who})",
+        what = (f"Listed price ${quote.price_per_person:.0f} pp, ${quote.total:.0f} total, read from "
+                f"{(prov.get('url') or 'their site').split('//')[-1].split('/')[0]} (not a quote until they confirm)"
+                if by == "listing" else
+                f"Binding quote ${quote.price_per_person:.0f} pp, ${quote.total:.0f} total, valid 30 min ({who})")
+        self.agent_msg(deal_id, self._prov(prov), MEDIATOR, "QuoteMsg", what,
                        {"kind": "binding", "quoteId": quote.id, "pricePerPerson": quote.price_per_person,
                         "total": quote.total, "expiresAt": quote.expires_at}, latency_ms=4.0)
         for q in quotes:
             if q.available:
-                note = "binding quote" if q.binding else "price sheet"
-                summary = f"{q.provider_name}: ${q.price_per_person:.0f} pp ({note}, simulated)"
+                note = "binding quote" if q.binding else ("listed on their website" if q.provenance == "cached"
+                                                          else "price sheet")
+                summary = f"{q.provider_name}: ${q.price_per_person:.0f} pp ({note}" + (
+                    ")" if q.provenance == "cached" else ", simulated)")
             else:
-                summary = f"{q.provider_name} can't serve this plan (simulated)"
+                summary = f"{q.provider_name} can't serve this plan" + ("" if q.provenance == "cached" else " (simulated)")
             self.store.append_event(deal_id, "quote.received", q.provider_id, summary,
                                     {"quoteId": q.id, "binding": q.binding})
         self.store.transition(deal_id, S.PROVIDER_QUOTES_PENDING, S.AWAITING_APPROVAL, "mediator",
-                              f"Binding quote from {quote.provider_name}: ${quote.price_per_person:.0f} per person",
+                              (f"Listed price from {quote.provider_name}: ${quote.price_per_person:.0f} per person"
+                               if quote.provenance == "cached" else
+                               f"Binding quote from {quote.provider_name}: ${quote.price_per_person:.0f} per person"),
                               {"quoteId": quote.id})
         self._maybe_nudge(deal_id, prov, quote)
 
@@ -622,7 +695,8 @@ class Rally:
                 raise ApiError(409, "PROPOSAL_CHANGED",
                                f"The plan is now version {deal.current_proposal_version}. Review the changes before approving.")
             quote = next((q for q in self.store.quotes[deal_id] if q.id == quote_id), None)
-            if quote is None or quote.proposal_version != version or not quote.binding:
+            listed = quote is not None and quote.id == deal.chosen_quote_id and quote.provenance == "cached"
+            if quote is None or quote.proposal_version != version or not (quote.binding or listed):
                 raise ApiError(409, "QUOTE_MISMATCH", "That quote is not the binding quote for this plan.")
             if quote.expires_at <= now_ms():
                 raise ApiError(410, "QUOTE_EXPIRED", "The quote expired. Refresh it before approving.")
@@ -1042,8 +1116,8 @@ class Rally:
                 prov["agentAddress"] = specs[f"provider:{prov['id']}"].address
 
     def _make_transport(self, deal_id: str, members: list[Member], brains: dict[str, PersonalAgentBrain]):
-        if self.transport_mode() != "agentverse":
-            return InProcTransport(brains)
+        if self.transport_mode() != "agentverse" or any(m.user_id.startswith("c_") for m in members):
+            return InProcTransport(brains)        # community demo people have no uAgents running
         from .negotiation.transport import UAgentsTransport
         live = {m.user_id: self.agent_prefs[m.intent_id] for m in members
                 if m.intent_id in self.agent_prefs and m.intent_id not in self.fixture_intents}
@@ -1498,7 +1572,79 @@ def seed_static(self: "Rally") -> None:
     self.providers = load_providers()
     self.auto_commit = {}
     self.fixture_intents = set(self.agent_prefs)        # agents (Parikshit): their agents load these prefs
+    self.load_community_people()
     self._apply_agent_addresses()                      # agents: real uAgents addresses when TRANSPORT=agentverse
+
+
+async def _find_vendors(self: "Rally", deal_id: str) -> None:
+    """Before the plan space: search the web for real vendors for this deal's activity and place."""
+    deal = self.store.deals[deal_id]
+    place = self._deal_place(deal_id)
+    if self.finder.mode != "brightdata" or place is None or deal.shape != "group_provider":
+        return
+    intent = self.store.intents.get(next(m.intent_id for m in self.store.members[deal_id] if m.user_id == deal.created_by))
+    window = ((intent.draft.date_from.isoformat(), intent.draft.date_to.isoformat())
+              if intent and intent.draft.date_from and intent.draft.date_to else None)
+    self.agent_msg(deal_id, MEDIATOR, ("brightdata", "Bright Data web search", "provider"), "VendorSearch",
+                   f"Find {deal.activity_label.lower()} vendors near {place.label} and read their prices",
+                   {"activity": deal.activity, "place": place.label})
+    found = await self.finder.find(deal.activity, place.model_dump(), window)
+    ids = []
+    for v in found["vendors"]:
+        self.providers = [p for p in self.providers if p["id"] != v["id"]] + [v]
+        ids.append(v["id"])
+    self.deal_vendors[deal_id] = ids
+    priced = [v for v in found["vendors"] if v["priced"]]
+    offers = sum(len(v["listedOffers"]) for v in priced)
+    async with self.store.locks[deal_id]:
+        self.agent_msg(deal_id, ("brightdata", "Bright Data web search", "provider"), MEDIATOR, "VendorResults",
+                       f"{len(found['vendors'])} vendors found, {len(priced)} with prices on their own site "
+                       f"({offers} offers, each with the sentence it came from)",
+                       {"vendors": [v["name"] for v in found["vendors"]], "deals": len(found["deals"]),
+                        "query": found["query"], "errors": found["errors"][:3]})
+        self.store.append_event(deal_id, "vendors.found", "mediator",
+                                f"Searched the web: {len(priced)} of {len(found['vendors'])} vendors near "
+                                f"{place.label} list prices", {"query": found["query"]})
+        self.publish(deal_id)
+
+
+def resolve_activity_place(self: "Rally", text: str = "", activity: str = "", place: str = "") -> tuple[str, Place | None]:
+    """Free text ("surf lessons in Santa Cruz") or explicit fields -> (activity key, place)."""
+    if text:
+        x = compiler_mod.extract_template(compiler_mod.sanitize(text))
+        activity = activity or x.activity
+        place = place or (x.place or "")
+    act = catalog.canonical(activity.strip().lower().replace(" ", "_")) if activity else "activity"
+    for key, info in catalog.activities().items():          # "surf lessons" -> surfing
+        if act == key or re.search(info["keywords"], activity.lower()):
+            act = key
+            break
+    loc = None
+    if place:
+        k = compiler_mod.find_place(place) or place.strip().lower()
+        if k in compiler_mod.GAZETTEER:
+            label, lat, lng = compiler_mod.GAZETTEER[k]
+            loc = Place(label=label, lat=lat, lng=lng)
+        else:
+            loc = Place(label=place.strip())
+    return act, loc
+
+
+async def discover(self: "Rally", text: str = "", activity: str = "", place: str = "", refresh: bool = False) -> dict:
+    """Real vendors and web deals for any activity near any place, with every price's source sentence."""
+    act, loc = self.resolve_activity_place(text, activity, place)
+    if act == "activity":
+        raise ApiError(422, "NO_ACTIVITY", "Say what you want to do, for example 'surf lessons'.")
+    if loc is None:
+        raise ApiError(422, "NO_PLACE", "Say where, for example 'in Santa Cruz'.", fields={"place": "required"})
+    found = await self.finder.find(act, loc.model_dump(), None, refresh=refresh)
+    seeded = [p for p in self.providers if p.get("source") != "web" and catalog.canonical(p["activity"]) == act
+              and (loc.lat is None or p["location"].get("lat") is None
+                   or haversine_km(loc, Place(label="", lat=p["location"]["lat"], lng=p["location"]["lng"])) <= 120)]
+    return {**found, "activity": act, "activityLabel": catalog.label(act), "place": loc.label,
+            "seeded": [{"id": p["id"], "name": p["name"], "location": p["location"],
+                        "fromPrice": min(t["pricePerPerson"] for t in p["tiers"]), "provenance": p["provenance"]}
+                       for p in seeded]}
 
 
 async def _create_solo(self: "Rally", user_id: str, seeker) -> dict:
@@ -1544,7 +1690,7 @@ async def gear_for_deal(self: "Rally", user_id: str, deal_id: str) -> dict:
     provider_id = quote.provider_id if quote else (props[-1].provider_id if props else None)
     gear_terms = {i.get("neededWhen") for i in load_gear_catalog().get(catalog.canonical(deal.activity), [])} - {None}
     rentals = []
-    for prov in self.activity_providers(deal.activity):
+    for prov in self.activity_providers(deal.activity, deal_id):
         offers = prov.get("offers", {})
         for term in gear_terms:
             if True not in offers.get(term, [True]):
@@ -1563,7 +1709,7 @@ async def gear_for_activity(self: "Rally", activity: str, terms: dict) -> dict:
     return await self.gear.price(activity, terms)
 
 
-for _f in (_create_solo, _solo_start, gear_for_deal, gear_for_activity, _stamp_timing, metrics, launch, _negotiate_when_joined, seats, _start_payment, _pay, deposit_check, _access, _publish_vendor_views, _publish_dashboards, _stored_goal, _save_prefs, restore, resume, seed_static):
+for _f in (resolve_activity_place, discover, _find_vendors, _create_solo, _solo_start, gear_for_deal, gear_for_activity, _stamp_timing, metrics, launch, _negotiate_when_joined, seats, _start_payment, _pay, deposit_check, _access, _publish_vendor_views, _publish_dashboards, _stored_goal, _save_prefs, restore, resume, seed_static):
     setattr(Rally, _f.__name__, _f)
 del _f
 
@@ -1658,3 +1804,5 @@ class _StoreHooks:
                     self.store.append_event(self.deal_id, f"member.{state}", "mediator",
                                             f"{m.name}: {reason or state}", {"memberId": member_id})
             self.app.publish(self.deal_id)
+
+install_social(Rally)
