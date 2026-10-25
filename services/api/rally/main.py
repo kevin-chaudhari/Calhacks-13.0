@@ -5,6 +5,7 @@ Run: uvicorn rally.main:app --reload --port 8000   (see Makefile: make api)
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from collections import defaultdict
@@ -31,13 +32,25 @@ rally = Rally(settings, MemoryStore(mirror))
 
 
 
+async def _pay_out_finished_trips() -> None:
+    """Held money goes to the vendor once a trip's dispute window closes (escrow.py)."""
+    while True:
+        try:
+            await rally.release_due()
+        except Exception:  # noqa: BLE001  one bad deal must not stop every payout
+            logging.getLogger("rally").exception("payout sweep failed")
+        await asyncio.sleep(60)
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await rally.start_agents()        # TRANSPORT=agentverse: mediator agent first, so resumed deals can use it
     resumed = rally.resume()          # restart recovery: mediators, invites and quote requests in flight
     if rally.restored:
         logging.getLogger("rally").info("restored from Convex: %s; resumed %s", rally.restored, resumed)
+    payouts = asyncio.create_task(_pay_out_finished_trips())
     yield
+    payouts.cancel()
     await rally.stop_agents()
     if mirror:
         mirror.close()
@@ -293,6 +306,30 @@ def events(deal_id: str, afterSeq: int = 0, uid: str = Depends(user)):
 @app.get("/v1/providers")
 def providers(activity: str | None = None):
     return [p for p in rally.providers if not activity or p["activity"] == activity]
+
+
+class ReportBody(BaseModel):
+    dealId: str
+    reason: str
+
+
+@app.post("/v1/deals/{deal_id}/trip-happened")
+async def trip_happened(deal_id: str, uid: str = Depends(user)):
+    """I went: once everyone says so, Parley pays the vendor the money it held."""
+    return await rally.confirm_trip(uid, deal_id)
+
+
+@app.post("/v1/vendors/{provider_id}/reports")
+async def report_vendor(provider_id: str, body: ReportBody, uid: str = Depends(user)):
+    """Report a vendor I booked and paid. Holds that trip's payout; reports from 2 trips freeze the vendor."""
+    limited(uid, "report", 5)
+    return await rally.report_vendor(uid, provider_id, body.dealId, body.reason)
+
+
+@app.get("/v1/agent/vendors")
+def learned_vendors(uid: str = Depends(user)):
+    """What my agent learned about vendors from my past trips, and which ones it no longer contacts."""
+    return rally.vendor_memory.known(uid)
 
 
 @app.get("/v1/diagnostics")

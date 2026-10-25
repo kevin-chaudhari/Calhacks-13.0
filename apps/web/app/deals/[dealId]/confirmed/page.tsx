@@ -2,12 +2,82 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { CircleCheck } from "lucide-react";
+import { useState } from "react";
+import { CircleCheck, ShieldCheck } from "lucide-react";
+import { api, ApiError } from "@/lib/api";
 import { money, orderedTerms, TERM_LABELS, termValue, time } from "@/lib/format";
+import type { DealSnapshot } from "@/lib/types";
 import { useDealSnapshot } from "@/lib/useDeal";
-import { Avatar, Callout, Card, CardHeader, Chip, Skeleton } from "@/components/ui/primitives";
+import { Avatar, Button, Callout, Card, CardHeader, Chip, Skeleton } from "@/components/ui/primitives";
 import { ProvenanceBadge } from "@/components/rally/shell";
 import { CalendarAndShare, DepositStatus, NegotiationReplay, ReplacementNotes } from "@/components/rally/platform";
+
+function YourMoney({ snap }: { snap: DealSnapshot }) {
+  const d = snap.deal;
+  const e = d.escrow;
+  const quote = snap.quotes.find((q) => q.id === d.chosenQuoteId);
+  const [busy, setBusy] = useState<"trip" | "report" | null>(null);
+  const [reason, setReason] = useState("");
+  const [note, setNote] = useState<{ tone: "danger" | "neutral"; text: string } | null>(null);
+
+  async function act(kind: "trip" | "report") {
+    if (!e) return;
+    setBusy(kind);
+    setNote(null);
+    try {
+      if (kind === "trip") await api(`/v1/deals/${d.id}/trip-happened`, { method: "POST" });
+      else {
+        const r = await api<{ vendorFrozen: boolean }>(`/v1/vendors/${e.providerId}/reports`, { body: { dealId: d.id, reason } });
+        setReason("");
+        setNote({ tone: "neutral", text: r.vendorFrozen ? `${e.providerName} is now frozen: nobody pays it, and everyone it owed is refunded.` : "Thanks. The payout for this trip is on hold." });
+      }
+    } catch (err) {
+      setNote({ tone: "danger", text: err instanceof ApiError ? err.message : "That didn't work." });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (!e) {
+    if (quote?.provenance !== "cached") return null;
+    return (
+      <Callout tone="warn" title="Parley can't hold this payment">
+        {quote.providerName} is booked on its own website, so you pay them directly. Pay only on their site itself, never through a link someone sends you.
+      </Callout>
+    );
+  }
+  const text = {
+    holding: `Parley is holding ${money(e.amount)}. ${e.providerName} is paid only after the trip${e.releaseAfter ? `, from ${e.releaseAfter} if nobody reports a problem` : ""}.`,
+    disputed: `The payout to ${e.providerName} is on hold: ${e.reason ?? "a problem was reported"}.`,
+    released: `Paid to ${e.providerName} after the trip.`,
+    refunded: `Refunded: ${e.reason ?? "the vendor was frozen"}. ${e.providerName} was never paid.`,
+  }[e.status];
+  return (
+    <Card className="mb-6">
+      <CardHeader icon={<ShieldCheck size={16} />} title="Your money" meta={<Chip tone={e.status === "refunded" || e.status === "disputed" ? "warn" : "accent"}>{e.status}</Chip>} />
+      <div className="space-y-3 px-5 py-4 text-[13px]">
+        <p>{text} Parley never asks you to pay anywhere else.</p>
+        {e.status === "holding" && (
+          <Button variant="secondary" onClick={() => act("trip")} disabled={!!busy}>{busy === "trip" ? "Saving…" : "The trip happened"}</Button>
+        )}
+        {e.status !== "refunded" && (
+          <div className="flex flex-col gap-2 border-t border-line pt-3">
+            <label htmlFor="report" className="font-medium">Something wrong with {e.providerName}?</label>
+            <textarea
+              id="report" value={reason} onChange={(ev) => setReason(ev.target.value)} rows={2} maxLength={500}
+              placeholder="What happened? For example: no-show, asked to pay outside Parley"
+              className="rounded-[6px] border border-line bg-surface px-2 py-1.5"
+            />
+            <Button variant="danger" onClick={() => act("report")} disabled={!!busy || reason.trim().length < 5}>
+              {busy === "report" ? "Reporting…" : "Report this vendor"}
+            </Button>
+          </div>
+        )}
+        {note && <Callout tone={note.tone} title={note.text} />}
+      </div>
+    </Card>
+  );
+}
 
 export default function Confirmed() {
   const { dealId } = useParams<{ dealId: string }>();
@@ -61,6 +131,8 @@ export default function Confirmed() {
           </div>
         </div>
       </div>
+
+      <YourMoney snap={snap} />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

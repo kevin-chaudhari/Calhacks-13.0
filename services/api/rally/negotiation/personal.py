@@ -12,7 +12,7 @@ from typing import Any
 
 from rally_contracts import ProposalMsg, ResponseMsg
 
-from .engine import VIOLATES, Plan, term_score, threshold, utility
+from .engine import VIOLATES, Plan, term_score, threshold, uncovered_high, utility
 
 
 class PersonalAgentBrain:
@@ -30,9 +30,18 @@ class PersonalAgentBrain:
         self.space = plans
         prices = [p.price_per_person for p in plans] or [0.0, 1.0]
         self.price_lo, self.price_hi = min(prices), max(prices)
-        scores = [utility(p, self.prefs, self.price_lo, self.price_hi) for p in plans]
-        ok = [u for u, v in scores if v is None]
-        self.u_star = max(ok) if ok else 0.0
+        # price is judged against plans this member could accept at all: a cheap plan that breaks a
+        # must-have shouldn't make the cheapest acceptable one look expensive
+        acceptable = [p.price_per_person for p in plans
+                      if utility(p, self.prefs, self.price_lo, self.price_hi)[1] is None]
+        if acceptable:
+            self.price_lo, self.price_hi = min(acceptable), max(acceptable)
+        scores = [(utility(p, self.prefs, self.price_lo, self.price_hi), p) for p in plans]
+        ok = [u for (u, v), _ in scores if v is None]
+        # concession is measured against plans that cover every top priority, when any exist
+        covered = [u for (u, v), p in scores if v is None
+                   and not uncovered_high(p, self.prefs, self.price_lo, self.price_hi)]
+        self.u_star = max(covered or ok) if ok else 0.0
 
     def _plan_from(self, msg: ProposalMsg) -> Plan:
         return Plan(tuple(sorted(msg.terms.items())), msg.provider_id, msg.price_per_person)
@@ -45,6 +54,10 @@ class PersonalAgentBrain:
         if violated:
             return ResponseMsg(**base, kind="reject_hard", term=violated,
                                preferred=self._json(plan.get(violated)))
+        missing = uncovered_high(plan, self.prefs, self.price_lo, self.price_hi)
+        if missing:                         # top priorities are never conceded, whatever the round
+            return ResponseMsg(**base, kind="change_request", term=missing[0],
+                               preferred=self._json(self._preferred(missing[0], plan)))
         tau = threshold(self.u_star, self.prefs.get("reservation", 0.35), msg.round,
                         self.rounds, self.prefs.get("patience", 1.0))
         if u >= tau - 1e-9:

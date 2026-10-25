@@ -17,6 +17,14 @@ const KIND: Record<string, { label: string; tone: "accent" | "neutral" | "warn" 
   provider: { label: "Provider decides", tone: "sim" },
 };
 
+type Priority = "must" | "high" | "nice";
+
+const PRIORITIES: { value: Priority; label: string; hint: string }[] = [
+  { value: "nice", label: "Nice to have", hint: "Your agent may trade this for a better price" },
+  { value: "high", label: "Top priority", hint: "Your agent won't accept a plan without it, and asks for it first" },
+  { value: "must", label: "Must have", hint: "Never traded: plans without it are refused outright" },
+];
+
 function MissingInput({ m, onApply }: { m: MissingField; onApply: (patch: Record<string, unknown>) => void }) {
   const [v, setV] = useState("");
   const field = m.field;
@@ -105,6 +113,7 @@ export default function Review() {
   const [busy, setBusy] = useState(false);
   const [weights, setWeights] = useState<Record<string, number>>({});
   const [best, setBest] = useState<Record<string, unknown>>({});
+  const [priorities, setPriorities] = useState<Record<string, Priority>>({});
   const pubKey = useRef(newKey());
 
   useEffect(() => {
@@ -118,6 +127,7 @@ export default function Review() {
         setGoal(g);
         setWeights(g.suggestedPrefs.weights ?? {});
         setBest(g.suggestedPrefs.best ?? {});
+        setPriorities(g.suggestedPrefs.priorities ?? {});
       })
       .catch((e) => setErr(e.message));
   }, [goalId, me]);
@@ -140,7 +150,7 @@ export default function Review() {
     setErr(null);
     try {
       await api(`/v1/intents`, {
-        body: { goalId, privatePrefs: { ...goal.suggestedPrefs, weights, best } },
+        body: { goalId, privatePrefs: { ...goal.suggestedPrefs, weights, best, priorities } },
         idempotencyKey: pubKey.current,
       });
       router.push(`/goals/${goalId}/matches`);
@@ -269,7 +279,7 @@ export default function Review() {
             <CardHeader
               icon={<Lock size={15} />}
               title="What matters most to you"
-              meta="Secret: only your agent sees this. Slide up what you care about."
+              meta="Secret: only your agent sees this. Slide up what you care about, and mark what it must never give up."
             />
             <div className="space-y-4 px-5 py-4">
               {terms.map((t) => {
@@ -295,6 +305,7 @@ export default function Review() {
                           const raw = e.target.value;
                           const val = raw === "true" ? true : raw === "false" ? false : raw;
                           setBest({ ...best, [t.key]: raw === "" ? undefined : val });
+                          if (raw === "") setPriorities({ ...priorities, [t.key]: "nice" });
                         }}
                         className="mt-1 h-8 w-full rounded-[6px] border border-line bg-surface px-2 text-[13px]"
                       >
@@ -303,6 +314,25 @@ export default function Review() {
                           <option key={String(o)} value={String(o)}>Prefer {termValue(t.key, o)}</option>
                         ))}
                       </select>
+                    )}
+                    {t.type !== "numeric" && t.options.length > 0 && (
+                      <div role="radiogroup" aria-label={`How much ${t.label || t.key} matters`} className="mt-1.5 flex gap-1">
+                        {PRIORITIES.map((p) => {
+                          const on = (priorities[t.key] ?? "nice") === p.value;
+                          const needsFavourite = p.value !== "nice" && best[t.key] === undefined;
+                          return (
+                            <button
+                              key={p.value} type="button" role="radio" aria-checked={on}
+                              disabled={published || needsFavourite}
+                              title={needsFavourite ? "Pick a favourite option first" : p.hint}
+                              onClick={() => setPriorities({ ...priorities, [t.key]: p.value })}
+                              className={`rounded-full border px-2.5 py-0.5 text-[12px] font-medium disabled:opacity-40 ${on ? "border-ink bg-ink text-surface" : "border-line bg-surface text-muted hover:text-ink"}`}
+                            >
+                              {p.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 );

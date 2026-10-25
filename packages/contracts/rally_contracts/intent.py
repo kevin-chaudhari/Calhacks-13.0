@@ -2,7 +2,7 @@
 
 from datetime import date
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field
 
@@ -90,6 +90,9 @@ class PrivatePrefs(RallyModel):
     price_worst: float | None = None              # price at which price score hits 0
     reservation: float = 0.35                     # lowest acceptable score at the last round
     patience: float = 1.0                         # beta in the concession curve
+    # per term: "must" is never traded, "high" must be covered before the agent accepts anything,
+    # "nice" (the default for unlisted terms) is weighed against price and may be conceded
+    priorities: dict[str, Literal["must", "high", "nice"]] = {}
 
 
 class PublicIntent(RallyModel):

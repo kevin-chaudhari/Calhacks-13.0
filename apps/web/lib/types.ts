@@ -25,6 +25,7 @@ export interface Goal {
     priceWorst?: number | null;
     reservation?: number;
     patience?: number;
+    priorities?: Record<string, "must" | "high" | "nice">;
   };
 }
 

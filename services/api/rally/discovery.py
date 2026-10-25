@@ -32,7 +32,7 @@ from urllib.parse import quote_plus, urlparse
 
 from pydantic import BaseModel
 
-from . import catalog
+from . import catalog, trust
 
 if TYPE_CHECKING:
     from .core import Settings
@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 log = logging.getLogger("rally.discovery")
 
 API = os.environ.get("BRIGHTDATA_API_BASE", "https://api.brightdata.com").rstrip("/")
+RDAP = os.environ.get("RDAP_BASE", "https://rdap.org/domain").rstrip("/")   # public domain registry lookup
 CACHE_TTL_S = 24 * 3600
 PAGE_CHARS = 40_000
 AGGREGATORS = ("yelp.", "tripadvisor.", "facebook.", "instagram.", "google.", "youtube.", "reddit.",
@@ -369,6 +370,23 @@ class VendorFinder:
             raise RuntimeError(f"Web Unlocker {r.status_code} for {_domain(url)}")
         return r.text[:PAGE_CHARS]
 
+    async def _domain_age(self, site: str | None) -> int | None:
+        """Days since the vendor's domain was registered, from the public RDAP registry (no key).
+        Its own client: the Bright Data key must never be sent to anyone else."""
+        domain = _domain(site)
+        if not domain:
+            return None
+        import httpx
+        try:
+            async with httpx.AsyncClient(transport=self.transport, timeout=8, follow_redirects=True) as http:
+                r = await http.get(f"{RDAP}/{domain}")
+            if r.status_code != 200:
+                return None
+            return trust.domain_age_days(r.json(), date.today())   # a real-world fact: real today
+        except Exception as exc:  # noqa: BLE001  unknown age is "unknown", never a red flag
+            log.info("domain age lookup failed for %s: %s", domain, exc)
+            return None
+
     def _gemini(self, page: str, vendor: str, activity: str) -> list[dict]:
         from google import genai  # optional dependency, same SDK the compiler uses
         client = genai.Client(api_key=self.s.gemini_api_key)
@@ -401,17 +419,18 @@ class VendorFinder:
         """Vendors + web deals for one activity near one place. Concurrent callers share one search."""
         ck = f"{catalog.canonical(activity)}|{_area(place['label'])}"
         hit = self.cache.get(ck)
-        if hit and not refresh and time.time() - hit["at"] < CACHE_TTL_S:
+        if hit and not refresh and time.time() - hit["at"] < CACHE_TTL_S and hit.get("limit", 6) >= limit:
             return _with_window(hit["result"], window)
         if self.mode != "brightdata":
             return {"mode": "off", "activity": activity, "place": place["label"], "vendors": [], "deals": [],
                     "query": None, "fetchedAt": int(time.time() * 1000), "extractor": self.extractor, "errors": []}
-        if ck not in self._inflight:
-            self._inflight[ck] = asyncio.ensure_future(self._find(activity, place, limit))
+        fk = f"{ck}|{limit}"                       # a wider search never waits on a narrower one
+        if fk not in self._inflight:
+            self._inflight[fk] = asyncio.ensure_future(self._find(activity, place, limit))
         try:
-            result = await self._inflight[ck]
+            result = await self._inflight[fk]
         finally:
-            self._inflight.pop(ck, None)
+            self._inflight.pop(fk, None)
         return _with_window(result, window)
 
     async def _find(self, activity: str, place: dict, limit: int) -> dict:
@@ -435,8 +454,9 @@ class VendorFinder:
             vendors = vendors[:limit]
             sem = asyncio.Semaphore(4)
 
-            async def read(v: dict) -> dict:
+            async def read(v: dict) -> tuple[dict, str | None, int | None]:
                 offers: list[dict] = []
+                page: str | None = None
                 if v.get("site") and self.unlocker_zone:
                     async with sem:
                         try:
@@ -447,13 +467,18 @@ class VendorFinder:
                             errors.append(str(exc))
                 if not offers and v.get("snippet"):        # the search snippet itself, if it states a price
                     offers = [o for o in extract_rules(v["snippet"]) if verify_offer(o, v["snippet"])]
-                return provider_record(activity, place, v, offers, None, v.get("site"), fetched)
+                age = await self._domain_age(v.get("site"))
+                return provider_record(activity, place, v, offers, None, v.get("site"), fetched), page, age
 
-            records = await asyncio.gather(*(read(v) for v in vendors))
+            read_back = await asyncio.gather(*(read(v) for v in vendors))
+        records = [r for r, _, _ in read_back]
+        for r, page, age in read_back:                     # is each one a real business? (trust.py)
+            r["trust"] = trust.assess(r, page, age, trust.market_ratio(r, [o for o in records if o is not r]))
         records.sort(key=lambda r: (not r["priced"], -(r.get("rating") or 0)))
         result = {"mode": "brightdata", "activity": activity, "place": place["label"], "vendors": records,
                   "deals": deals, "query": query, "fetchedAt": fetched, "extractor": self.extractor, "errors": errors}
-        self.cache[f"{catalog.canonical(activity)}|{_area(place['label'])}"] = {"at": time.time(), "result": result}
+        self.cache[f"{catalog.canonical(activity)}|{_area(place['label'])}"] = {"at": time.time(), "result": result,
+                                                                               "limit": limit}
         try:
             self.cache_path.parent.mkdir(parents=True, exist_ok=True)
             self.cache_path.write_text(json.dumps(self.cache))

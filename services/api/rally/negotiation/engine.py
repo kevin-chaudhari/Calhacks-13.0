@@ -145,7 +145,15 @@ def _days(a: str, b: str) -> int:
 
 
 def term_score(key: str, value: Any, prefs: dict, price_lo: float, price_hi: float) -> float | str:
-    """s_{m,t}(value) in [0,1], or VIOLATES if outside the member's acceptable range."""
+    """s_{m,t}(value) in [0,1], or VIOLATES if outside the member's acceptable range
+    or a must-have term that the plan doesn't cover."""
+    s = _raw_score(key, value, prefs, price_lo, price_hi)
+    if s != VIOLATES and priority(prefs, key) == "must" and float(s) < GOOD:
+        return VIOLATES
+    return s
+
+
+def _raw_score(key: str, value: Any, prefs: dict, price_lo: float, price_hi: float) -> float | str:
     ranges: dict = prefs.get("ranges", {})
     best: dict = prefs.get("best", {})
     if key in ranges and value not in ranges[key]:
@@ -166,11 +174,34 @@ def term_score(key: str, value: Any, prefs: dict, price_lo: float, price_hi: flo
     return 1.0 if value == best[key] else 0.35
 
 
+GOOD = 0.75                                # a term at or above this score counts as covered
+
+
+def priority(prefs: dict, key: str) -> str:
+    """must | high | nice. Price is never ranked: the budget already caps it as a must-have."""
+    if key == "price_per_person" or key not in prefs.get("best", {}):
+        return "nice"                      # nothing to cover without a stated favourite
+    return prefs.get("priorities", {}).get(key, "nice")
+
+
+def uncovered_high(plan: Plan, prefs: dict, price_lo: float, price_hi: float) -> list[str]:
+    """Top-priority terms this plan doesn't cover, most important (highest weight) first."""
+    weights = prefs.get("weights", {})
+    out = []
+    for k in prefs.get("best", {}):
+        if priority(prefs, k) == "high":
+            s = _raw_score(k, plan.get(k), prefs, price_lo, price_hi)
+            if s == VIOLATES or float(s) < GOOD:
+                out.append(k)
+    return sorted(out, key=lambda k: (-weights.get(k, 0.0), k))
+
+
 def utility(plan: Plan, prefs: dict, price_lo: float, price_hi: float) -> tuple[float, str | None]:
     """u_m(p) = sum_t w_t * s_t(p_t). Returns (score, violated_term). Hard check first."""
     total = 0.0
     weights: dict[str, float] = prefs["weights"]
-    for key in list(weights) + [k for k in prefs.get("ranges", {}) if k not in weights]:
+    musts = [k for k in prefs.get("best", {}) if priority(prefs, k) == "must"]
+    for key in dict.fromkeys([*weights, *prefs.get("ranges", {}), *musts]):
         s = term_score(key, plan.get(key), prefs, price_lo, price_hi)
         if s == VIOLATES:
             return 0.0, key

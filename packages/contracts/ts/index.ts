@@ -101,6 +101,7 @@ export interface Deal {
   replacements: Replacement[];
   negotiationMs: number | null;
   solo: boolean;
+  escrow: Escrow | null;
 }
 
 export interface DealEvent {
@@ -129,6 +130,18 @@ export interface DealSnapshot {
 }
 
 export type DealStatus = "GROUP_FORMING" | "NEGOTIATING" | "PROVIDER_QUOTES_PENDING" | "AWAITING_APPROVAL" | "COMMITMENT_PENDING" | "COMMITTED" | "NO_AGREEMENT" | "EXPIRED" | "CANCELLED" | "FAILED";
+
+export interface Escrow {
+  status: "holding" | "disputed" | "released" | "refunded";
+  amount: number;
+  providerId: string;
+  providerName: string;
+  tripDate: string | null;
+  releaseAfter: string | null;
+  confirmedBy: string[];
+  reason: string | null;
+  at: number;
+}
 
 export interface FinalAgreementMsg {
   msgId: string;
@@ -236,6 +249,7 @@ export interface PrivatePrefs {
   priceWorst: number | null;
   reservation: number;
   patience: number;
+  priorities: Record<string, "must" | "high" | "nice">;
 }
 
 export interface Proposal {

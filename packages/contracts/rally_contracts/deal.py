@@ -154,6 +154,19 @@ class Replacement(RallyModel):
     at: int
 
 
+class Escrow(RallyModel):
+    """Money Parley holds for a committed trip. The vendor is paid only after the trip happened."""
+    status: Literal["holding", "disputed", "released", "refunded"] = "holding"
+    amount: float                               # everything the members committed, held by Parley
+    provider_id: str
+    provider_name: str = ""
+    trip_date: str | None = None
+    release_after: str | None = None            # paid out from this date if nobody reported a problem
+    confirmed_by: list[str] = []                # members who said the trip happened
+    reason: str | None = None                   # why it's disputed or refunded
+    at: int = 0
+
+
 class Deal(RallyModel):
     id: str
     shape: Shape
@@ -182,3 +195,4 @@ class Deal(RallyModel):
     replacements: list[Replacement] = []        # owner: agents (Parikshit); UI: platform (Kevin)
     negotiation_ms: int | None = None           # wall time from negotiate to agreement, for live metrics
     solo: bool = False                          # one traveller; their agent negotiates with vendor agents directly
+    escrow: Escrow | None = None                # set once everyone committed (escrow.py)
