@@ -1,17 +1,17 @@
-"""Parley concierge: type a group-trip goal in ASI:One, get back a negotiated group plan.
+"""HuddleUp concierge: type a group-trip goal in ASI:One, get back a negotiated group plan.
 
     python agents/concierge.py     # mailbox agent; needs the API (and, for TRANSPORT=agentverse, run_agents.py)
 
 Chat Protocol (ChatMessage / ChatAcknowledgement) with a published manifest, so ASI:One can
-discover and route to it. On each message it drives the Parley API over HTTP:
+discover and route to it. On each message it drives the HuddleUp API over HTTP:
 compile -> (ask a missing question) -> publish -> matches -> deal -> negotiate -> poll the snapshot,
-and replies in three short messages: what Parley understood, who matched, and the agreed plan
+and replies in three short messages: what HuddleUp understood, who matched, and the agreed plan
 with a link to the live group room.
 
 People already in a deal are not matched again, so a second chat finds nobody until the demo board
 is reset; CONCIERGE_RESET_EACH_GOAL=1 resets it before every new goal (it also ends earlier rooms).
 
-Identity: ASI:One senders map to Parley demo personas from CONCIERGE_PERSONAS (default u_kevin),
+Identity: ASI:One senders map to HuddleUp demo personas from CONCIERGE_PERSONAS (default u_kevin),
 in order of first contact; with one persona, every sender acts as Kevin.
 """
 from __future__ import annotations
@@ -40,7 +40,7 @@ class ApiFailure(Exception):
 
 
 class RallyAPI:
-    """The Parley HTTP API, as the concierge uses it. Replace with a fake in tests."""
+    """The HuddleUp HTTP API, as the concierge uses it. Replace with a fake in tests."""
 
     def __init__(self, base_url: str, transport=None):
         import httpx
@@ -123,7 +123,7 @@ def understood(draft: dict, compiled_by: str) -> str:
                 None)
     if cert:
         parts.append(f"{cert.replace('_', ' ').title()} certified")
-    how = "Gemini" if compiled_by == "gemini" else "Parley's offline compiler"
+    how = "Gemini" if compiled_by == "gemini" else "HuddleUp's offline compiler"
     return f"Here's what I understood: {', '.join(parts)}. (Compiled by {how}.)"
 
 
@@ -219,10 +219,10 @@ class Concierge:
         try:
             await self._step(s, text, say)
         except ApiFailure as exc:
-            await say(f"Parley couldn't do that: {exc}. Try rephrasing, or say 'start over'.")
+            await say(f"HuddleUp couldn't do that: {exc}. Try rephrasing, or say 'start over'.")
             s.text, s.patch, s.asking = "", {}, None
         except Exception as exc:  # noqa: BLE001 - the chat must always answer
-            await say(f"Something went wrong on Parley's side ({type(exc).__name__}). Say 'start over' to retry.")
+            await say(f"Something went wrong on HuddleUp's side ({type(exc).__name__}). Say 'start over' to retry.")
             s.text, s.patch, s.asking = "", {}, None
         finally:
             s.busy = False
@@ -319,5 +319,5 @@ def from_env() -> Concierge:
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     a = build_agent(from_env())
-    print(f"Parley concierge {a.address}")
+    print(f"HuddleUp concierge {a.address}")
     a.run()

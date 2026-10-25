@@ -48,7 +48,7 @@ export default function Pricing() {
   return (
     <>
       <PageTitle eyebrow={`Vendor portal · ${p.name}`} title="Agent & pricing rules">
-        Your Parley agent prices every plan from these rules: the group-size tier, plus or minus option modifiers. It can only
+        Your HuddleUp agent prices every plan from these rules: the group-size tier, plus or minus option modifiers. It can only
         offer what you list here.
       </PageTitle>
 

@@ -9,14 +9,14 @@ import { Chip, cx } from "@/components/ui/primitives";
 
 export function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2" aria-label="Parley home">
+    <Link href="/" className="flex items-center gap-2" aria-label="HuddleUp home">
       {/* Two signal pennants meeting: yours and theirs, at the table. */}
       <svg width="26" height="22" viewBox="0 0 26 22" aria-hidden>
         <path d="M3 2v19M23 2v19" stroke="var(--ink)" strokeWidth="1.6" strokeLinecap="round" />
         <path d="M3.8 3h8.6l-3.2 3.5 3.2 3.5H3.8z" fill="var(--accent)" />
         <path d="M22.2 3h-8.6l3.2 3.5-3.2 3.5h8.6z" fill="var(--buoy)" />
       </svg>
-      <span className="display text-[21px] font-semibold tracking-[-0.03em]">Parley</span>
+      <span className="display text-[21px] font-semibold tracking-[-0.03em]">HuddleUp</span>
     </Link>
   );
 }

@@ -155,9 +155,9 @@ class Replacement(RallyModel):
 
 
 class Escrow(RallyModel):
-    """Money Parley holds for a committed trip. The vendor is paid only after the trip happened."""
+    """Money HuddleUp holds for a committed trip. The vendor is paid only after the trip happened."""
     status: Literal["holding", "disputed", "released", "refunded"] = "holding"
-    amount: float                               # everything the members committed, held by Parley
+    amount: float                               # everything the members committed, held by HuddleUp
     provider_id: str
     provider_name: str = ""
     trip_date: str | None = None

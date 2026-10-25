@@ -1,6 +1,6 @@
 """Hold-until-trip payments and fraud reports. Owner: platform.
 
-Parley holds everything the members committed for a trip booked through it. The vendor is paid only
+HuddleUp holds everything the members committed for a trip booked through it. The vendor is paid only
 after the trip: once it has confirmed the booking, and either every member says the trip happened or
 DISPUTE_DAYS have passed since the trip date with no report.
 
@@ -9,7 +9,7 @@ from FREEZE_AFTER different trips freeze the vendor everywhere: every payout it 
 refunded to the members, its open deals are cancelled, and no agent contacts it again. One report
 can't freeze a vendor, so a competitor can't take a shop down with a single fake complaint.
 
-Vendors found on the web are booked and paid on their own website, so Parley never holds that
+Vendors found on the web are booked and paid on their own website, so HuddleUp never holds that
 money; the trip page says so instead.
 """
 
@@ -47,7 +47,7 @@ def _sim(app: "Rally", deal_id: str) -> str:
 
 
 def open_escrow(app: "Rally", deal_id: str) -> None:
-    """Everyone committed: Parley holds the money. Call inside the deal lock."""
+    """Everyone committed: HuddleUp holds the money. Call inside the deal lock."""
     deal = app.store.deals[deal_id]
     quote = _chosen(app, deal_id)
     if quote is None or deal.escrow is not None:
@@ -55,7 +55,7 @@ def open_escrow(app: "Rally", deal_id: str) -> None:
     if quote.provenance == "cached":
         site = (quote.source_url or "").split("//")[-1].split("/")[0] or "its website"
         app.store.append_event(deal_id, "escrow.none", "commitments",
-                               f"{quote.provider_name} is booked on its own website, so Parley can't hold this "
+                               f"{quote.provider_name} is booked on its own website, so HuddleUp can't hold this "
                                f"money. Pay only on {site} itself, never through a link someone sends you")
         return
     held = round(sum(c.amount for c in app.store.commitments[deal_id] if c.state == "committed"), 2)
@@ -65,7 +65,7 @@ def open_escrow(app: "Rally", deal_id: str) -> None:
     deal.escrow = Escrow(status="holding", amount=held, provider_id=quote.provider_id,
                          provider_name=quote.provider_name, trip_date=trip, release_after=after, at=now_ms())
     app.store.append_event(deal_id, "escrow.holding", "commitments",
-                           f"Parley is holding ${held:.0f}{_sim(app, deal_id)}. {quote.provider_name} is paid only "
+                           f"HuddleUp is holding ${held:.0f}{_sim(app, deal_id)}. {quote.provider_name} is paid only "
                            f"after the trip" + (f", from {after} if nobody reports a problem" if after else ""),
                            {"amount": held, "releaseAfter": after})
 
@@ -107,7 +107,7 @@ async def confirm_trip(app: "Rally", user_id: str, deal_id: str) -> dict:
         member = app._member(deal_id, user_id)
         e = deal.escrow
         if e is None or e.status != "holding":
-            raise ApiError(409, "NOT_HOLDING", "Parley isn't holding a payment for this trip.")
+            raise ApiError(409, "NOT_HOLDING", "HuddleUp isn't holding a payment for this trip.")
         if e.trip_date and _today(app) < date.fromisoformat(str(e.trip_date)):
             raise ApiError(409, "TRIP_NOT_YET", f"You can confirm the trip from {e.trip_date}.")
         if user_id not in e.confirmed_by:
@@ -127,7 +127,7 @@ async def report_vendor(app: "Rally", user_id: str, provider_id: str, deal_id: s
         member = app._member(deal_id, user_id)
         quote = _chosen(app, deal_id)
         if deal.status != S.COMMITTED or quote is None or quote.provider_id != provider_id:
-            raise ApiError(409, "NOT_YOUR_VENDOR", "You can report a vendor you booked and paid on Parley.")
+            raise ApiError(409, "NOT_YOUR_VENDOR", "You can report a vendor you booked and paid on HuddleUp.")
         mine = next((r for r in app.reports.get(provider_id, []) if r["userId"] == user_id), None)
         if mine is None:
             mine = {"id": f"r_{uuid.uuid4().hex[:8]}", "providerId": provider_id, "dealId": deal_id,
@@ -158,7 +158,7 @@ def _refund_committed(app: "Rally", deal_id: str, why: str) -> None:
                 deal_id, "commitment.refunded", c.user_id,
                 f"Refunded ${c.amount:.0f} to {app.personas[c.user_id].name} ({why})" if c.method == "simulated" else
                 f"Refund owed to {app.personas[c.user_id].name} ({why}): x402 has no automatic refunds, so "
-                f"Parley's testnet wallet sends it back separately")
+                f"HuddleUp's testnet wallet sends it back separately")
         elif c.state == "pending":
             c.state = "cancelled"
 

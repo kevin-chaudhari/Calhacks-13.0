@@ -60,8 +60,8 @@ async def lifespan(_: FastAPI):
         mirror.close()
 
 
-app = FastAPI(title="Parley API", version="0.1.0", lifespan=lifespan,
-              description="Commands for the Parley group-deal engine. The UI reads state from Convex "
+app = FastAPI(title="HuddleUp API", version="0.1.0", lifespan=lifespan,
+              description="Commands for the HuddleUp group-deal engine. The UI reads state from Convex "
                           "(or GET /v1/deals/{id}/snapshot in local dev).")
 rally.rail.install(app, rally)          # x402: payment middleware + POST /v1/x402/deposits/{deal}/{user}
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=False,
@@ -319,7 +319,7 @@ class ReportBody(BaseModel):
 
 @app.post("/v1/deals/{deal_id}/trip-happened")
 async def trip_happened(deal_id: str, uid: str = Depends(user)):
-    """I went: once everyone says so, Parley pays the vendor the money it held."""
+    """I went: once everyone says so, HuddleUp pays the vendor the money it held."""
     return await rally.confirm_trip(uid, deal_id)
 
 
@@ -511,7 +511,7 @@ def follow(person_id: str, uid: str = Depends(user)):
 
 @app.get("/v1/activities")
 def activities():
-    """Every activity Parley understands, grouped for the UI."""
+    """Every activity HuddleUp understands, grouped for the UI."""
     from . import catalog
     return [{"key": k, "label": v["label"], "category": v.get("category", "other")}
             for k, v in catalog.activities().items()]

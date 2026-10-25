@@ -1,4 +1,4 @@
-"""Parley's personal and provider agents as real uAgents, in one process.
+"""HuddleUp's personal and provider agents as real uAgents, in one process.
 
     python agents/run_agents.py                 # AGENT_NETWORK=mailbox (Agentverse), the default
     AGENT_NETWORK=local python agents/run_agents.py   # plain HTTP on localhost, no account needed
@@ -7,7 +7,7 @@ One personal agent per customer persona (holding that person's private prefs per
 from data/fixtures/private_prefs.json) and one provider agent per vendor (answering
 QuoteRequestWire from data/fixtures/providers.json). Seeds come from AGENT_SEED_PREFIX, so
 addresses are stable across restarts and match what the API computes. Agents only take
-negotiation messages from the Parley mediator's address.
+negotiation messages from the HuddleUp mediator's address.
 """
 from __future__ import annotations
 
@@ -112,7 +112,7 @@ async def main() -> None:
             agents.append(make_personal(s, prefs.setdefault(s.owner, {}), mediator, loop))
         elif s.kind == "provider":
             agents.append(make_provider(s, providers[s.owner], loop))
-    print(f"Parley agents ({network.network_mode()}), mediator {mediator}")
+    print(f"HuddleUp agents ({network.network_mode()}), mediator {mediator}")
     for s in specs:
         if s.kind in {"personal", "provider"}:
             print(f"  {s.port}  {s.address}  {s.name}")

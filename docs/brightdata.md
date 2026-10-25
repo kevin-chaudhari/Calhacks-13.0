@@ -11,7 +11,7 @@ The item list lives in `data/fixtures/gear.json` (add activities or items there)
 
 ## Real vendors for any activity (the main use)
 
-For any goal ("rock climbing in Yosemite", "pottery class in Brooklyn"), Parley:
+For any goal ("rock climbing in Yosemite", "pottery class in Brooklyn"), HuddleUp:
 
 1. runs a **SERP API** Google search ("rock climbing guide near Yosemite Valley, CA", `brd_json=1`). The parsed
    `snack_pack` is the local map pack: each business's name, website, phone, rating, review count, address and

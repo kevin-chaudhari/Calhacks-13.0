@@ -111,7 +111,7 @@ function Discover() {
   return (
     <>
       <h1 className="text-[34px] font-semibold leading-[40px] tracking-[-0.025em]">Find real deals</h1>
-      <p className="mt-1 max-w-[62ch] text-muted">Any activity, anywhere. Parley searches the web, reads each vendor&apos;s own site and shows only prices it can quote back to you.</p>
+      <p className="mt-1 max-w-[62ch] text-muted">Any activity, anywhere. HuddleUp searches the web, reads each vendor&apos;s own site and shows only prices it can quote back to you.</p>
       <form onSubmit={(e) => (e.preventDefault(), q.trim() && go(q.trim()))} className="mt-6 flex max-w-2xl gap-2">
         <label htmlFor="q" className="sr-only">What and where</label>
         <input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="surf lessons in Santa Cruz"
@@ -181,7 +181,7 @@ function Discover() {
               )}
               {res.seeded.length > 0 && (
                 <div>
-                  <h3 className="mb-2 text-[15px] font-semibold">Parley demo shops</h3>
+                  <h3 className="mb-2 text-[15px] font-semibold">HuddleUp demo shops</h3>
                   <ul className="space-y-2">
                     {res.seeded.map((s) => (
                       <li key={s.id} className="rounded-[12px] border border-line bg-surface p-3 text-[13px]">

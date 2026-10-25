@@ -7,7 +7,7 @@ import { Providers } from "./providers";
 import { AppHeader } from "@/components/rally/shell";
 
 export const metadata: Metadata = {
-  title: "Parley",
+  title: "HuddleUp",
   description: "Say what you want to do. Your agent finds people to go with, or goes alone, and negotiates the deal with the shops.",
 };
 

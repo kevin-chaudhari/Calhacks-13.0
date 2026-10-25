@@ -377,7 +377,7 @@ export function CalendarAndShare({ snap }: { snap: DealSnapshot }) {
     if (!plan) return "";
     const people = snap.members.filter((m) => m.state === "joined").map((m) => m.name).join(", ");
     const terms = orderedTerms(plan.terms).map(([k, v]) => `${TERM_LABELS[k] ?? k}: ${termValue(k, v)}`).join("\n");
-    return `${snap.deal.title}\n${terms}\n${quote ? `${quote.providerName} · ${money(quote.pricePerPerson)} per person` : ""}\nWith ${people}\nPlanned by our agents on Parley`;
+    return `${snap.deal.title}\n${terms}\n${quote ? `${quote.providerName} · ${money(quote.pricePerPerson)} per person` : ""}\nWith ${people}\nPlanned by our agents on HuddleUp`;
   }, [plan, quote, snap]);
 
   const downloadIcs = useCallback(() => {
@@ -386,7 +386,7 @@ export function CalendarAndShare({ snap }: { snap: DealSnapshot }) {
     next.setUTCDate(next.getUTCDate() + 1);
     const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/,/g, "\\,").replace(/;/g, "\\;").replace(/\n/g, "\\n");
     const ics = [
-      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Parley//Group plan//EN", "BEGIN:VEVENT",
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//HuddleUp//Group plan//EN", "BEGIN:VEVENT",
       `UID:${snap.deal.id}@rally`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
       `DTSTART;VALUE=DATE:${icsDate(date)}`, `DTEND;VALUE=DATE:${icsDate(next.toISOString().slice(0, 10))}`,
       `SUMMARY:${esc(snap.deal.title)}`, `LOCATION:${esc(quote?.providerName ?? "")}`, `DESCRIPTION:${esc(summary)}`,
@@ -435,7 +435,7 @@ export function AsiOneCard() {
         <Avatar initials="AI" size={32} />
         <div className="min-w-0">
           <div className="font-semibold">Also on ASI:One</div>
-          <p className="text-[13px] text-muted">Type the same goal in ASI:One chat; Parley&apos;s concierge agent finds your people and replies with the plan.</p>
+          <p className="text-[13px] text-muted">Type the same goal in ASI:One chat; HuddleUp&apos;s concierge agent finds your people and replies with the plan.</p>
           <div className="mt-2 flex flex-wrap gap-3 text-[13px]">
             <a className="inline-flex items-center gap-1 text-accent underline" href="https://asi1.ai" target="_blank" rel="noreferrer">Open ASI:One <ExternalLink size={12} /></a>
             <a className="inline-flex items-center gap-1 text-muted underline" href={`https://agentverse.ai/agents/details/${AGENT}/profile`} target="_blank" rel="noreferrer">Agent on Agentverse <ExternalLink size={12} /></a>

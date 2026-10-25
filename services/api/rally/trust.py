@@ -129,6 +129,6 @@ def assess(vendor: dict, page: str | None, age_days: int | None, ratio: float | 
 
 
 def partner() -> dict:
-    """Shops in Parley's own fixtures: onboarded directly, not found on the web."""
+    """Shops in HuddleUp's own fixtures: onboarded directly, not found on the web."""
     return {"level": "verified", "reasons": [],
-            "signals": [{"kind": "partner", "ok": True, "detail": "Parley partner shop (demo data)"}]}
+            "signals": [{"kind": "partner", "ok": True, "detail": "HuddleUp partner shop (demo data)"}]}

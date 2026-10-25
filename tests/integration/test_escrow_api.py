@@ -1,4 +1,4 @@
-"""Hold-until-trip payments and fraud reports: Parley holds the money, the vendor is paid only after
+"""Hold-until-trip payments and fraud reports: HuddleUp holds the money, the vendor is paid only after
 the trip, and vendors reported by people on two different trips are frozen and everyone is refunded."""
 import asyncio
 import contextlib
@@ -31,7 +31,7 @@ def client():
 
 @contextlib.contextmanager
 def clock(c, day: str):
-    """Move Parley's 'today' (after trips are booked: the compiler reads it too)."""
+    """Move HuddleUp's 'today' (after trips are booked: the compiler reads it too)."""
     c.rally.s.demo_today = day
     try:
         yield

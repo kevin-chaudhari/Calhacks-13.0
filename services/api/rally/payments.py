@@ -6,7 +6,7 @@ PAYMENTS=x402_testnet  each member's commitment is backed by a real x402 payment
 
     member clicks Commit (or auto-commit after the last approval)
       -> the member's personal agent (holding a testnet wallet) POSTs /v1/x402/deposits/{deal}/{user}
-      -> Parley answers 402 Payment Required with the price, asset and payTo address
+      -> HuddleUp answers 402 Payment Required with the price, asset and payTo address
       -> the agent signs an EIP-3009 transferWithAuthorization and retries with PAYMENT-SIGNATURE
       -> the x402 facilitator verifies, the handler checks a commitment is actually pending,
          the facilitator settles on-chain, and the PAYMENT-RESPONSE header carries the tx hash
@@ -79,7 +79,7 @@ class X402TestnetRail:
             raise RuntimeError(f"X402_NETWORK={settings.x402_network!r} refused: testnet only "
                                f"({', '.join(TESTNETS)}).")
         if not settings.x402_pay_to:
-            raise RuntimeError("PAYMENTS=x402_testnet needs X402_PAY_TO (Parley's testnet receiving address).")
+            raise RuntimeError("PAYMENTS=x402_testnet needs X402_PAY_TO (HuddleUp's testnet receiving address).")
         self.network_name = net
         self.network = TESTNETS[net]
         self.pay_to = settings.x402_pay_to
@@ -103,7 +103,7 @@ class X402TestnetRail:
         return {f"POST {DEPOSIT_ROUTE}/*": {
             "accepts": {"scheme": "exact", "payTo": self.pay_to, "price": f"${self.price_usd}",
                         "network": self.network},
-            "description": "Parley group-trip deposit (testnet)",
+            "description": "HuddleUp group-trip deposit (testnet)",
         }}
 
     def install(self, app: "FastAPI", rally: Any) -> None:

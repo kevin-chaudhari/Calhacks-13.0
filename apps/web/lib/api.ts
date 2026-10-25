@@ -61,7 +61,7 @@ export async function api<T>(
       cache: "no-store",
     });
   } catch {
-    throw new ApiError(0, "NETWORK", "Can't reach the Parley API. Is it running on " + API_URL + "?", true);
+    throw new ApiError(0, "NETWORK", "Can't reach the HuddleUp API. Is it running on " + API_URL + "?", true);
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

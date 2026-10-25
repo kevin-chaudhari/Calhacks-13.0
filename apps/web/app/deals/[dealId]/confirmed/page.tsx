@@ -41,13 +41,13 @@ function YourMoney({ snap }: { snap: DealSnapshot }) {
   if (!e) {
     if (quote?.provenance !== "cached") return null;
     return (
-      <Callout tone="warn" title="Parley can't hold this payment">
+      <Callout tone="warn" title="HuddleUp can't hold this payment">
         {quote.providerName} is booked on its own website, so you pay them directly. Pay only on their site itself, never through a link someone sends you.
       </Callout>
     );
   }
   const text = {
-    holding: `Parley is holding ${money(e.amount)}. ${e.providerName} is paid only after the trip${e.releaseAfter ? `, from ${e.releaseAfter} if nobody reports a problem` : ""}.`,
+    holding: `HuddleUp is holding ${money(e.amount)}. ${e.providerName} is paid only after the trip${e.releaseAfter ? `, from ${e.releaseAfter} if nobody reports a problem` : ""}.`,
     disputed: `The payout to ${e.providerName} is on hold: ${e.reason ?? "a problem was reported"}.`,
     released: `Paid to ${e.providerName} after the trip.`,
     refunded: `Refunded: ${e.reason ?? "the vendor was frozen"}. ${e.providerName} was never paid.`,
@@ -56,7 +56,7 @@ function YourMoney({ snap }: { snap: DealSnapshot }) {
     <Card className="mb-6">
       <CardHeader icon={<ShieldCheck size={16} />} title="Your money" meta={<Chip tone={e.status === "refunded" || e.status === "disputed" ? "warn" : "accent"}>{e.status}</Chip>} />
       <div className="space-y-3 px-5 py-4 text-[13px]">
-        <p>{text} Parley never asks you to pay anywhere else.</p>
+        <p>{text} HuddleUp never asks you to pay anywhere else.</p>
         {e.status === "holding" && (
           <Button variant="secondary" onClick={() => act("trip")} disabled={!!busy}>{busy === "trip" ? "Saving…" : "The trip happened"}</Button>
         )}
@@ -65,7 +65,7 @@ function YourMoney({ snap }: { snap: DealSnapshot }) {
             <label htmlFor="report" className="font-medium">Something wrong with {e.providerName}?</label>
             <textarea
               id="report" value={reason} onChange={(ev) => setReason(ev.target.value)} rows={2} maxLength={500}
-              placeholder="What happened? For example: no-show, asked to pay outside Parley"
+              placeholder="What happened? For example: no-show, asked to pay outside HuddleUp"
               className="rounded-[6px] border border-line bg-surface px-2 py-1.5"
             />
             <Button variant="danger" onClick={() => act("report")} disabled={!!busy || reason.trim().length < 5}>
@@ -118,7 +118,7 @@ export default function Confirmed() {
           <p className="mt-2 text-muted">
             {committed.length} people committed to plan v{d.currentProposalVersion} after {roundsUsed} negotiation round{roundsUsed === 1 ? "" : "s"}.
             {" "}{quote?.provenance === "cached"
-              ? <>{quote.providerName} isn&apos;t on Parley yet, so book on their website at the listed price; your plan, date and group size are below.</>
+              ? <>{quote.providerName} isn&apos;t on HuddleUp yet, so book on their website at the listed price; your plan, date and group size are below.</>
               : d.bookingStatus === "not_booked" ? <>Next: {quote?.providerName ?? "the provider"} confirms the booking from their vendor portal.</> : <>{quote?.providerName} confirmed the booking. Have a great trip.</>}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">

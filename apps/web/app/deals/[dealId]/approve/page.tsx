@@ -96,7 +96,7 @@ export default function Approve() {
           <span className="font-semibold text-sim">{simulated ? "Simulated commitment. No money moves." : "Testnet deposit over x402 on Base Sepolia. Test USDC only, no real funds."}</span>{" "}
           {simulated
             ? "Committing records each member's share in an auditable ledger. It is not a booking; the provider still has to confirm."
-            : "After the last approval, each member's agent pays a small deposit over HTTP 402 and the transaction appears below. A deposit is a transfer, not escrow: if the vendor declines, Parley sends it back as a separate transfer."}
+            : "After the last approval, each member's agent pays a small deposit over HTTP 402 and the transaction appears below. A deposit is a transfer, not escrow: if the vendor declines, HuddleUp sends it back as a separate transfer."}
         </div>
       </div>
 

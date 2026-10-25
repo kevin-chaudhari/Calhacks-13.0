@@ -1,4 +1,4 @@
-"""Connect every running Parley agent to its Agentverse mailbox in one go, then print the address table.
+"""Connect every running HuddleUp agent to its Agentverse mailbox in one go, then print the address table.
 
     # .env: AGENTVERSE_API_KEY (agentverse.ai → Profile → API keys), AGENT_SEED_PREFIX (private)
     python agents/run_agents.py               # terminal 1: personal + provider agents

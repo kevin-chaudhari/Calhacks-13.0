@@ -1,4 +1,4 @@
-"""Parley orchestrator: the only component that changes state.
+"""HuddleUp orchestrator: the only component that changes state.
 
 Agents propose; this module decides. Every agent response passes the mediator's
 validation, and every status change goes through store.transition().
@@ -69,7 +69,7 @@ def trust_level(vendor: dict) -> str:
 
 log = logging.getLogger("rally.service")
 S = DealStatus
-MEDIATOR = ("mediator", "Parley mediator", "mediator")
+MEDIATOR = ("mediator", "HuddleUp mediator", "mediator")
 SEARCH_STAGES = (6, 12, 20)        # vendors read per web search; a wider search runs only if nobody agreed
 
 
@@ -153,7 +153,7 @@ class Rally:
 
     def compile_goal(self, user_id: str, text: str) -> dict:
         if not text or not text.strip():
-            raise ApiError(422, "EMPTY_GOAL", "Tell Parley what you want to do.", fields={"text": "required"})
+            raise ApiError(422, "EMPTY_GOAL", "Tell HuddleUp what you want to do.", fields={"text": "required"})
         if len(text) > 1000:
             raise ApiError(422, "GOAL_TOO_LONG", "Keep the goal under 1,000 characters.")
         res = compiler_mod.compile_goal(text, self.s.demo_today, self.s.compiler,
@@ -916,7 +916,7 @@ class Rally:
         if rows and all(c.state == "committed" for c in rows):
             self.store.transition(deal_id, S.COMMITMENT_PENDING, S.COMMITTED, "commitments",
                                   "Everyone committed. Booking is still with the provider (not booked yet).")
-            self.open_escrow(deal_id)                   # Parley holds the money until after the trip
+            self.open_escrow(deal_id)                   # HuddleUp holds the money until after the trip
 
     async def commit(self, user_id: str, deal_id: str, version: int) -> dict:
         async with self.store.locks[deal_id]:
@@ -954,7 +954,7 @@ class Rally:
                                             f"Simulated refund recorded for {self.personas[c.user_id].name}"
                                             if c.method == "simulated" else
                                             f"Refund owed to {self.personas[c.user_id].name}: x402 has no automatic "
-                                            f"refunds, so Parley's testnet wallet sends it back separately")
+                                            f"refunds, so HuddleUp's testnet wallet sends it back separately")
                 elif c.state == "pending":
                     c.state = "cancelled"
             new = self._auto_replace(deal_id, member)
@@ -1026,7 +1026,7 @@ class Rally:
     def _not_frozen(self, prov: dict) -> None:
         if prov["id"] in self.frozen:
             raise ApiError(403, "VENDOR_FROZEN", "Your account is frozen after fraud reports from customers; "
-                                                 "contact Parley support.")
+                                                 "contact HuddleUp support.")
 
     def _stage(self, deal: Deal, pid: str) -> str:
         chosen = next((q for q in self.store.quotes[deal.id] if q.id == deal.chosen_quote_id), None)
@@ -1270,7 +1270,7 @@ class Rally:
         agents = [{"address": p.agent_address, "name": f"{p.name}'s agent", "kind": "personal",
                    "ownerUserId": p.id, "transport": mode, "capabilities": ["InviteMsg", "ProposalMsg→ResponseMsg"],
                    "hasPrefs": p.id in owners} for p in self.personas.values() if p.role == "customer"]
-        agents.append({"address": self._mediator_address(), "name": "Parley mediator", "kind": "mediator",
+        agents.append({"address": self._mediator_address(), "name": "HuddleUp mediator", "kind": "mediator",
                        "transport": mode, "capabilities": ["InviteMsg", "ProposalMsg", "QuoteRequestMsg"]})
         for p in self.providers:
             agents.append({"address": p["agentAddress"], "name": f"{p['name']} agent", "kind": "provider",

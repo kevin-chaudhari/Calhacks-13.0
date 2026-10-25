@@ -1,6 +1,6 @@
 export type Mode = "group" | "solo";
 /** Home-page choice: go with others or alone. Read by the matches page to lead with solo. */
-export const MODE_KEY = "parley.mode";
+export const MODE_KEY = "huddleup.mode";
 
 export function readMode(): Mode {
   try {

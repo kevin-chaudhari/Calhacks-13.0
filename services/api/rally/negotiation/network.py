@@ -1,11 +1,11 @@
-"""Parley's agent network: one deterministic identity, port and name per agent.
+"""HuddleUp's agent network: one deterministic identity, port and name per agent.
 
 The API (mediator) and agents/run_agents.py (personal + provider agents) both build the
 directory from the same fixtures and AGENT_SEED_PREFIX, so every process knows every
 address without asking the network.
 
 AGENT_NETWORK=mailbox  the 8 agents in agentverse_keys() use Agentverse mailboxes and resolve through the
-                       Almanac; the other Parley agents are reached by direct HTTP (venue / demo).
+                       Almanac; the other HuddleUp agents are reached by direct HTTP (venue / demo).
 AGENT_NETWORK=local    plain HTTP on AGENT_HOST, static resolver; no Fetch.ai account needed (tests).
 """
 
@@ -29,7 +29,7 @@ DEV_PREFIX = "rally dev agents"
 
 
 def seed_prefix() -> str:
-    """Seeds are private keys: anyone who knows the prefix can impersonate every Parley agent."""
+    """Seeds are private keys: anyone who knows the prefix can impersonate every HuddleUp agent."""
     return _env("AGENT_SEED_PREFIX", DEV_PREFIX)
 
 
@@ -49,7 +49,7 @@ def base_port() -> int:
 class AgentSpec:
     key: str             # "mediator", "personal:u_ana", "provider:p_kelpline", "concierge"
     kind: str            # mediator | personal | provider | concierge
-    owner: str           # user id, provider id, or "" for Parley's own agents
+    owner: str           # user id, provider id, or "" for HuddleUp's own agents
     name: str            # Agentverse display name
     description: str
     port: int
@@ -69,28 +69,28 @@ class AgentSpec:
 
 
 def directory() -> list[AgentSpec]:
-    """Every Parley agent, in a fixed order (ports follow this order)."""
+    """Every HuddleUp agent, in a fixed order (ports follow this order)."""
     personas = json.loads((FIXTURES / "personas.json").read_text(encoding="utf-8"))["personas"]
     providers = json.loads((FIXTURES / "providers.json").read_text(encoding="utf-8"))["providers"]
     port = base_port()
-    out = [AgentSpec("mediator", "mediator", "", "Parley · group mediator",
+    out = [AgentSpec("mediator", "mediator", "", "HuddleUp · group mediator",
                      "Negotiates one shared plan for a group of personal agents in bounded rounds. "
                      "Never sees anyone's private preferences.", port)]
     for p in personas:
         if p["role"] != "customer":
             continue
         port += 1
-        out.append(AgentSpec(f"personal:{p['id']}", "personal", p["id"], f"Parley · {p['name']}'s agent",
-                             f"{p['name']}'s personal Parley agent. Holds {p['name']}'s private trip preferences "
+        out.append(AgentSpec(f"personal:{p['id']}", "personal", p["id"], f"HuddleUp · {p['name']}'s agent",
+                             f"{p['name']}'s personal HuddleUp agent. Holds {p['name']}'s private trip preferences "
                              "and answers the mediator's proposals with accept, one change request, or a hard no.",
                              port))
     for p in providers:
         port += 1
-        out.append(AgentSpec(f"provider:{p['id']}", "provider", p["id"], f"Parley · {p['name']}",
+        out.append(AgentSpec(f"provider:{p['id']}", "provider", p["id"], f"HuddleUp · {p['name']}",
                              f"Provider agent for {p['name']} ({p['location']['label']}). Answers group quote "
                              "requests from its price tiers.", port))
-    out.append(AgentSpec("concierge", "concierge", "", "Parley concierge",
-                         "Group trips: tell Parley a goal (scuba, skydiving, kayaking) and it finds people, "
+    out.append(AgentSpec("concierge", "concierge", "", "HuddleUp concierge",
+                         "Group trips: tell HuddleUp a goal (scuba, skydiving, kayaking) and it finds people, "
                          "negotiates one shared plan with vendors and gets the group discount.", port + 1))
     return out
 
@@ -120,7 +120,7 @@ def on_agentverse(spec: AgentSpec) -> bool:
 
 
 def _resolver(direct_all: bool):
-    """Parley agents without a mailbox (or all of them, AGENT_DIRECT=1) by direct HTTP; anyone else
+    """HuddleUp agents without a mailbox (or all of them, AGENT_DIRECT=1) by direct HTTP; anyone else
     (Agentverse-registered agents, ASI:One users) through the Almanac."""
     from uagents.resolver import GlobalResolver, Resolver
 
