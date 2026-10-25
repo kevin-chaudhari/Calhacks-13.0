@@ -28,11 +28,11 @@ export default function DiagnosticsPage() {
 
   return (
     <>
-      <PageTitle title="Agents">Every agent, every message they exchanged, and which adapters are live or in fallback.</PageTitle>
+      <PageTitle title="Agents">Look behind the curtain: every AI agent, every message they sent each other, and which services are live.</PageTitle>
       {err && <Callout tone="danger" title="Diagnostics unavailable">{err}</Callout>}
       {!d && !err && <Skeleton className="h-64" />}
       {d && (
-        <div className="space-y-6 font-mono text-[12px]">
+        <div className="space-y-6 text-[13px]">
           <Card>
             <CardHeader title="Adapters" />
             <div className="flex flex-wrap gap-2 p-4">
@@ -46,7 +46,7 @@ export default function DiagnosticsPage() {
           <Card>
             <CardHeader title={`Agents (${d.agents.length})`} />
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full font-mono text-[12px]">
                 <thead className="text-left text-muted"><tr><th className="px-4 py-2 font-normal">name</th><th className="font-normal">kind</th><th className="font-normal">address</th><th className="font-normal">transport</th><th className="font-normal">mode</th><th className="font-normal">capabilities</th></tr></thead>
                 <tbody>
                   {d.agents.map((a) => (

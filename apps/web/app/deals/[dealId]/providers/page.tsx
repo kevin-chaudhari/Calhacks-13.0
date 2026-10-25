@@ -21,12 +21,12 @@ export default function Providers() {
 
   return (
     <>
-      <PageTitle eyebrow={<Link href={`/deals/${dealId}`} className="hover:text-ink">← Group room</Link>} title="Provider comparison">
+      <PageTitle eyebrow={<Link href={`/deals/${dealId}`} className="hover:text-accent">← Back to the trip</Link>} title="Provider comparison">
         Quotes for the plan your group agreed. Savings are only shown against the same provider&apos;s single-person price for the same plan.
       </PageTitle>
       {quotes.length === 0 && <Callout tone="neutral" title="No quotes yet">Quotes are requested once every agent accepts a plan.</Callout>}
       {chosen && plan && (
-        <div className="mb-5 rounded-[10px] border border-accent bg-accent-soft px-5 py-3 text-[13px]">
+        <div className="mb-5 rounded-[16px] border border-accent bg-accent-soft px-5 py-4 text-[13px]">
           <span className="font-semibold text-accent">Selected: {chosen.providerName}.</span>{" "}
           Lowest per-person price for {termValue("dive_type", plan.terms.dive_type)} at {String(plan.terms.site)} on {termValue("date", plan.terms.date)}
           {plan.terms.gear_included ? " with gear included" : ""}.

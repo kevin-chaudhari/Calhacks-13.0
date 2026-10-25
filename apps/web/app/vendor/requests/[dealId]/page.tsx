@@ -140,7 +140,7 @@ export default function VendorRequestPage() {
           </Callout>
         )}
         {req.stage === "confirm_booking" && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-warn/50 bg-warn-soft px-5 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-warn/50 bg-warn-soft px-5 py-4">
             <div>
               <div className="font-semibold text-warn">Everyone approved and committed.</div>
               <div className="text-[13px] text-ink/80">Reserve the slot in your own system, then confirm here so the group knows it&apos;s booked.</div>

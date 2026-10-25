@@ -20,7 +20,7 @@ export function StagePill({ stage }: { stage: VendorStage }) {
 
 export function Stat({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) {
   return (
-    <div className="rounded-[10px] border border-line bg-surface px-4 py-3">
+    <div className="rounded-[16px] border border-line bg-surface shadow-card px-4 py-3">
       <div className="text-[12px] text-muted">{label}</div>
       <div className="num mt-0.5 text-[24px] font-semibold leading-8">{value}</div>
       {hint && <div className="text-[11px] text-muted">{hint}</div>}

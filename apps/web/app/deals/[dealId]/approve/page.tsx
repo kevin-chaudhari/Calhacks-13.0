@@ -86,11 +86,11 @@ export default function Approve() {
 
   return (
     <>
-      <PageTitle eyebrow={<Link href={`/deals/${dealId}`} className="hover:text-ink">← Group room</Link>} title={`Approve plan v${v}`}>
-        Your approval binds to this exact version and quote. If anything changes, approvals reset and everyone reviews again.
+      <PageTitle eyebrow={<Link href={`/deals/${dealId}`} className="hover:text-accent">← Back to the trip</Link>} title={`Approve plan v${v}`}>
+        Look over the final plan and price. Your &ldquo;yes&rdquo; counts for this exact version only: if anything changes, everyone checks again.
       </PageTitle>
 
-      <div className="mb-5 flex items-start gap-3 rounded-[10px] border border-sim/30 bg-sim-soft px-5 py-3">
+      <div className="mb-5 flex items-start gap-3 rounded-[16px] border border-sim/30 bg-sim-soft px-5 py-4">
         <Info size={16} className="mt-0.5 shrink-0 text-sim" />
         <div className="text-[13px]">
           <span className="font-semibold text-sim">{simulated ? "Simulated commitment. No money moves." : "Testnet deposit over x402 on Base Sepolia. Test USDC only, no real funds."}</span>{" "}
@@ -171,7 +171,7 @@ export default function Approve() {
             </Card>
           )}
           {err && <Callout tone="danger" title="Not approved">{err}</Callout>}
-          <Button className="h-10 w-full" onClick={() => approve()} disabled={!!disabledReason || !!pending}>
+          <Button className="h-12 w-full text-[15px]" onClick={() => approve()} disabled={!!disabledReason || !!pending}>
             {pending === "me" ? "Sending…" : iApproved ? <><Check size={15} /> Approved v{v}</> : `Approve plan v${v}`}
           </Button>
           {disabledReason && !iApproved && <p className="text-[12px] text-muted">{disabledReason}</p>}

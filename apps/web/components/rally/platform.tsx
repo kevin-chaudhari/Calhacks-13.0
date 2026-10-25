@@ -101,7 +101,7 @@ export function NudgeCard({ snap, meId }: { snap: DealSnapshot; meId?: string })
     }
   }
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-accent/40 bg-accent-soft px-5 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-accent/40 bg-accent-soft px-5 py-4">
       <div className="flex items-start gap-3">
         <TrendingDown size={18} className="mt-0.5 shrink-0 text-accent" />
         <div>
@@ -302,7 +302,7 @@ export function MetricsGrid({ m }: { m: Metrics }) {
   return (
     <dl className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       {items.map(([label, value, hint]) => (
-        <div key={label} className="rounded-[10px] border border-line bg-surface px-4 py-3">
+        <div key={label} className="rounded-[16px] border border-line bg-surface shadow-card px-4 py-3">
           <dt className="text-[12px] text-muted">{label}</dt>
           <dd className={cx("num mt-0.5 text-[24px] font-semibold leading-8", label.startsWith("Hard") && value === "0" && "text-accent")}>{value}</dd>
           {hint && <div className="text-[11px] text-muted">{hint}</div>}
@@ -327,7 +327,7 @@ export function AdapterLights({ adapters, convexErrors }: { adapters: Record<str
         const mode = adapters[k] ?? "—";
         const live = (LIVE[k] ?? []).includes(mode) && !(k === "store" && (convexErrors ?? 0) > 0);
         return (
-          <li key={k} className="flex items-center gap-2.5 rounded-[10px] border border-line bg-surface px-3 py-2.5">
+          <li key={k} className="flex items-center gap-2.5 rounded-[16px] border border-line bg-surface shadow-card px-3 py-2.5">
             <span className={cx("h-2.5 w-2.5 shrink-0 rounded-full", live ? "bg-accent" : "bg-warn")} aria-hidden />
             <div className="min-w-0">
               <div className="text-[13px] font-medium">{SPONSOR[k]}</div>

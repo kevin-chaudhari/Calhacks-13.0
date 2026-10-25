@@ -34,11 +34,13 @@ export default function Confirmed() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="mb-8 flex items-start gap-4">
-        <CircleCheck size={36} strokeWidth={1.5} className="shrink-0 text-accent" />
+      <div className="chart-field mb-8 flex items-start gap-4 rounded-[24px] border border-line p-6 shadow-card sm:p-8">
+        <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink shadow-pop">
+          <CircleCheck size={30} strokeWidth={2} />
+        </span>
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-[28px] font-semibold leading-[34px] tracking-[-0.01em]">Committed</h1>
+            <h1 className="text-[30px] font-semibold leading-[36px] tracking-[-0.02em]">You&apos;re going!</h1>
             <Chip tone="sim">{sim ? "Simulated, no money moved" : "x402 testnet deposits, Base Sepolia"}</Chip>
             {d.bookingStatus === "not_booked" ? <Chip tone="warn">Booking: waiting for the vendor</Chip> : <Chip tone="accent">Booked by {d.bookedBy}</Chip>}
           </div>

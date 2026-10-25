@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Moon, Sun, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Bot, Compass, MonitorPlay, Store, Tags, UserRound, Inbox } from "lucide-react";
 import { usePersona } from "@/lib/persona";
 import { STATUS_LABEL } from "@/lib/format";
 import { Chip, cx } from "@/components/ui/primitives";
@@ -22,32 +21,6 @@ export function Logo() {
   );
 }
 
-function ThemeToggle() {
-  const [dark, setDark] = useState<boolean | null>(null);
-  useEffect(() => {
-    let saved: string | null = null;
-    try {
-      saved = localStorage.getItem("parley.theme");
-    } catch {}
-    const isDark = saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setDark(isDark);
-    document.documentElement.dataset.theme = isDark ? "dark" : "light";
-  }, []);
-  const flip = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.dataset.theme = next ? "dark" : "light";
-    try {
-      localStorage.setItem("parley.theme", next ? "dark" : "light");
-    } catch {}
-  };
-  return (
-    <button onClick={flip} className="rounded-[6px] p-2 text-muted hover:bg-surface-2 hover:text-ink" aria-label="Toggle dark mode">
-      {dark ? <Sun size={16} strokeWidth={1.75} /> : <Moon size={16} strokeWidth={1.75} />}
-    </button>
-  );
-}
-
 function IdentitySwitcher({ vendorSide }: { vendorSide: boolean }) {
   const { personas, me, vendor, choose, chooseVendor, error } = usePersona();
   if (error) return <Chip tone="danger" title={error}>API offline</Chip>;
@@ -55,14 +28,14 @@ function IdentitySwitcher({ vendorSide }: { vendorSide: boolean }) {
   const current = vendorSide ? vendor : me;
   return (
     <label className="flex items-center gap-2 text-[13px]">
-      <span className="hidden text-muted md:inline">{vendorSide ? "Staff" : "Signed in as"}</span>
+      <span className="hidden text-muted lg:inline">{vendorSide ? "Staff" : "You are"}</span>
       <span className="relative inline-flex items-center">
-        <UserRound size={14} strokeWidth={1.75} className="pointer-events-none absolute left-2 text-muted" />
+        <UserRound size={14} strokeWidth={1.75} className="pointer-events-none absolute left-3 text-accent" />
         <select
           aria-label={vendorSide ? "Vendor staff" : "Signed in as"}
           value={current?.id ?? ""}
           onChange={(e) => (vendorSide ? chooseVendor(e.target.value) : choose(e.target.value))}
-          className="h-8 max-w-[140px] appearance-none sm:max-w-[220px] rounded-[6px] border border-line bg-surface pl-7 pr-3 text-[13px] font-medium"
+          className="h-9 max-w-[150px] cursor-pointer appearance-none rounded-full border border-line bg-surface pl-8 pr-4 text-[13px] font-medium hover:border-accent/40 sm:max-w-[220px]"
         >
           {list.map((p) => (
             <option key={p.id} value={p.id}>
@@ -80,45 +53,47 @@ export function AppHeader() {
   const vendorSide = path.startsWith("/vendor");
   const nav = vendorSide
     ? [
-        { href: "/vendor", label: "Requests", exact: true },
-        { href: "/vendor/pricing", label: "Agent & pricing" },
-        { href: "/", label: "Customer app", exact: true },
+        { href: "/vendor", label: "Requests", icon: Inbox, exact: true },
+        { href: "/vendor/pricing", label: "Agent & pricing", icon: Tags },
+        { href: "/", label: "Traveller app", icon: Compass, exact: true },
       ]
     : [
-        { href: "/", label: "Plan a trip", exact: true },
-        { href: "/diagnostics", label: "Agents" },
-        { href: "/vendor", label: "Vendor portal" },
-        { href: "/demo", label: "Control room" },
+        { href: "/", label: "Plan a trip", icon: Compass, exact: true },
+        { href: "/diagnostics", label: "Agents", icon: Bot },
+        { href: "/vendor", label: "For shops", icon: Store },
+        { href: "/demo", label: "Demo", icon: MonitorPlay },
       ];
+  const isOn = (n: (typeof nav)[number]) => (n.exact ? path === n.href : path.startsWith(n.href));
+  const links = (mobile: boolean) =>
+    nav.map((n) => (
+      <Link
+        key={n.href}
+        href={n.href}
+        aria-current={isOn(n) ? "page" : undefined}
+        className={cx(
+          "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[14px] font-medium transition-colors",
+          isOn(n) ? "bg-accent-soft text-accent" : "text-muted hover:bg-surface-2 hover:text-ink",
+          mobile && "text-[13px]",
+        )}
+      >
+        <n.icon size={15} strokeWidth={1.9} />
+        {n.label}
+      </Link>
+    ));
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
+    <header className="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-[1280px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
         <div className="flex items-center gap-2">
           <Logo />
-          {vendorSide && <Chip tone="accent" className="hidden sm:inline-flex">for vendors</Chip>}
+          {vendorSide && <Chip tone="accent" className="hidden sm:inline-flex">for shops</Chip>}
         </div>
-        <nav className="hidden items-center gap-1 sm:flex">
-          {nav.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              aria-current={(n.exact ? path === n.href : path.startsWith(n.href)) ? "page" : undefined}
-              className={cx(
-                "relative px-2.5 py-1.5 text-[13px] font-medium",
-                (n.exact ? path === n.href : path.startsWith(n.href))
-                  ? "text-ink after:absolute after:inset-x-2.5 after:-bottom-[13px] after:h-[3px] after:rounded-full after:bg-buoy"
-                  : "text-muted hover:text-ink",
-              )}
-            >
-              {n.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
+        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">{links(false)}</nav>
+        <div className="ml-auto flex min-w-0 items-center gap-2">
           <IdentitySwitcher vendorSide={vendorSide} />
-          <ThemeToggle />
         </div>
       </div>
+      {/* Phones: the same links in a row you can swipe, so nothing hides behind a menu. */}
+      <nav aria-label="Main" className="no-scrollbar flex gap-1 overflow-x-auto border-t border-line px-3 py-2 md:hidden">{links(true)}</nav>
     </header>
   );
 }

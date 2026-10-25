@@ -1,83 +1,145 @@
 # Parley
 
-**Tell your agent where you want to go. It finds the people, or goes it alone with you, and negotiates the deal with the shops' agents.**
+**Say where you want to go. Your AI agent finds people to go with and bargains with the shops for you.**
 
-Parley turns a sentence like *"Scuba diving in Monterey next month, under $300, I'm Open Water certified"* into a booked adventure. Each person has a personal AI agent that holds their private preferences. The agents find compatible people, agree on one plan without revealing anyone's preferences, and negotiate price with vendor agents that represent real shops. Nothing is booked or paid until every human approves the exact plan and quote.
+Built at **Cal Hacks 13.0** by Kevin (website, payments, hosting), Parikshit (AI agents and Fetch.ai) and Dev (AI, search and data).
 
-Built at **Cal Hacks 13.0** by Kevin (platform, frontend, payments, deployment), Parikshit (agents and Fetch.ai) and Dev (AI, search and data).
+---
+
+## The simple version
+
+Imagine you want to go scuba diving. Doing it alone is expensive, and finding other divers who want the
+same trip, on the same day, at the same price, is a lot of work. Then somebody still has to call the dive
+shops and haggle.
+
+**Parley does all of that for you.**
+
+1. **You type one sentence**, like *"Scuba diving in Monterey next month, under $300. I'm certified."*
+2. **Your own AI helper (your "agent") reads it** and turns it into a clear plan: what, where, when and how much.
+3. **It finds people who want the same trip.** Or, if you'd rather go alone, it hunts for a boat that's already going so you can hop on at the cheaper group price.
+4. **The agents talk it out.** Everyone's agent, plus a go-between agent, agree on one plan. The dive shops have agents too, and they offer prices.
+5. **You say yes (or no).** Nothing is booked and no money moves until every real person approves the exact plan and price.
+
+Think of it like a group chat where helpful robots do the planning and haggling, and the humans just make the final call.
+
+### Two promises
+
+- **Your secrets stay secret.** You can tell your agent things like *"I really care about a morning dive"*. Your agent uses that to argue for you, but never shows it to anyone else.
+- **Robots suggest, people decide.** An agent can never approve, pay or book anything. Only a person clicking a button can.
+
+## How it works (picture version)
 
 ```
-"Scuba in Monterey under $300"
-        │  compile (Gemini or offline template)          you review: hard conditions vs. preferences
-        ▼
-   public intent ──► matching (hard filters, Moss ranking) ──► people who fit
-        │                                                         │
-        │  nobody fits, or "Just me"                              │  "With others"
-        ▼                                                         ▼
-   SOLO: your agent ⇄ every shop's agent              GROUP: mediator ⇄ each person's agent
-   (price sheets + trips already running)             (bounded rounds, private prefs stay private)
-        └──────────────────────┬──────────────────────────────────┘
-                               ▼
-              binding quote from the vendor's agent (staff can review and discount)
-                               ▼
-        every human approves the exact version ─► deposit (simulated or x402 testnet)
-                               ▼
-              vendor staff confirm the booking ─► calendar invite, share card
+  You: "Scuba in Monterey under $300"
+           │
+           ▼
+  1. Your agent turns it into a plan      (what, where, when, budget, must-haves)
+           │
+           ▼
+  2. It finds people who fit  ──────────  or nobody? You go solo, and your agent
+           │                              looks for a boat that's already going
+           ▼
+  3. The agents negotiate                 (a go-between agent proposes a plan,
+           │                               each person's agent says yes or "change this")
+           ▼
+  4. The shop's agent sends a real price  (shop staff can check it, or offer a discount)
+           │
+           ▼
+  5. Every person approves  ──►  deposit (pretend money or test money)  ──►  shop confirms  ──►  you're going!
 ```
+
+## Words you'll see
+
+| Word | What it means |
+|---|---|
+| **Agent** | A small AI helper that works for one person or one shop. Yours knows what you want and argues for you. |
+| **Mediator** | The go-between agent. It suggests one plan for the whole group and improves it round by round. |
+| **Goal** | The sentence you typed. |
+| **Must-have** (hard condition) | Something you won't give up, like "under $300" or "I'm certified". Agents never trade these away. |
+| **Private preference** | Something you'd *like*, like a morning time slot. Only your agent knows it. |
+| **Vendor** / **shop** | The business running the trip, like a dive shop. It has its own agent and its own staff page. |
+| **Quote** | A shop's price offer for the exact plan. |
+| **Solo mode** | Going alone. Your agent bargains for you and tries to slot you into a group that's already booked. |
+| **Simulated** | Pretend. Anything pretend says so right on the screen. |
+
+## Try it yourself
+
+You need **Python** (version 3.11, 3.12 or 3.13) and **Node.js** (version 20 or newer). Works on Windows, Mac and Linux.
+
+**Step 1. Install everything** (only needed once):
+
+```bash
+python scripts/rally.py setup
+```
+
+**Step 2. Start the app:**
+
+```bash
+python scripts/rally.py dev
+```
+
+**Step 3. Open http://localhost:3000 in your browser.** That's it!
+
+### What to click
+
+- **Go with others:** pick **With others**, tap **Scuba in Monterey**, then **Find my people**. Check the details, tap the people you want, and start the group. Use the name menu at the top right to switch to another person and approve as them.
+- **Go alone:** pick **Just me**, tap **Scuba in Monterey**, then **Find my deal**. Your agent bargains with the dive shops and finds a boat that's already going.
+
+### Finding your way around
+
+| Where | What's there |
+|---|---|
+| **Plan a trip** (home) | Type a goal, see your trips and goals |
+| **Trip page** | The next step is always at the top. Tabs: **Plan**, **Chat**, **Agent talk** (every message between agents) and **Replay** (step through how the deal changed) |
+| **Agents** | Every agent and every message, live |
+| **For shops** | What a dive shop sees: requests, quotes to approve, price rules |
+| **Demo** | One-click demos, live numbers, and QR codes for phones |
+
+Want to start fresh? Run `python scripts/rally.py reset`.
+
+Everything works with no setup. To switch on the real sponsor services (Gemini, Convex, Bright Data and the rest), copy `.env.example` to `.env` and fill it in. See [Configuration](#configuration).
+
+## Demo for judges
+
+Open **http://localhost:3000/demo** on the big screen.
+
+1. **The lights.** Each sponsor service shows **live** (teal) or **fallback** (amber). Nothing pretends.
+2. **Launch scuba.** One click: the goal is read, five divers are matched, their agents join and start negotiating.
+3. **Phone seats.** In the trip page, **Phone seats** shows a QR code for each person and for the shop's staff. A judge scans one and approves, or asks for a change, from their own phone.
+4. **The shop.** Another judge takes the shop seat and approves the price, or offers a discount.
+5. **Everyone approves.** Deposits go through; add the trip to a calendar or share it.
+6. **Replay.** Step through every version of the plan and see why it changed.
+7. **Solo diver.** Nobody to go with, yet the agent joins a boat that's already booked and pays the group price.
+8. **The numbers:** zero broken must-haves, how many agent messages, time to agreement, money saved. All measured live.
+
+---
+
+# For developers
+
+Everything below is the technical reference.
 
 ## Contents
 
 1. [Why it's different](#why-its-different)
-2. [Run it in two minutes](#run-it-in-two-minutes)
-3. [Demo script for judges](#demo-script-for-judges)
-4. [Features](#features)
-5. [Sponsor technology](#sponsor-technology)
-6. [What is real and what is simulated](#what-is-real-and-what-is-simulated)
-7. [Configuration](#configuration)
-8. [Architecture](#architecture)
-9. [API reference](#api-reference)
-10. [Tests and measured results](#tests-and-measured-results)
-11. [Deploying](#deploying)
-12. [Privacy and safety rules](#privacy-and-safety-rules)
-13. [Troubleshooting](#troubleshooting)
-14. [Project layout and owners](#project-layout-and-owners)
+2. [Features](#features)
+3. [Sponsor technology](#sponsor-technology)
+4. [What is real and what is simulated](#what-is-real-and-what-is-simulated)
+5. [Configuration](#configuration)
+6. [Architecture](#architecture)
+7. [API reference](#api-reference)
+8. [Tests and measured results](#tests-and-measured-results)
+9. [Deploying](#deploying)
+10. [Privacy and safety rules](#privacy-and-safety-rules)
+11. [Troubleshooting](#troubleshooting)
+12. [Project layout and owners](#project-layout-and-owners)
 
 ## Why it's different
 
 - **Agents negotiate, people decide.** Agents propose and counter-propose; only a human click approves, commits or books.
-- **Private preferences never leave your agent.** The mediator sees accept, "change this term" or "can't do this". It never sees weights or ideal values. That rule is enforced by tests on every snapshot.
+- **Private preferences never leave your agent.** The mediator sees accept, "change this term" or "can't do this". It never sees weights or ideal values. Tests enforce this on every snapshot.
 - **Groups or solo.** With others, a mediator gets everyone's agent to one plan. Alone, your agent negotiates with every shop directly and hunts for **trips already running that you can join at the group rate**, the main lever a solo traveller actually has.
 - **Both sides are real.** Vendors have their own portal, their own agent with editable price rules, and staff who can review a quote, offer a discount (never a higher price) and confirm the booking.
 - **Honest labels.** Anything simulated says so on screen: "Simulated", "Listed price, not a quote", "Typical price, not live", "Testnet".
-
-## Run it in two minutes
-
-Needs **Python 3.11 to 3.13** and **Node 20+**. Works on Windows, macOS and Linux.
-
-```bash
-python scripts/rally.py setup     # pip install -r requirements.txt + npm install
-python scripts/rally.py dev       # API on http://localhost:8000, web on http://localhost:3000
-```
-
-Open http://localhost:3000.
-
-- **With others:** pick *Scuba in Monterey*, then **Find my people**. Answer 5 for group size, publish, start the group and approve. Switch identity in the header to approve as other people.
-- **Just me:** choose *Just me*, pick *Scuba in Monterey*, then **Find my deal**. Publish, then **Go solo**. Your agent negotiates with the dive shops and finds a boat that's already going.
-
-`python scripts/rally.py reset` restores the scenario between rehearsals. Copy `.env.example` to `.env` to turn on sponsor integrations (see [Configuration](#configuration)). The API reads `.env` itself.
-
-## Demo script for judges
-
-Open **http://localhost:3000/demo**, the control room, on the projector.
-
-1. **Lights.** Each sponsor's integration shows live (teal) or fallback (amber). Nothing pretends to be live.
-2. **Launch scuba.** One click compiles the goal, matches five divers, invites their agents and starts the negotiation. The room fills as agents join.
-3. **Phone seats.** In the group room, **Phone seats** shows a QR code per member and for the vendor's staff. A judge scans one and approves or asks for a change as that person, live on both screens.
-4. **Vendor review.** Another judge takes the vendor seat and approves the binding quote in the vendor portal, or offers a discount.
-5. **Approve and commit.** Everyone approves; deposits commit; add the trip to a calendar or share it.
-6. **Replay.** Scrub through every plan version: what was proposed, how each agent answered, why the next version changed.
-7. **Solo diver.** Launch the solo scenario. Nobody to go with, yet the agent joins Kelp Line's already-booked Nov 14 boat and pays the 4-to-5-person rate instead of the solo rate.
-8. **Point at the numbers:** zero hard-constraint violations, agent messages, time to agreement, group savings. They are all measured live, never estimated.
 
 ## Features
 

@@ -122,27 +122,42 @@ export function stepIndex(deal: Deal): { at: number; failed: boolean } {
 /** End-to-end workflow, driven only by real deal state. */
 export function WorkflowStepper({ deal, reviewBy }: { deal: Deal; reviewBy?: string | null }) {
   const { at, failed } = stepIndex(deal);
+  const label = (i: number) => (deal.solo ? SOLO_LABEL[STEPS[i].key] ?? STEPS[i].label : STEPS[i].label);
+  const shown = Math.min(at, STEPS.length - 1);
+  const who = STEPS[shown].key === "quote" && reviewBy ? `${reviewBy} reviewing` : STEPS[shown].who;
   return (
-    <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7" aria-label="Workflow">
-      {STEPS.map((step, i) => {
-        const done = i < at || (i === at && at === 7);
-        const current = i === at && !done;
-        return (
-          <li key={step.key} className={cx("rounded-[8px] border px-3 py-2", current ? (failed ? "border-danger bg-danger-soft" : "border-accent bg-accent-soft") : "border-line bg-surface")}
-            aria-current={current ? "step" : undefined}>
-            <div className="flex items-center gap-1.5">
-              <span className={cx("inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold",
-                done ? "bg-accent text-accent-ink" : current ? (failed ? "bg-danger text-white" : "bg-accent/20 text-accent") : "bg-surface-2 text-muted")}>
-                {done ? <Check size={10} /> : current && failed ? <X size={10} /> : i + 1}
+    <div className="rounded-[16px] border border-line bg-surface px-5 py-4 shadow-card">
+      {/* Phones: one line and a bar. */}
+      <div className="flex items-center justify-between gap-3 md:hidden">
+        <div className="min-w-0">
+          <div className="text-[12px] text-muted">Step {Math.min(at + 1, STEPS.length)} of {STEPS.length}</div>
+          <div className={cx("truncate font-semibold", failed && "text-danger")}>{at === STEPS.length ? "All done" : label(shown)}</div>
+        </div>
+        <span className="truncate text-[12px] text-muted">{who}</span>
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2 md:hidden">
+        <div className={cx("h-full rounded-full", failed ? "bg-danger" : "bg-accent")} style={{ width: `${(Math.min(at + 1, STEPS.length) / STEPS.length) * 100}%` }} />
+      </div>
+      {/* Wider screens: every step on one connected line. */}
+      <ol className="hidden grid-cols-7 md:grid" aria-label="Workflow">
+        {STEPS.map((step, i) => {
+          const done = i < at || (i === at && at === 7);
+          const current = i === at && !done;
+          return (
+            <li key={step.key} className="relative flex flex-col items-center text-center" aria-current={current ? "step" : undefined}>
+              {i > 0 && <span className={cx("absolute right-1/2 top-3.5 h-0.5 w-full -translate-y-1/2", i <= at ? "bg-accent" : "bg-line")} aria-hidden />}
+              <span className={cx("relative z-[1] inline-flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-semibold ring-4 ring-surface",
+                done ? "bg-accent text-accent-ink" : current ? (failed ? "bg-danger text-accent-ink" : "bg-accent-soft text-accent ring-accent/25") : "bg-surface-2 text-muted")}>
+                {done ? <Check size={14} strokeWidth={2.5} /> : current && failed ? <X size={14} /> : i + 1}
               </span>
-              <span className={cx("truncate text-[12px] font-medium", !done && !current && "text-muted")}>{deal.solo ? SOLO_LABEL[step.key] ?? step.label : step.label}</span>
-            </div>
-            <div className="mt-0.5 truncate text-[11px] text-muted">
-              {current && step.key === "quote" && reviewBy ? `${reviewBy} reviewing` : step.who}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+              <span className={cx("mt-2 px-1 text-[12px] font-medium leading-4", current ? (failed ? "text-danger" : "text-ink") : done ? "text-ink" : "text-muted")}>{label(i)}</span>
+              <span className="mt-0.5 hidden px-1 text-[11px] leading-4 text-muted lg:block">
+                {current && step.key === "quote" && reviewBy ? `${reviewBy} reviewing` : step.who}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }

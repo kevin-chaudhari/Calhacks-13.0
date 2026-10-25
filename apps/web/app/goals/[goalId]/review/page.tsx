@@ -1,13 +1,13 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { AlertTriangle, Lock, Sparkles } from "lucide-react";
+import { AlertTriangle, ListChecks, Lock, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError, newKey } from "@/lib/api";
 import { usePersona } from "@/lib/persona";
 import { shortDay, TERM_LABELS, termValue } from "@/lib/format";
 import type { Condition, Goal, MissingField, TermSpec } from "@/lib/types";
-import { Button, Callout, Card, CardHeader, Chip, PageTitle, Skeleton } from "@/components/ui/primitives";
+import { Button, Callout, Card, CardHeader, Chip, FlowSteps, PageTitle, Skeleton } from "@/components/ui/primitives";
 import { readMode } from "@/lib/mode";
 
 const KIND: Record<string, { label: string; tone: "accent" | "neutral" | "warn" | "sim" }> = {
@@ -165,10 +165,11 @@ export default function Review() {
 
   return (
     <>
+      <FlowSteps at={1} />
       <PageTitle
         eyebrow={
-          <span className="flex items-center gap-2">
-            Step 1 of 4 · Review your intent
+          <span className="flex flex-wrap items-center gap-2">
+            Here&apos;s what your agent understood
             {goal.compiledBy === "gemini" ? (
               <Chip tone="accent"><Sparkles size={12} /> Compiled by Gemini</Chip>
             ) : (
@@ -179,15 +180,18 @@ export default function Review() {
         }
         title={d.activity.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
       >
-        Parley only publishes what you confirm here. Hard conditions are never traded away during negotiation.
+        Check it looks right. &ldquo;Must have&rdquo; items are never traded away, and the sliders on the right stay secret between you and your agent.
       </PageTitle>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
-          <blockquote className="border-l-2 border-accent pl-4 text-[16px] leading-6">&ldquo;{goal.text}&rdquo;</blockquote>
+          <blockquote className="rounded-[14px] border-l-4 border-accent bg-surface px-5 py-4 text-[16px] leading-6 shadow-card">
+            <div className="mb-1 text-[12px] font-semibold uppercase tracking-wider text-muted">You said</div>
+            &ldquo;{goal.text}&rdquo;
+          </blockquote>
 
           {missing.length > 0 && (
-            <div className="rounded-[10px] border border-warn/30 bg-warn-soft px-4 py-3">
+            <div className="rounded-[14px] border border-warn/30 bg-warn-soft px-4 py-3">
               <div className="mb-1 flex items-center gap-2 text-[13px] font-semibold text-warn">
                 <AlertTriangle size={14} /> {missing.length} {missing.length === 1 ? "thing" : "things"} to confirm before publishing
               </div>
@@ -201,7 +205,7 @@ export default function Review() {
           ))}
 
           <Card>
-            <CardHeader title="Compiled intent" meta={`Template: ${d.templateId.replace("_", " ")} · shape: ${d.shape.replace("_", " + ")}`} />
+            <CardHeader icon={<ListChecks size={16} />} title="Your trip details" meta={`Template: ${d.templateId.replace("_", " ")} · shape: ${d.shape.replace("_", " + ")}`} />
             <div className="divide-y divide-line">
               <Row label="Activity">
                 <div className="flex flex-wrap gap-1.5">
@@ -263,8 +267,9 @@ export default function Review() {
         <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <Card>
             <CardHeader
-              title={<span className="flex items-center gap-1.5"><Lock size={13} /> Your private preferences</span>}
-              meta="Only your agent sees this. Parley stores a hash, never the values."
+              icon={<Lock size={15} />}
+              title="What matters most to you"
+              meta="Secret: only your agent sees this. Slide up what you care about."
             />
             <div className="space-y-4 px-5 py-4">
               {terms.map((t) => {
@@ -305,7 +310,7 @@ export default function Review() {
             </div>
           </Card>
           {err && <Callout tone="danger" title="Not saved">{err}</Callout>}
-          <Button className="h-10 w-full" onClick={publish} disabled={busy || missing.length > 0 || published}>
+          <Button className="h-12 w-full text-[15px]" onClick={publish} disabled={busy || missing.length > 0 || published}>
             {published ? "Published" : busy ? "Publishing…" : missing.length ? `Answer ${missing.length} question${missing.length > 1 ? "s" : ""} to publish` : d.groupMax === 1 ? "Publish and ask the shops" : "Publish and find people"}
           </Button>
           {published && (

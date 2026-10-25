@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
-  ArrowRight, Bot, Check, ChevronLeft, ChevronRight, CircleDashed, Clock, LogOut, MessageSquareWarning, Receipt, ShieldX, UserMinus,
+  Activity, ArrowRight, Bot, Check, ChevronLeft, ChevronRight, CircleDashed, Clock, LogOut, MessageSquareWarning, Receipt, ShieldX, UserMinus, Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { day, money, orderedTerms, TERM_LABELS, termValue, time } from "@/lib/format";
@@ -26,7 +26,7 @@ export function MemberRail({ snap }: { snap: DealSnapshot }) {
   const accepted = active.filter((m) => m.agentStatus === "accepted").length;
   return (
     <Card>
-      <CardHeader title={snap.deal.solo ? "Traveller" : "Members"} meta={<span className="num">{snap.deal.solo ? "Solo trip, no group needed" : `${active.length} in the group, ${accepted} of ${active.length} accepted`}</span>} />
+      <CardHeader icon={<Users size={15} />} title={snap.deal.solo ? "Traveller" : "People"} meta={<span className="num">{snap.deal.solo ? "Solo trip, no group needed" : `${active.length} in the group, ${accepted} of ${active.length} accepted`}</span>} />
       <ul className="divide-y divide-line">
         {snap.members.map((m) => {
           const gone = m.state !== "joined";
@@ -94,7 +94,7 @@ export function PlanCard({ snap, providerName }: { snap: DealSnapshot; providerN
   if (!current) {
     return (
       <Card>
-        <CardHeader title="Current plan" />
+        <CardHeader title="The plan" />
         <div className="flex flex-col items-center gap-2 px-5 py-14 text-center">
           <CircleDashed className="text-muted" />
           <div className="font-medium">No plan yet</div>
@@ -115,7 +115,7 @@ export function PlanCard({ snap, providerName }: { snap: DealSnapshot; providerN
     <Card>
       <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
         <div className="flex items-center gap-2">
-          <h2 className="text-[20px] font-semibold leading-7">Plan v{p.version}</h2>
+          <h2 className="text-[20px] font-semibold leading-7">Plan <span className="text-muted">v{p.version}</span></h2>
           {!isCurrent && <Chip>Earlier version</Chip>}
           {isCurrent && allAccepted && <Chip tone="accent"><Check size={12} /> {snap.deal.solo ? "Your agent accepted" : "Everyone accepted"}</Chip>}
         </div>
@@ -152,7 +152,7 @@ export function PlanCard({ snap, providerName }: { snap: DealSnapshot; providerN
         </div>
       </div>
       {p.rationale.length > 0 && (
-        <div className="border-t border-line bg-surface-2/60 px-5 py-3">
+        <div className="rounded-b-[18px] border-t border-line bg-surface-2/60 px-5 py-3">
           <div className="text-[12px] font-semibold text-muted">Why this version</div>
           <ul className="mt-1 space-y-0.5 text-[13px]">
             {p.rationale.map((r) => <li key={r} className="num">{r}</li>)}
@@ -210,8 +210,8 @@ export function ActivityFeed({ events, limit = 40 }: { events: DealEvent[]; limi
   const items = useMemo(() => [...events].reverse().slice(0, limit), [events, limit]);
   return (
     <Card>
-      <CardHeader title="Mediator activity" />
-      <ol className="max-h-[440px] divide-y divide-line overflow-y-auto" aria-live="polite">
+      <CardHeader icon={<Activity size={15} />} title="Live activity" meta="Everything that happens, newest first" />
+      <ol className="scroll-soft max-h-[420px] divide-y divide-line overflow-y-auto" aria-live="polite">
         <AnimatePresence initial={false}>
           {items.map((e) => {
             const Icon = EVENT_ICON[e.type] ?? (e.type.startsWith("deal.") ? ArrowRight : Bot);
@@ -241,7 +241,7 @@ export function ActivityFeed({ events, limit = 40 }: { events: DealEvent[]; limi
 
 export function QuoteMini({ q, chosen }: { q: Quote; chosen: boolean }) {
   return (
-    <div className={cx("rounded-[10px] border p-3", chosen ? "border-accent" : "border-line", !q.available && "opacity-60")}>
+    <div className={cx("rounded-[12px] border p-3", chosen ? "border-accent bg-accent-soft/40" : "border-line", !q.available && "opacity-60")}>
       <div className="flex items-center justify-between gap-2">
         <span className="truncate font-medium">{q.providerName}</span>
         <ProvenanceBadge kind={q.provenance} />
@@ -266,14 +266,14 @@ export function NextStepBar({ snap, meId }: { snap: DealSnapshot; meId?: string 
     const v = snap.deal.currentProposalVersion;
     const mine = snap.approvals.some((a) => a.userId === meId && a.proposalVersion === v && !a.void);
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-accent bg-accent-soft px-5 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-accent/40 bg-accent-soft px-5 py-4">
         <div>
           <div className="font-semibold text-accent">{snap.deal.solo ? `Your agent settled on plan v${v} with the shop.` : `Everyone's agent accepted plan v${v}.`}</div>
           <div className="text-[13px] text-ink/80">
             {snap.deal.solo ? "Check the plan and the binding quote, then approve it yourself." : mine ? "You approved. Waiting for the others." : "Now each person approves the exact plan and quote."}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <ButtonLink href={`/deals/${id}/providers`} variant="secondary">Compare quotes</ButtonLink>
           <ButtonLink href={`/deals/${id}/approve`}>Review and approve <ArrowRight size={15} /></ButtonLink>
         </div>
@@ -283,10 +283,10 @@ export function NextStepBar({ snap, meId }: { snap: DealSnapshot; meId?: string 
   if (s === "PROVIDER_QUOTES_PENDING") {
     const r = snap.deal.vendorReview as { staffName?: string; providerName?: string } | null;
     return (
-      <div className="rounded-[10px] border border-line bg-surface px-5 py-3">
+      <div className="rounded-[16px] border border-line bg-surface px-5 py-4 shadow-card">
         <div className="font-semibold">{r ? `${r.providerName}'s agent drafted a quote` : "Requesting a binding quote"}</div>
         <div className="text-[13px] text-muted">
-          {r ? `${r.staffName} is reviewing it in the vendor portal. You can message them in the group chat below.` : "The mediator asked the chosen provider's agent for a binding quote."}
+          {r ? `${r.staffName} is reviewing it in the vendor portal. You can message them in the Chat tab.` : "The mediator asked the chosen provider's agent for a binding quote."}
         </div>
       </div>
     );
@@ -294,9 +294,9 @@ export function NextStepBar({ snap, meId }: { snap: DealSnapshot; meId?: string 
   if (s === "COMMITTED") {
     const booked = snap.deal.bookingStatus !== "not_booked";
     return (
-      <div className="flex items-center justify-between gap-3 rounded-[10px] border border-accent bg-accent-soft px-5 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-accent/40 bg-accent-soft px-5 py-4">
         <div className="font-semibold text-accent">
-          {booked ? `Booked: confirmed by ${snap.deal.bookedBy}.` : "Committed (simulated). Waiting for the vendor to confirm the booking."}
+          {booked ? `Booked: confirmed by ${snap.deal.bookedBy}.` : "Committed (simulated). Waiting for the shop to confirm the booking."}
         </div>
         <ButtonLink href={`/deals/${id}/confirmed`}>See confirmation</ButtonLink>
       </div>
@@ -304,7 +304,7 @@ export function NextStepBar({ snap, meId }: { snap: DealSnapshot; meId?: string 
   }
   if (s === "NO_AGREEMENT") {
     return (
-      <div className="rounded-[10px] border border-danger/40 bg-danger-soft px-5 py-3">
+      <div className="rounded-[16px] border border-danger/30 bg-danger-soft px-5 py-4">
         <div className="font-semibold text-danger">No plan fits everyone.</div>
         <div className="text-[13px] text-ink/80">{snap.deal.conflicts.join(" · ")}. Choose: someone leaves the group, or start a goal with relaxed terms.</div>
       </div>
@@ -313,21 +313,22 @@ export function NextStepBar({ snap, meId }: { snap: DealSnapshot; meId?: string 
   return null;
 }
 
-export function DealHeader({ snap }: { snap: DealSnapshot }) {
+export function DealHeader({ snap, action }: { snap: DealSnapshot; action?: React.ReactNode }) {
   const d = snap.deal;
   const deadline = new Date(d.deadlineAt);
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
         <div className="text-[13px] text-muted">
-          <Link href="/" className="hover:text-ink">Trips</Link> / {d.solo ? "Solo trip" : "Group room"}
+          <Link href="/" className="hover:text-accent">Your trips</Link> <span aria-hidden>›</span> {d.solo ? "Solo trip" : "Group trip"}
         </div>
-        <h1 className="mt-1 text-[28px] font-semibold leading-[34px] tracking-[-0.01em]">{d.title}</h1>
+        <h1 className="mt-1 text-[30px] font-semibold leading-[36px] tracking-[-0.02em]">{d.title}</h1>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {d.solo && <Chip tone="buoy" title="One traveller; their agent negotiates with the shops' agents directly">Solo</Chip>}
         <StatusPill status={d.status} />
         <Chip title="The group expires if not committed by then"><Clock size={12} /> until {deadline.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}</Chip>
+        {action}
         <Chip tone={snap.provenance.transport === "agentverse" ? "accent" : "sim"} title={snap.provenance.transport === "agentverse" ? "Every member and vendor agent is a registered Fetch.ai uAgent on Agentverse" : "Agent transport in use"}>Agents: {snap.provenance.transport as string}</Chip>
       </div>
     </div>
