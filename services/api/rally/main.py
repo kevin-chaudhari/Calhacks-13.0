@@ -32,14 +32,18 @@ rally = Rally(settings, MemoryStore(mirror))
 
 
 
-async def _pay_out_finished_trips() -> None:
-    """Held money goes to the vendor once a trip's dispute window closes (escrow.py)."""
+HOUSEKEEPING_S = 5
+
+
+async def _housekeeping() -> None:
+    """Restart any deal whose negotiation stopped, and pay out trips whose dispute window closed."""
     while True:
-        try:
-            await rally.release_due()
-        except Exception:  # noqa: BLE001  one bad deal must not stop every payout
-            logging.getLogger("rally").exception("payout sweep failed")
-        await asyncio.sleep(60)
+        for job in (rally.revive_stalled, rally.release_due):
+            try:
+                await job()
+            except Exception:  # noqa: BLE001  one bad deal must not stop the others
+                logging.getLogger("rally").exception("%s failed", job.__name__)
+        await asyncio.sleep(HOUSEKEEPING_S)
 
 
 @asynccontextmanager
@@ -48,9 +52,9 @@ async def lifespan(_: FastAPI):
     resumed = rally.resume()          # restart recovery: mediators, invites and quote requests in flight
     if rally.restored:
         logging.getLogger("rally").info("restored from Convex: %s; resumed %s", rally.restored, resumed)
-    payouts = asyncio.create_task(_pay_out_finished_trips())
+    chores = asyncio.create_task(_housekeeping())
     yield
-    payouts.cancel()
+    chores.cancel()
     await rally.stop_agents()
     if mirror:
         mirror.close()

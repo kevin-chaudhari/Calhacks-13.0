@@ -111,7 +111,8 @@ class Rally:
 
     def seed(self) -> None:
         for t in self.tasks.values():
-            t.cancel()
+            with contextlib.suppress(RuntimeError):     # a task from an event loop that already closed
+                t.cancel()
         self.tasks.clear()
         self.transports.clear()
         self.deal_skipped.clear()
@@ -503,6 +504,40 @@ class Rally:
                 date_to=it.draft.date_to.isoformat() if it.draft.date_to else None,
                 budget_max=it.draft.budget_max.amount if it.draft.budget_max else None)
         return plans, constraints
+
+    async def revive_stalled(self) -> list[str]:
+        """Safety net: a deal that is still negotiating, or waiting for a binding quote nobody is
+        requesting, with no live task behind it gets that work restarted (as resume() does after a
+        restart). A rare race once left a deal at NEGOTIATING forever after a member left; whatever
+        the cause, a deal can't stay stuck. How the old task ended is logged to find that cause."""
+        revived = []
+        for deal_id in list(self.store.deals):
+            async with self.store.locks[deal_id]:
+                deal = self.store.deals[deal_id]
+                t = self.tasks.get(deal_id)
+                if t is not None and not t.done():
+                    continue
+                st = DealStatus(deal.status)
+                props = self.store.proposals[deal_id]
+                if st == S.PROVIDER_QUOTES_PENDING and (deal.vendor_review or not props):
+                    continue                                # waiting on a person, not on a task
+                if st not in {S.NEGOTIATING, S.PROVIDER_QUOTES_PENDING}:
+                    continue
+                how = ("had no task" if t is None else "was cancelled" if t.cancelled()
+                       else f"crashed: {t.exception()!r}" if t.exception() else "ended without a result")
+                log.warning("deal %s stalled at %s (its task %s); restarting", deal_id, st.value, how)
+                self.store.append_event(deal_id, "deal.revived", "mediator",
+                                        "The negotiation had stopped; the mediator restarted it")
+                if st == S.NEGOTIATING:
+                    self.tasks[deal_id] = asyncio.create_task(self._mediate(deal_id))
+                else:
+                    p = props[-1]
+                    plan = Plan(tuple(sorted(p.terms.items())), p.provider_id, p.price_per_person)
+                    self.tasks[deal_id] = asyncio.create_task(
+                        self._request_binding_quote(deal_id, plan, p.version, len(self._active(deal_id))))
+                self.publish(deal_id)
+                revived.append(deal_id)
+        return revived
 
     async def _mediate(self, deal_id: str) -> None:
         try:
