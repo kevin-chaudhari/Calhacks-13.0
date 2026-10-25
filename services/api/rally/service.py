@@ -11,6 +11,7 @@ import contextlib
 import hashlib
 import json
 import logging
+import math
 import re
 import uuid
 from datetime import date
@@ -40,6 +41,23 @@ from .payments import PaymentError, make_rail
 from .providers import baseline_valid, load_providers, quote_for, rank_quotes, sheets
 from .store import AgentPrefsVault, MemoryStore, TransitionError, now_ms
 from .vendor_memory import VendorMemory
+
+
+def _money(x: Any) -> float:
+    """A real, finite amount. NaN and Infinity pass every < and > check, so they're refused here."""
+    if isinstance(x, bool):
+        raise TypeError("not a number")
+    v = float(x)
+    if not math.isfinite(v):
+        raise ValueError("not a finite number")
+    return round(v, 2)
+
+
+def _whole(x: Any) -> int:
+    v = _money(x)
+    if not v.is_integer():
+        raise ValueError("not a whole number")
+    return int(v)
 
 
 def trust_level(vendor: dict) -> str:
@@ -1059,11 +1077,11 @@ class Rally:
                 self.publish(deal_id)
                 return {"ok": True, "status": deal.status}
             if price is not None:
-                if price <= 0 or price > draft.price_per_person:
+                if not math.isfinite(price) or price <= 0 or price > draft.price_per_person:
                     raise ApiError(422, "PRICE_NOT_ALLOWED",
                                    f"You can lower the price but not raise it above ${draft.price_per_person:.0f}.")
                 draft.price_per_person = round(price, 2)
-                draft.total = round(price * draft.group_size, 2)
+                draft.total = round(draft.price_per_person * draft.group_size, 2)
             draft.expires_at = now_ms() + 30 * 60 * 1000
             self.agent_msg(deal_id, me, self._prov(prov), "ReviewDecision",
                            f"Approved at ${draft.price_per_person:.0f} pp" + (f": {note}" if note else ""),
@@ -1097,32 +1115,52 @@ class Rally:
             return {"bookingStatus": deal.booking_status}
 
     def vendor_update(self, user_id: str, patch: dict) -> dict:
+        """Edit the vendor agent's price rules. Every field is checked first and nothing is saved
+        unless all of them pass, so a bad rule can never reach a quote, a snapshot or the feed."""
         _, prov = self.vendor(user_id)
         errors: dict[str, str] = {}
+        changes: dict[str, Any] = {}
         if "autoQuote" in patch:
-            prov["autoQuote"] = bool(patch["autoQuote"])
+            if isinstance(patch["autoQuote"], bool):
+                changes["autoQuote"] = patch["autoQuote"]
+            else:
+                errors["autoQuote"] = "Must be true or false."
         if "tiers" in patch:
-            tiers = patch["tiers"]
             try:
-                tiers = [{"min": int(t["min"]), "max": int(t["max"]), "pricePerPerson": float(t["pricePerPerson"]),
-                          "includes": list(t.get("includes", []))} for t in tiers]
-                if any(t["pricePerPerson"] <= 0 or t["min"] > t["max"] for t in tiers):
+                tiers = sorted(({"min": _whole(t["min"]), "max": _whole(t["max"]), "pricePerPerson": _money(t["pricePerPerson"]),
+                                 "includes": [str(i) for i in t.get("includes", [])]} for t in patch["tiers"]),
+                               key=lambda t: t["min"])
+                if not tiers or any(t["min"] < 1 or t["min"] > t["max"] or t["pricePerPerson"] <= 0 for t in tiers):
                     raise ValueError
-                prov["tiers"] = sorted(tiers, key=lambda t: t["min"])
-            except (KeyError, TypeError, ValueError):
-                errors["tiers"] = "Each tier needs min ≤ max and a positive price."
+                if any(a["max"] >= b["min"] for a, b in zip(tiers, tiers[1:])):
+                    raise ValueError                    # overlapping tiers: two prices for one group size
+                changes["tiers"] = tiers
+            except (KeyError, TypeError, ValueError, AttributeError):
+                errors["tiers"] = ("Each tier needs whole group sizes from 1 up (min ≤ max, no overlaps) "
+                                   "and a positive price.")
         if "modifiers" in patch:
             try:
-                prov["modifiers"] = {k: {str(v): float(x) for v, x in m.items()} for k, m in patch["modifiers"].items()}
+                changes["modifiers"] = {str(k): {str(v): _money(x) for v, x in m.items()}
+                                        for k, m in patch["modifiers"].items()}
             except (AttributeError, TypeError, ValueError):
                 errors["modifiers"] = "Modifiers must be numbers."
         if "availableDates" in patch:
             try:
-                prov["availableDates"] = sorted({date.fromisoformat(d).isoformat() for d in patch["availableDates"]})
+                if isinstance(patch["availableDates"], str):
+                    raise TypeError
+                changes["availableDates"] = sorted({date.fromisoformat(d).isoformat() for d in patch["availableDates"]})
             except (TypeError, ValueError):
-                errors["availableDates"] = "Dates must be YYYY-MM-DD."
+                errors["availableDates"] = "Dates must be a list of YYYY-MM-DD."
+        if not errors and ("tiers" in changes or "modifiers" in changes):
+            tiers = changes.get("tiers", prov["tiers"])
+            mods = changes.get("modifiers", prov.get("modifiers", {}))
+            floor = min(t["pricePerPerson"] for t in tiers) + sum(min(0.0, *m.values()) for m in mods.values() if m)
+            if floor <= 0:
+                errors["modifiers"] = (f"With these discounts the cheapest plan would cost ${floor:.0f} per person. "
+                                       f"Every price must stay above $0.")
         if errors:
             raise ApiError(422, "INVALID_FIELDS", "Some pricing rules need fixing.", fields=errors)
+        prov.update(changes)
         self.store.publish_row("providers", prov["id"], prov, [s.id for s in self.personas.values()
                                                                 if s.provider_id == prov["id"]])
         self._publish_dashboards([prov["id"]])
