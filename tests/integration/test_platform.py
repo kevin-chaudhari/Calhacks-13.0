@@ -28,7 +28,7 @@ def snapshot_until(c, deal_id, pred, timeout=10):
     raise AssertionError(s["deal"]["status"])
 
 
-@pytest.mark.parametrize("scenario", ["scuba", "skydiving", "kayaking"])
+@pytest.mark.parametrize("scenario", ["scuba", "skydiving", "kayaking", "solo"])
 def test_one_click_launch_reaches_an_agreed_plan(client, scenario):
     c = client
     r = c.post("/v1/demo/launch", json={"scenario": scenario}, headers=h(c, "u_kevin"))
@@ -58,3 +58,19 @@ def test_seat_links_cover_every_member_and_the_quoting_vendor(client):
 def test_unknown_scenario_is_refused(client):
     r = client.post("/v1/demo/launch", json={"scenario": "moon"}, headers=h(client, "u_kevin"))
     assert r.status_code == 400 and r.json()["error"]["code"] == "UNKNOWN_SCENARIO"
+
+
+def test_gear_for_the_agreed_plan_includes_the_rent_or_buy_comparison(client):
+    c = client
+    d = c.post("/v1/demo/launch", json={"scenario": "scuba"}, headers=h(c, "u_kevin")).json()["dealId"]
+    snapshot_until(c, d, lambda s: s["deal"]["vendorReview"] is not None)
+    r = c.get(f"/v1/deals/{d}/gear", headers=h(c, "u_ana"))
+    assert r.status_code == 200, r.text
+    gear = r.json()
+    assert gear["activity"] == "scuba_diving" and gear["mode"] == "estimate" and gear["items"]
+    assert gear["rentals"] and gear["rentals"][0]["term"] == "gear_included"
+    assert c.get(f"/v1/deals/{d}/gear", headers=h(c, "u_jordan") if "u_jordan" in c.tokens else {}).status_code in (401, 403)
+    byo = c.get("/v1/gear/scuba_diving?gear_included=false", headers=h(c, "u_kevin")).json()
+    assert {"bcd", "regulator"} <= {i["key"] for i in byo["items"]}
+    assert c.get("/v1/gear/curling", headers=h(c, "u_kevin")).status_code == 404
+    assert c.get("/v1/health").json()["gear"]["mode"] == "estimate"

@@ -23,18 +23,27 @@ def load_providers() -> list[dict]:
     return json.loads((FIXTURES / "providers.json").read_text(encoding="utf-8"))["providers"]
 
 
-def sheets(providers: list[dict]) -> list[ProviderSheet]:
+def sheets(providers: list[dict], pool: bool = False) -> list[ProviderSheet]:
     return [ProviderSheet(id=p["id"], name=p["name"], offers=p["offers"], available_dates=p["availableDates"],
                           tiers=p["tiers"], modifiers=p.get("modifiers", {}),
-                          provenance=p.get("provenance", "simulated")) for p in providers]
+                          provenance=p.get("provenance", "simulated"), open_groups=p.get("openGroups", {}),
+                          pool=pool) for p in providers]
 
 
-def quote_for(provider: dict, plan_terms: dict, group_size: int, version: int, binding: bool) -> Quote:
-    sheet = sheets([provider])[0]
+def open_group_seats(provider: dict, plan_terms: dict) -> int:
+    return int(provider.get("openGroups", {}).get(str(plan_terms.get("date")), 0))
+
+
+def quote_for(provider: dict, plan_terms: dict, group_size: int, version: int, binding: bool,
+              pool: bool = False) -> Quote:
+    sheet = sheets([provider], pool)[0]
     price = sheet.price(plan_terms, group_size)
-    solo = sheet.price(plan_terms, 1)
-    tier = sheet.tier_for(group_size) or {}
+    solo = sheets([provider])[0].price(plan_terms, 1)     # baseline: booking alone, never pooled
+    tier = sheet.tier_for(sheet.pooled_size(plan_terms, group_size)) or {}
     includes = list(tier.get("includes", []))
+    joined = open_group_seats(provider, plan_terms) if pool else 0
+    if joined and price is not None:
+        includes.append(f"joins a booked group of {joined} (group rate)")
     for key, value in plan_terms.items():           # paid add-ons the group chose
         if value is True and provider.get("modifiers", {}).get(key, {}).get("true", 0) > 0:
             includes.append(key.replace("_included", "").replace("_", " ") + " (add-on)")

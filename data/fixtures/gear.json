@@ -1,0 +1,25 @@
+{
+  "_note": "What a member must bring per activity. 'neededWhen' names a plan term: the item is needed when that term is false (the shop doesn't provide it). Items without it are always needed. 'query' is what we price-search; 'priceRange' rejects accessories and bulk listings. 'typicalUsd' is only a labelled fallback when live prices are off.",
+  "activities": {
+    "scuba_diving": [
+      { "key": "mask", "label": "Dive mask", "query": "scuba diving mask tempered glass", "neededWhen": "gear_included", "priceRange": [12, 250], "typicalUsd": 40 },
+      { "key": "fins", "label": "Open-heel fins", "query": "open heel scuba fins", "neededWhen": "gear_included", "priceRange": [25, 300], "typicalUsd": 70 },
+      { "key": "wetsuit", "label": "7mm wetsuit", "why": "Monterey water is 10 to 14 °C", "query": "7mm full wetsuit scuba", "neededWhen": "gear_included", "priceRange": [90, 900], "typicalUsd": 220 },
+      { "key": "hood", "label": "Hood and gloves", "query": "5mm dive hood gloves", "neededWhen": "gear_included", "priceRange": [15, 200], "typicalUsd": 55 },
+      { "key": "bcd", "label": "BCD", "query": "scuba BCD buoyancy compensator", "neededWhen": "gear_included", "priceRange": [150, 1200], "typicalUsd": 380 },
+      { "key": "regulator", "label": "Regulator set", "query": "scuba regulator octopus set", "neededWhen": "gear_included", "priceRange": [180, 1500], "typicalUsd": 450 },
+      { "key": "computer", "label": "Dive computer", "query": "wrist dive computer", "neededWhen": "gear_included", "priceRange": [120, 1500], "typicalUsd": 250 },
+      { "key": "defog", "label": "Mask defog", "query": "dive mask defog", "optional": true, "priceRange": [4, 30], "typicalUsd": 9 }
+    ],
+    "skydiving": [
+      { "key": "shoes", "label": "Laced athletic shoes", "why": "No boots or slip-ons on a tandem jump", "query": "lace up athletic training shoes", "priceRange": [25, 200], "typicalUsd": 60 },
+      { "key": "layers", "label": "Fitted long-sleeve layer", "why": "It's colder at 13,000 ft", "query": "moisture wicking long sleeve base layer", "optional": true, "priceRange": [10, 120], "typicalUsd": 25 },
+      { "key": "camera", "label": "Action camera", "why": "Only if you skip the video package; most drop zones require a camera-rated jumper", "query": "action camera 4k waterproof", "neededWhen": "video_package", "optional": true, "priceRange": [60, 600], "typicalUsd": 200 }
+    ],
+    "kayaking": [
+      { "key": "wetsuit", "label": "3mm wetsuit", "query": "3mm full wetsuit", "neededWhen": "wetsuit_included", "priceRange": [50, 500], "typicalUsd": 120 },
+      { "key": "drybag", "label": "Dry bag", "query": "dry bag 10L waterproof", "priceRange": [8, 80], "typicalUsd": 18 },
+      { "key": "shoes", "label": "Water shoes", "query": "water shoes quick dry", "priceRange": [12, 120], "typicalUsd": 30 }
+    ]
+  }
+}

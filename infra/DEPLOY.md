@@ -38,7 +38,10 @@ python scripts/x402_wallets.py        # prints X402_PAY_TO, X402_PAYER_KEYS and 
 Fund each payer address with Base Sepolia test USDC at https://faucet.circle.com, paste the lines
 into `.env`, set `PAYMENTS=x402_testnet`, restart. Mainnet network names refuse to start.
 
+## 5. Bright Data live gear prices (optional, 10 min)
+Follow `docs/brightdata.md`: one API key and one SERP zone name in `.env`, then set `GEAR_PRICES=brightdata`.
+
 ## Before judging
-- Open `/demo` on the projector: all six lights, then "Reset everything".
+- Open `/demo` on the projector: all seven lights, then "Reset everything".
 - `ALLOW_DEMO_ROUTES=1` is needed for the control room and seats; set it to 0 after the event.
 - Seat QR codes use `RALLY_WEB_URL`, so it must be the public Vercel URL, not localhost.

@@ -4,7 +4,7 @@
 //  - Speech to text: Web Speech API (SpeechRecognition). Chrome and Edge; audio is processed by the
 //    browser vendor's speech service, so it needs a network connection.
 //  - Text to speech: speechSynthesis with a voice matching the language. All modern browsers.
-//  - Translation: Chrome's on-device Translator API when present, else the Rally API (Gemini, if a key
+//  - Translation: Chrome's on-device Translator API when present, else the Parley API (Gemini, if a key
 //    is configured). If neither is available the UI says so instead of pretending.
 
 import { useCallback, useEffect, useRef, useState } from "react";

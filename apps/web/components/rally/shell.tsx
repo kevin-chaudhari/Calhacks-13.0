@@ -10,15 +10,14 @@ import { Chip, cx } from "@/components/ui/primitives";
 
 export function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2" aria-label="Rally home">
-      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden>
-        <circle cx="4" cy="5" r="2.5" fill="var(--muted)" />
-        <circle cx="18" cy="5" r="2.5" fill="var(--muted)" />
-        <circle cx="11" cy="19" r="2.5" fill="var(--muted)" />
-        <path d="M5.8 6.6 10 10.4M16.2 6.6 12 10.4M11 16.4V12.6" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="11" cy="11" r="3.2" fill="var(--accent)" />
+    <Link href="/" className="flex items-center gap-2" aria-label="Parley home">
+      {/* Two signal pennants meeting: yours and theirs, at the table. */}
+      <svg width="26" height="22" viewBox="0 0 26 22" aria-hidden>
+        <path d="M3 2v19M23 2v19" stroke="var(--ink)" strokeWidth="1.6" strokeLinecap="round" />
+        <path d="M3.8 3h8.6l-3.2 3.5 3.2 3.5H3.8z" fill="var(--accent)" />
+        <path d="M22.2 3h-8.6l3.2 3.5-3.2 3.5h8.6z" fill="var(--buoy)" />
       </svg>
-      <span className="text-[17px] font-semibold tracking-[-0.02em]">Rally</span>
+      <span className="display text-[21px] font-semibold tracking-[-0.03em]">Parley</span>
     </Link>
   );
 }
@@ -28,7 +27,7 @@ function ThemeToggle() {
   useEffect(() => {
     let saved: string | null = null;
     try {
-      saved = localStorage.getItem("rally.theme");
+      saved = localStorage.getItem("parley.theme");
     } catch {}
     const isDark = saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
     setDark(isDark);
@@ -39,7 +38,7 @@ function ThemeToggle() {
     setDark(next);
     document.documentElement.dataset.theme = next ? "dark" : "light";
     try {
-      localStorage.setItem("rally.theme", next ? "dark" : "light");
+      localStorage.setItem("parley.theme", next ? "dark" : "light");
     } catch {}
   };
   return (
@@ -86,7 +85,7 @@ export function AppHeader() {
         { href: "/", label: "Customer app", exact: true },
       ]
     : [
-        { href: "/", label: "Goals", exact: true },
+        { href: "/", label: "Plan a trip", exact: true },
         { href: "/diagnostics", label: "Agents" },
         { href: "/vendor", label: "Vendor portal" },
         { href: "/demo", label: "Control room" },
@@ -103,9 +102,12 @@ export function AppHeader() {
             <Link
               key={n.href}
               href={n.href}
+              aria-current={(n.exact ? path === n.href : path.startsWith(n.href)) ? "page" : undefined}
               className={cx(
-                "rounded-[6px] px-2.5 py-1.5 text-[13px] font-medium",
-                (n.exact ? path === n.href : path.startsWith(n.href)) ? "text-ink" : "text-muted hover:text-ink",
+                "relative px-2.5 py-1.5 text-[13px] font-medium",
+                (n.exact ? path === n.href : path.startsWith(n.href))
+                  ? "text-ink after:absolute after:inset-x-2.5 after:-bottom-[13px] after:h-[3px] after:rounded-full after:bg-buoy"
+                  : "text-muted hover:text-ink",
               )}
             >
               {n.label}

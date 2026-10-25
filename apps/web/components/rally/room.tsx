@@ -26,7 +26,7 @@ export function MemberRail({ snap }: { snap: DealSnapshot }) {
   const accepted = active.filter((m) => m.agentStatus === "accepted").length;
   return (
     <Card>
-      <CardHeader title="Members" meta={<span className="num">{active.length} in the group · {accepted} of {active.length} accepted</span>} />
+      <CardHeader title={snap.deal.solo ? "Traveller" : "Members"} meta={<span className="num">{snap.deal.solo ? "Solo trip, no group needed" : `${active.length} in the group, ${accepted} of ${active.length} accepted`}</span>} />
       <ul className="divide-y divide-line">
         {snap.members.map((m) => {
           const gone = m.state !== "joined";
@@ -64,7 +64,8 @@ function termState(key: string, snap: DealSnapshot, p: Proposal, isCurrent: bool
   const active = snap.members.filter((m) => m.state === "joined");
   const contesting = active.filter((m) => (m.agentStatus === "change_request" || m.agentStatus === "reject_hard") && m.agentTerm === key);
   if (contesting.length) return { label: `Contested by ${contesting.length}`, tone: "warn" as const };
-  if (active.length && active.every((m) => m.agentStatus === "accepted")) return { label: "Agreed by all", tone: "accent" as const };
+  if (active.length && active.every((m) => m.agentStatus === "accepted"))
+    return { label: snap.deal.solo ? "Your agent agreed" : "Agreed by all", tone: "accent" as const };
   if (p.changed.includes(key)) return { label: "Just changed", tone: "neutral" as const };
   return { label: "Pending", tone: "neutral" as const };
 }
@@ -116,7 +117,7 @@ export function PlanCard({ snap, providerName }: { snap: DealSnapshot; providerN
         <div className="flex items-center gap-2">
           <h2 className="text-[20px] font-semibold leading-7">Plan v{p.version}</h2>
           {!isCurrent && <Chip>Earlier version</Chip>}
-          {isCurrent && allAccepted && <Chip tone="accent"><Check size={12} /> Everyone accepted</Chip>}
+          {isCurrent && allAccepted && <Chip tone="accent"><Check size={12} /> {snap.deal.solo ? "Your agent accepted" : "Everyone accepted"}</Chip>}
         </div>
         <div className="flex items-center gap-1" role="group" aria-label="Plan versions">
           <button aria-label="Previous version" disabled={p.version <= proposals[0].version} onClick={() => setView(p.version - 1)} className="rounded-[6px] p-1.5 text-muted hover:bg-surface-2 disabled:opacity-30">
@@ -152,7 +153,7 @@ export function PlanCard({ snap, providerName }: { snap: DealSnapshot; providerN
       </div>
       {p.rationale.length > 0 && (
         <div className="border-t border-line bg-surface-2/60 px-5 py-3">
-          <div className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">Why this version</div>
+          <div className="text-[12px] font-semibold text-muted">Why this version</div>
           <ul className="mt-1 space-y-0.5 text-[13px]">
             {p.rationale.map((r) => <li key={r} className="num">{r}</li>)}
           </ul>
@@ -173,7 +174,7 @@ export function RoundTimeline({ snap }: { snap: DealSnapshot }) {
   return (
     <Card className="px-5 py-4">
       <div className="flex items-center justify-between">
-        <div className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Negotiation</div>
+        <div className="text-[13px] font-semibold text-muted">Negotiation</div>
         <div className="num text-[13px] text-muted" aria-live="polite">
           {last ? `Round ${last.number} of ${deal.maxRounds} · ${last.accepted || snap.members.filter((m) => m.agentStatus === "accepted").length} of ${last.active || snap.members.filter((m) => m.state === "joined").length} accepted` : "Not started"}
           {attempt > 1 && ` · attempt ${attempt}`}
@@ -267,8 +268,10 @@ export function NextStepBar({ snap, meId }: { snap: DealSnapshot; meId?: string 
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-accent bg-accent-soft px-5 py-3">
         <div>
-          <div className="font-semibold text-accent">Everyone&apos;s agent accepted plan v{v}.</div>
-          <div className="text-[13px] text-ink/80">{mine ? "You approved. Waiting for the others." : "Now each person approves the exact plan and quote."}</div>
+          <div className="font-semibold text-accent">{snap.deal.solo ? `Your agent settled on plan v${v} with the shop.` : `Everyone's agent accepted plan v${v}.`}</div>
+          <div className="text-[13px] text-ink/80">
+            {snap.deal.solo ? "Check the plan and the binding quote, then approve it yourself." : mine ? "You approved. Waiting for the others." : "Now each person approves the exact plan and quote."}
+          </div>
         </div>
         <div className="flex gap-2">
           <ButtonLink href={`/deals/${id}/providers`} variant="secondary">Compare quotes</ButtonLink>
@@ -317,11 +320,12 @@ export function DealHeader({ snap }: { snap: DealSnapshot }) {
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <div className="text-[13px] text-muted">
-          <Link href="/" className="hover:text-ink">Goals</Link> / Group room
+          <Link href="/" className="hover:text-ink">Trips</Link> / {d.solo ? "Solo trip" : "Group room"}
         </div>
         <h1 className="mt-1 text-[28px] font-semibold leading-[34px] tracking-[-0.01em]">{d.title}</h1>
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        {d.solo && <Chip tone="buoy" title="One traveller; their agent negotiates with the shops' agents directly">Solo</Chip>}
         <StatusPill status={d.status} />
         <Chip title="The group expires if not committed by then"><Clock size={12} /> until {deadline.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}</Chip>
         <Chip tone={snap.provenance.transport === "agentverse" ? "accent" : "sim"} title={snap.provenance.transport === "agentverse" ? "Every member and vendor agent is a registered Fetch.ai uAgent on Agentverse" : "Agent transport in use"}>Agents: {snap.provenance.transport as string}</Chip>

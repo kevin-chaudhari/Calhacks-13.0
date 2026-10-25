@@ -41,7 +41,7 @@ export default function VendorHome() {
   return (
     <>
       <PageTitle eyebrow={`Vendor portal · ${data.staff.name}, ${data.staff.title}`} title={p.name}>
-        Groups that want what you offer, found and organised by their agents. Your Rally agent answers price questions
+        Groups that want what you offer, found and organised by their agents. Your Parley agent answers price questions
         instantly; you approve quotes, talk to the group and confirm bookings.
       </PageTitle>
 
@@ -95,7 +95,7 @@ export default function VendorHome() {
 
         <div className="space-y-4">
           <Card className="p-5">
-            <div className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted"><Bot size={14} /> Your Rally agent</div>
+            <div className="flex items-center gap-2 text-[13px] font-semibold text-muted"><Bot size={14} /> Your Parley agent</div>
             <div className="mt-2 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-accent" />
               <span className="font-medium">Online</span>

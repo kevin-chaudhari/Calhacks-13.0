@@ -180,3 +180,4 @@ class Deal(RallyModel):
     nudge: Nudge | None = None                  # owner: agents (Parikshit); UI: platform (Kevin)
     replacements: list[Replacement] = []        # owner: agents (Parikshit); UI: platform (Kevin)
     negotiation_ms: int | None = None           # wall time from negotiate to agreement, for live metrics
+    solo: bool = False                          # one traveller; their agent negotiates with vendor agents directly

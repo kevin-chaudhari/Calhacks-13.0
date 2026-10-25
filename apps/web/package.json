@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "5.2.8",
     "convex": "1.46.0",
     "geist": "1.4.2",
     "lucide-react": "0.544.0",

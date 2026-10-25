@@ -100,6 +100,7 @@ export interface Deal {
   nudge: Nudge | null;
   replacements: Replacement[];
   negotiationMs: number | null;
+  solo: boolean;
 }
 
 export interface DealEvent {

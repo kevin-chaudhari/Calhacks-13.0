@@ -1,4 +1,4 @@
-"""The concierge drives the real Rally API (in-process over ASGI) from a chat goal to an agreed plan."""
+"""The concierge drives the real Parley API (in-process over ASGI) from a chat goal to an agreed plan."""
 import asyncio
 import sys
 from pathlib import Path

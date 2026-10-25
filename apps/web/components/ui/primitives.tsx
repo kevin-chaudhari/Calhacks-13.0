@@ -6,7 +6,7 @@ export { cx };
 
 type BtnVariant = "primary" | "secondary" | "ghost" | "danger";
 const btn: Record<BtnVariant, string> = {
-  primary: "bg-accent text-accent-ink hover:brightness-110 disabled:opacity-50",
+  primary: "bg-ink text-bg hover:bg-accent hover:text-accent-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-bg",
   secondary: "bg-surface text-ink border border-line hover:bg-surface-2 disabled:opacity-50",
   ghost: "text-muted hover:text-ink hover:bg-surface-2",
   danger: "bg-surface text-danger border border-line hover:bg-danger-soft",
@@ -17,7 +17,7 @@ export function Button({ variant = "primary", className, ...p }: ComponentProps<
     <button
       {...p}
       className={cx(
-        "inline-flex h-9 items-center justify-center gap-2 rounded-[6px] px-3.5 text-[13px] font-medium transition-colors disabled:cursor-not-allowed",
+        "inline-flex h-9 items-center justify-center gap-2 rounded-[8px] px-4 text-[13px] font-medium transition-colors disabled:cursor-not-allowed",
         btn[variant],
         className,
       )}
@@ -29,7 +29,7 @@ export function ButtonLink({ href, variant = "primary", className, children }: {
   return (
     <Link
       href={href}
-      className={cx("inline-flex h-9 items-center justify-center gap-2 rounded-[6px] px-3.5 text-[13px] font-medium transition-colors", btn[variant], className)}
+      className={cx("inline-flex h-9 items-center justify-center gap-2 rounded-[8px] px-4 text-[13px] font-medium transition-colors", btn[variant], className)}
     >
       {children}
     </Link>
@@ -37,14 +37,14 @@ export function ButtonLink({ href, variant = "primary", className, children }: {
 }
 
 export function Card({ className, ...p }: ComponentProps<"section">) {
-  return <section {...p} className={cx("rounded-[10px] border border-line bg-surface", className)} />;
+  return <section {...p} className={cx("rounded-[14px] border border-line bg-surface", className)} />;
 }
 
 export function CardHeader({ title, meta, action }: { title: ReactNode; meta?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
+    <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
       <div className="min-w-0">
-        <h2 className="truncate text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">{title}</h2>
+        <h2 className="truncate text-[16px] font-semibold leading-6 tracking-[-0.01em] text-ink">{title}</h2>
         {meta && <div className="mt-0.5 text-[13px] text-muted">{meta}</div>}
       </div>
       {action}
@@ -52,13 +52,14 @@ export function CardHeader({ title, meta, action }: { title: ReactNode; meta?: R
   );
 }
 
-type Tone = "neutral" | "accent" | "warn" | "danger" | "sim";
+type Tone = "neutral" | "accent" | "warn" | "danger" | "sim" | "buoy";
 const tones: Record<Tone, string> = {
   neutral: "bg-surface-2 text-muted",
   accent: "bg-accent-soft text-accent",
   warn: "bg-warn-soft text-warn",
   danger: "bg-danger-soft text-danger",
   sim: "bg-sim-soft text-sim",
+  buoy: "bg-buoy-soft text-ink",
 };
 
 export function Chip({ tone = "neutral", className, children, title }: { tone?: Tone; className?: string; children: ReactNode; title?: string }) {
@@ -75,7 +76,7 @@ export function Skeleton({ className }: { className?: string }) {
 
 export function Callout({ tone = "warn", title, children }: { tone?: Tone; title: ReactNode; children?: ReactNode }) {
   return (
-    <div role="status" className={cx("rounded-[10px] border px-4 py-3", tones[tone], "border-transparent")}>
+    <div role="status" className={cx("rounded-[12px] border px-4 py-3", tones[tone], "border-transparent")}>
       <div className="text-[13px] font-semibold">{title}</div>
       {children && <div className="mt-1 text-[13px] text-ink/80">{children}</div>}
     </div>
@@ -101,7 +102,7 @@ export function PageTitle({ eyebrow, title, children }: { eyebrow?: ReactNode; t
   return (
     <div className="mb-6">
       {eyebrow && <div className="mb-1 text-[13px] text-muted">{eyebrow}</div>}
-      <h1 className="text-[28px] font-semibold leading-[34px] tracking-[-0.01em]">{title}</h1>
+      <h1 className="text-[34px] font-semibold leading-[40px] tracking-[-0.025em]">{title}</h1>
       {children && <div className="mt-2 max-w-2xl text-muted">{children}</div>}
     </div>
   );

@@ -8,6 +8,7 @@ import { usePersona } from "@/lib/persona";
 import { shortDay, TERM_LABELS, termValue } from "@/lib/format";
 import type { Condition, Goal, MissingField, TermSpec } from "@/lib/types";
 import { Button, Callout, Card, CardHeader, Chip, PageTitle, Skeleton } from "@/components/ui/primitives";
+import { readMode } from "@/lib/mode";
 
 const KIND: Record<string, { label: string; tone: "accent" | "neutral" | "warn" | "sim" }> = {
   hard: { label: "Must have", tone: "accent" },
@@ -54,6 +55,11 @@ function MissingInput({ m, onApply }: { m: MissingField; onApply: (patch: Record
             inputMode={field === "location" ? "text" : "numeric"}
             className="h-8 w-28 rounded-[6px] border border-line bg-surface px-2 text-[13px]"
           />
+          {field === "groupMax" && (
+            <button onClick={() => onApply({ groupMax: 1, groupMin: 1 })} className="rounded-full border border-ink bg-surface px-2.5 py-0.5 text-[12px] font-medium text-ink hover:bg-buoy-soft">
+              Just me
+            </button>
+          )}
           {suggestions.map((s) => (
             <button key={String(s)} onClick={() => setV(String(s))} className="rounded-full border border-line bg-surface px-2 py-0.5 text-[12px] text-muted hover:text-ink">
               {String(s)}
@@ -104,7 +110,11 @@ export default function Review() {
   useEffect(() => {
     if (!me) return;
     api<Goal>(`/v1/goals/${goalId}`)
-      .then((g) => {
+      .then(async (g) => {
+        // "Just me" on the home page answers the group-size question for you
+        if (readMode() === "solo" && g.status !== "published" && g.draft.missing.some((m) => m.field === "groupMax")) {
+          g = await api<Goal>(`/v1/goals/${goalId}`, { method: "PATCH", body: { groupMax: 1, groupMin: 1 } });
+        }
         setGoal(g);
         setWeights(g.suggestedPrefs.weights ?? {});
         setBest(g.suggestedPrefs.best ?? {});
@@ -169,7 +179,7 @@ export default function Review() {
         }
         title={d.activity.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
       >
-        Rally only publishes what you confirm here. Hard conditions are never traded away during negotiation.
+        Parley only publishes what you confirm here. Hard conditions are never traded away during negotiation.
       </PageTitle>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -229,7 +239,7 @@ export default function Review() {
               </Row>
               <Row label="Group size">
                 {d.groupMax ? (
-                  <span className="num font-medium">{d.groupMin ?? 2} to {d.groupMax} people, including you</span>
+                  <span className="num font-medium">{d.groupMax === 1 ? "Just you, solo" : `${d.groupMin ?? 2} to ${d.groupMax} people, including you`}</span>
                 ) : <span className="text-muted">Not set</span>}
               </Row>
               <Row label="Conditions">
@@ -254,7 +264,7 @@ export default function Review() {
           <Card>
             <CardHeader
               title={<span className="flex items-center gap-1.5"><Lock size={13} /> Your private preferences</span>}
-              meta="Only your agent sees this. Rally stores a hash, never the values."
+              meta="Only your agent sees this. Parley stores a hash, never the values."
             />
             <div className="space-y-4 px-5 py-4">
               {terms.map((t) => {
@@ -296,7 +306,7 @@ export default function Review() {
           </Card>
           {err && <Callout tone="danger" title="Not saved">{err}</Callout>}
           <Button className="h-10 w-full" onClick={publish} disabled={busy || missing.length > 0 || published}>
-            {published ? "Published" : busy ? "Publishing…" : missing.length ? `Answer ${missing.length} question${missing.length > 1 ? "s" : ""} to publish` : "Publish and find people"}
+            {published ? "Published" : busy ? "Publishing…" : missing.length ? `Answer ${missing.length} question${missing.length > 1 ? "s" : ""} to publish` : d.groupMax === 1 ? "Publish and ask the shops" : "Publish and find people"}
           </Button>
           {published && (
             <Button variant="secondary" className="w-full" onClick={() => router.push(`/goals/${goalId}/matches`)}>

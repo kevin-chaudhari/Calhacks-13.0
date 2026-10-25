@@ -55,6 +55,11 @@ class Settings:
     api_self_url: str = field(default_factory=lambda: _env("RALLY_API_SELF_URL", "http://127.0.0.1:8000"))
     web_url: str = field(default_factory=lambda: _env("RALLY_WEB_URL", "http://localhost:3000").rstrip("/"))
     runtime_dir: str = field(default_factory=lambda: _env("RALLY_RUNTIME_DIR", str(ROOT / "data" / "runtime")))
+    gear_prices: str = field(default_factory=lambda: _env("GEAR_PRICES", "estimate"))   # brightdata | estimate
+    brightdata_api_key: str = field(default_factory=lambda: os.environ.get("BRIGHTDATA_API_KEY", "").strip())
+    brightdata_serp_zone: str = field(default_factory=lambda: os.environ.get("BRIGHTDATA_SERP_ZONE", "").strip())
+    brightdata_walmart_dataset_id: str = field(
+        default_factory=lambda: os.environ.get("BRIGHTDATA_WALMART_DATASET_ID", "").strip())
     allow_demo_routes: bool = field(default_factory=lambda: _env("ALLOW_DEMO_ROUTES", "1") == "1")
     cors_origins: list[str] = field(default_factory=lambda: _env(
         "CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(","))

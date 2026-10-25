@@ -1,4 +1,4 @@
-"""Rally concierge conversation logic with a fake Rally API (no network, no uagents)."""
+"""Parley concierge conversation logic with a fake Parley API (no network, no uagents)."""
 import asyncio
 import sys
 from pathlib import Path
@@ -119,9 +119,9 @@ def test_api_errors_become_a_chat_reply():
 
     class Broken(FakeAPI):
         async def compile(self, persona, text):
-            raise ApiFailure("Tell Rally what you want to do. (EMPTY_GOAL)")
+            raise ApiFailure("Tell Parley what you want to do. (EMPTY_GOAL)")
     replies = chat(make(Broken()), "asi1", "hm")
-    assert replies == ["Rally couldn't do that: Tell Rally what you want to do. (EMPTY_GOAL). "
+    assert replies == ["Parley couldn't do that: Tell Parley what you want to do. (EMPTY_GOAL). "
                        "Try rephrasing, or say 'start over'."]
 
 

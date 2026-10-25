@@ -48,7 +48,7 @@ export default function Pricing() {
   return (
     <>
       <PageTitle eyebrow={`Vendor portal · ${p.name}`} title="Agent & pricing rules">
-        Your Rally agent prices every plan from these rules: the group-size tier, plus or minus option modifiers. It can only
+        Your Parley agent prices every plan from these rules: the group-size tier, plus or minus option modifiers. It can only
         offer what you list here.
       </PageTitle>
 
@@ -132,7 +132,7 @@ export default function Pricing() {
 
         <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <Card className="p-5">
-            <div className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Preview</div>
+            <div className="text-[13px] font-semibold text-muted">Preview</div>
             <label className="mt-3 flex items-center justify-between text-[13px]">
               Group of
               <input type="range" min={1} max={8} value={size} onChange={(e) => setSize(+e.target.value)} className="mx-3 flex-1 accent-[var(--accent)]" aria-label="Group size" />

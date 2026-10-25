@@ -1,11 +1,12 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { Check, ChevronDown, Users } from "lucide-react";
+import { Check, ChevronDown, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError, newKey } from "@/lib/api";
 import { usePersona } from "@/lib/persona";
 import type { Goal, MatchCard, MatchResult } from "@/lib/types";
+import { readMode } from "@/lib/mode";
 import { Avatar, Button, Callout, Card, Chip, PageTitle, Skeleton, cx } from "@/components/ui/primitives";
 
 function FitBar({ score }: { score: number }) {
@@ -62,6 +63,8 @@ export default function Matches() {
   const [busy, setBusy] = useState(false);
   const [showRejected, setShowRejected] = useState(false);
   const dealKey = useRef(newKey());
+  const [preferSolo, setPreferSolo] = useState(false);
+  useEffect(() => setPreferSolo(readMode() === "solo"), []);
 
   useEffect(() => {
     if (!me) return;
@@ -72,7 +75,7 @@ export default function Matches() {
         if (!g.intentId) throw new ApiError(409, "NOT_PUBLISHED", "Publish this goal first.");
         const m = await api<MatchResult>(`/v1/intents/${g.intentId}/matches`, { body: {} });
         setRes(m);
-        setPicked(m.selectedIntentIds);
+        setPicked(readMode() === "solo" ? [] : m.selectedIntentIds);
       } catch (e) {
         setErr(e instanceof ApiError ? e.message : "Matching failed.");
       }
@@ -94,14 +97,33 @@ export default function Matches() {
     }
   }
 
-  const max = (goal?.draft.groupMax ?? 5) - 1;
+  async function goSolo() {
+    if (!goal?.intentId) return;
+    setBusy(true);
+    try {
+      const deal = await api<{ id: string }>(`/v1/deals`, {
+        body: { intentId: goal.intentId, candidateIntentIds: [], solo: true },
+        idempotencyKey: dealKey.current,
+      });
+      router.push(`/deals/${deal.id}`);
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : "Couldn't start your solo trip.");
+      setBusy(false);
+    }
+  }
+
+  const max = Math.max(1, (goal?.draft.groupMax ?? 5) - 1);
+  const nobody = res !== null && res.matches.length === 0;
+  const soloFirst = nobody || preferSolo;
   const toggle = (id: string) =>
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length < max ? [...p, id] : p));
 
   return (
     <>
-      <PageTitle eyebrow="Step 2 of 4 · Find your people" title="Compatible people">
-        Everyone below passed every hard condition. Ranking only reorders them; it can never admit someone who failed one.
+      <PageTitle eyebrow="Step 2 of 4: who's going" title={nobody ? "Nobody fits yet, so go solo" : "People who want the same trip"}>
+        {nobody
+          ? "No one passed your hard conditions this time. Your agent can still negotiate with every shop for you alone."
+          : "Everyone below passed every hard condition. Ranking only reorders them; it never admits someone who failed one."}
       </PageTitle>
 
       {err && <div className="mb-6"><Callout tone="danger" title="Something's off">{err}</Callout></div>}
@@ -129,7 +151,9 @@ export default function Matches() {
                 <Candidate key={c.intentId} c={c} picked={picked.includes(c.intentId)} toggle={() => toggle(c.intentId)} />
               ))}
             </div>
-            {res.matches.length === 0 && <Callout tone="neutral" title="No one fits yet">Widen your dates or radius and publish again.</Callout>}
+            {nobody && (
+              <Callout tone="neutral" title="Want company instead?">Widen your dates, budget or distance and publish again; new people join all the time.</Callout>
+            )}
 
             <Card className="mt-6">
               <button
@@ -137,7 +161,7 @@ export default function Matches() {
                 aria-expanded={showRejected}
                 className="flex w-full items-center justify-between px-5 py-3 text-left"
               >
-                <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Not a match ({res.rejections.length})</span>
+                <span className="text-[13px] font-semibold text-muted">Not a match ({res.rejections.length})</span>
                 <ChevronDown size={16} className={cx("text-muted transition-transform", showRejected && "rotate-180")} />
               </button>
               {showRejected && (
@@ -155,22 +179,64 @@ export default function Matches() {
             </Card>
           </div>
 
-          <div className="lg:sticky lg:top-20 lg:self-start">
-            <Card className="p-5">
+          <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+            {soloFirst ? <><Card className={cx("p-5", soloFirst && "border-ink")}>
+              <div className="flex items-center gap-2 text-[13px] text-muted"><User size={14} /> Just me</div>
+              <div className="display mt-1 text-[24px] font-semibold leading-[30px] tracking-[-0.02em]">Go solo</div>
+              <p className="mt-1 text-[13px] text-muted">
+                Your agent negotiates with every shop&apos;s agent for you alone, and looks for trips already running that you can join at the group rate.
+              </p>
+              {goal?.draft.groupMax === 1 && !nobody && (
+                <p className="mt-2 text-[12px] text-muted">You chose to go alone. To go with the people on the left, set a bigger group size on the previous step.</p>
+              )}
+              <Button className="mt-4 h-10 w-full" variant={soloFirst ? "primary" : "secondary"} onClick={goSolo} disabled={busy}>
+                {busy && soloFirst ? "Asking the shops…" : "Go solo"}
+              </Button>
+            </Card>{!nobody && (
+            <Card className={cx("p-5", !soloFirst && "border-ink")}>
               <div className="flex items-center gap-2 text-[13px] text-muted"><Users size={14} /> Your group</div>
-              <div className="num mt-1 text-[28px] font-semibold leading-[34px]">{picked.length + 1} people</div>
-              <div className="text-[13px] text-muted">You plus {picked.length} · max {max + 1}</div>
+              <div className="num display mt-1 text-[28px] font-semibold leading-[34px]">{picked.length + 1} {picked.length ? "people" : "person"}</div>
+              <div className="text-[13px] text-muted">You plus {picked.length}, up to {max + 1}</div>
               <div className="mt-4 flex -space-x-2">
                 {me && <Avatar initials={me.initials} />}
                 {res.matches.filter((m) => picked.includes(m.intentId)).map((m) => (
                   <Avatar key={m.intentId} initials={m.initials} demo={m.isDemoPersona} />
                 ))}
               </div>
-              <Button className="mt-5 h-10 w-full" onClick={start} disabled={busy || picked.length < 1}>
-                {busy ? "Inviting agents…" : `Start group with ${picked.length}`}
+              <Button className="mt-5 h-10 w-full" variant={soloFirst ? "secondary" : "primary"} onClick={start} disabled={busy || picked.length < 1}>
+                {busy && !soloFirst ? "Inviting agents…" : picked.length < 1 ? "Pick at least one person" : `Start a group of ${picked.length + 1}`}
               </Button>
               <p className="mt-3 text-[12px] text-muted">Each person&apos;s agent decides whether to join under its owner&apos;s rules.</p>
             </Card>
+            )}</> : <>{!nobody && (
+            <Card className={cx("p-5", !soloFirst && "border-ink")}>
+              <div className="flex items-center gap-2 text-[13px] text-muted"><Users size={14} /> Your group</div>
+              <div className="num display mt-1 text-[28px] font-semibold leading-[34px]">{picked.length + 1} {picked.length ? "people" : "person"}</div>
+              <div className="text-[13px] text-muted">You plus {picked.length}, up to {max + 1}</div>
+              <div className="mt-4 flex -space-x-2">
+                {me && <Avatar initials={me.initials} />}
+                {res.matches.filter((m) => picked.includes(m.intentId)).map((m) => (
+                  <Avatar key={m.intentId} initials={m.initials} demo={m.isDemoPersona} />
+                ))}
+              </div>
+              <Button className="mt-5 h-10 w-full" variant={soloFirst ? "secondary" : "primary"} onClick={start} disabled={busy || picked.length < 1}>
+                {busy && !soloFirst ? "Inviting agents…" : picked.length < 1 ? "Pick at least one person" : `Start a group of ${picked.length + 1}`}
+              </Button>
+              <p className="mt-3 text-[12px] text-muted">Each person&apos;s agent decides whether to join under its owner&apos;s rules.</p>
+            </Card>
+            )}<Card className={cx("p-5", soloFirst && "border-ink")}>
+              <div className="flex items-center gap-2 text-[13px] text-muted"><User size={14} /> Just me</div>
+              <div className="display mt-1 text-[24px] font-semibold leading-[30px] tracking-[-0.02em]">Go solo</div>
+              <p className="mt-1 text-[13px] text-muted">
+                Your agent negotiates with every shop&apos;s agent for you alone, and looks for trips already running that you can join at the group rate.
+              </p>
+              {goal?.draft.groupMax === 1 && !nobody && (
+                <p className="mt-2 text-[12px] text-muted">You chose to go alone. To go with the people on the left, set a bigger group size on the previous step.</p>
+              )}
+              <Button className="mt-4 h-10 w-full" variant={soloFirst ? "primary" : "secondary"} onClick={goSolo} disabled={busy}>
+                {busy && soloFirst ? "Asking the shops…" : "Go solo"}
+              </Button>
+            </Card></>}
           </div>
         </div>
       )}

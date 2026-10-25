@@ -5,7 +5,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Anchor, Mountain, Plane, RotateCcw, Waves } from "lucide-react";
+import { Anchor, Mountain, Plane, RotateCcw, User, Waves } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { usePersona } from "@/lib/persona";
@@ -25,6 +25,7 @@ const SCENARIOS = [
   { id: "scuba", title: "Scuba in Monterey", blurb: "Five divers, certification and budget limits, a dive shop's binding quote.", icon: Anchor },
   { id: "skydiving", title: "Skydiving, Santa Cruz", blurb: "First jumps: weight limits and weather windows decide the date.", icon: Plane },
   { id: "kayaking", title: "Sea kayaking", blurb: "A cheaper trip where group size changes the price most.", icon: Waves },
+  { id: "solo", title: "Solo diver", blurb: "Nobody to go with: one agent negotiates with every dive shop and finds a boat to join.", icon: User },
 ] as const;
 
 export default function ControlRoom() {
@@ -85,7 +86,7 @@ export default function ControlRoom() {
       {err && <div className="mb-4"><Callout tone="danger" title="Didn't work">{err}</Callout></div>}
 
       <section className="mb-6">
-        <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Sponsor tech, live or fallback</h2>
+        <h2 className="mb-2 text-[13px] font-semibold text-muted">Sponsor tech, live or fallback</h2>
         {health ? (
           <>
             <AdapterLights adapters={{ ...health.adapters, payments: health.payments.mode }} convexErrors={health.convex.errors} />
@@ -103,10 +104,10 @@ export default function ControlRoom() {
 
       <section className="mb-6">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Launch a scenario as {me?.name ?? "…"}</h2>
+          <h2 className="text-[13px] font-semibold text-muted">Launch a scenario as {me?.name ?? "…"}</h2>
           <Button variant="secondary" onClick={reset} disabled={busy !== null}><RotateCcw size={14} /> {busy === "reset" ? "Resetting…" : "Reset everything"}</Button>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {SCENARIOS.map((s) => (
             <Card key={s.id}>
               <div className="flex h-full flex-col gap-3 p-4">
@@ -121,7 +122,7 @@ export default function ControlRoom() {
       </section>
 
       <section className="mb-6">
-        <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Measured live</h2>
+        <h2 className="mb-2 text-[13px] font-semibold text-muted">Measured live</h2>
         {metrics ? <MetricsGrid m={metrics} /> : <Skeleton className="h-24" />}
       </section>
 
@@ -140,6 +141,7 @@ export default function ControlRoom() {
           <li>Hand another judge the vendor seat. They approve the binding quote from the vendor portal.</li>
           <li>Everyone approves; deposits commit and the plan goes to calendars.</li>
           <li>Scrub the replay to show why each version changed. Point at zero hard-constraint violations above.</li>
+          <li>Launch the solo diver: nobody to go with, yet the agent joins a boat that's already going and gets the group rate.</li>
         </ol>
       </Card>
     </>

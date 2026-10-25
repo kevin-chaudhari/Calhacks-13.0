@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import "@fontsource-variable/bricolage-grotesque";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AppHeader } from "@/components/rally/shell";
 
 export const metadata: Metadata = {
-  title: "Rally",
-  description: "Your agents find your people, agree on the plan, and turn shared goals into group deals.",
+  title: "Parley",
+  description: "Say what you want to do. Your agent finds people to go with, or goes alone, and negotiates the deal with the shops.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

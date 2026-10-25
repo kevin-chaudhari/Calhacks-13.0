@@ -2,21 +2,33 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CornerDownLeft, Waves } from "lucide-react";
+import { Anchor, ArrowRight, CornerDownLeft, Plane, User, Users, Waves } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError, newKey } from "@/lib/api";
 import { usePersona } from "@/lib/persona";
 import type { DealSummary, Goal } from "@/lib/types";
-import { Button, Callout, Card, Skeleton } from "@/components/ui/primitives";
+import { Button, Callout, Card, Skeleton, cx } from "@/components/ui/primitives";
 import { StatusPill } from "@/components/rally/shell";
 import { AsiOneCard, VendorSearch } from "@/components/rally/platform";
+import { MODE_KEY, type Mode } from "@/lib/mode";
 
 const EXAMPLES = [
-  { label: "Scuba trip in Monterey", text: "I want to go scuba diving in Monterey next month for under $300. I am Open Water certified." },
-  { label: "Skydiving near Santa Cruz", text: "I want to go skydiving near Santa Cruz next month for under $400, first jump." },
-  { label: "Sea kayaking in Monterey", text: "Sea kayaking in Monterey next month, under $120 per person." },
-  { label: "Tennis partner this week", text: "Tennis partner, 3.5 level, weekday evenings near Berkeley." },
+  { label: "Scuba in Monterey", icon: Anchor, text: "I want to go scuba diving in Monterey next month for under $300. I am Open Water certified." },
+  { label: "Skydiving, Santa Cruz", icon: Plane, text: "I want to go skydiving near Santa Cruz next month for under $400, first jump." },
+  { label: "Sea kayaking", icon: Waves, text: "Sea kayaking in Monterey next month, under $120 per person." },
 ];
+
+
+const MODES: Record<Mode, { label: string; icon: typeof Users; line: string; cta: string }> = {
+  group: {
+    label: "With others", icon: Users, cta: "Find my people",
+    line: "Your agent finds people who want the same trip. Everyone's agent then agrees on one plan and one price with the shop.",
+  },
+  solo: {
+    label: "Just me", icon: User, cta: "Find my deal",
+    line: "Your agent negotiates with every shop directly and looks for trips already running that you can join at the group rate.",
+  },
+};
 
 export default function Home() {
   const router = useRouter();
@@ -27,6 +39,18 @@ export default function Home() {
   const [goals, setGoals] = useState<Goal[] | null>(null);
   const [deals, setDeals] = useState<DealSummary[] | null>(null);
   const keyRef = useRef(newKey());
+  const [mode, setModeState] = useState<Mode>("group");
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(MODE_KEY) === "solo") setModeState("solo");
+    } catch {}
+  }, []);
+  const setMode = (m: Mode) => {
+    setModeState(m);
+    try {
+      localStorage.setItem(MODE_KEY, m);
+    } catch {}
+  };
 
   useEffect(() => {
     if (!me) return;
@@ -54,21 +78,39 @@ export default function Home() {
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <div>
-        <h1 className="max-w-xl text-[34px] font-semibold leading-[40px] tracking-[-0.02em]">
-          Tell Rally what you want to do.
-          <span className="block text-muted">Your agent finds your people.</span>
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="chart-field relative overflow-hidden rounded-[24px] border border-line px-5 pb-8 pt-10 sm:px-10 sm:pb-10 sm:pt-14">
+        <h1 className="buoy-rise max-w-[15ch] text-[44px] font-semibold leading-[46px] tracking-[-0.035em] sm:text-[60px] sm:leading-[60px]">
+          Tell your agent where you want to go.
         </h1>
-        <p className="mt-3 max-w-xl text-muted">
-          Agents find compatible people, agree on one plan without exposing anyone&apos;s private preferences, and get a group
-          price. Nothing is booked or paid until every person approves.
+        <p className="mt-4 max-w-[56ch] text-[16px] leading-6 text-muted">
+          It finds the people and negotiates with the shops&apos; agents, so you get a group price whether you bring
+          friends or go on your own. Nothing is booked until you approve it.
         </p>
 
-        <Card className="mt-8 p-2 focus-within:border-accent">
-          <label htmlFor="goal" className="sr-only">
-            Your goal
-          </label>
+        <div role="radiogroup" aria-label="Who is going" className="mt-8 inline-flex rounded-[12px] border border-line bg-surface p-1">
+          {(Object.keys(MODES) as Mode[]).map((m) => {
+            const M = MODES[m];
+            return (
+              <button
+                key={m}
+                role="radio"
+                aria-checked={mode === m}
+                onClick={() => setMode(m)}
+                className={cx(
+                  "inline-flex h-9 items-center gap-2 rounded-[9px] px-4 text-[14px] font-medium transition-colors",
+                  mode === m ? "bg-ink text-bg" : "text-muted hover:text-ink",
+                )}
+              >
+                <M.icon size={15} strokeWidth={1.9} /> {M.label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-3 max-w-[60ch] text-[14px] text-ink/80">{MODES[mode].line}</p>
+
+        <Card className="mt-5 p-2 shadow-[0_1px_0_var(--line)] focus-within:border-accent">
+          <label htmlFor="goal" className="sr-only">Your goal</label>
           <textarea
             id="goal"
             autoFocus
@@ -78,24 +120,24 @@ export default function Home() {
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
             }}
-            placeholder="I want to go scuba diving in Monterey next month for under $300…"
-            className="w-full resize-none bg-transparent px-3 py-2.5 text-[16px] leading-6 outline-none placeholder:text-muted/70"
+            placeholder="Scuba diving in Monterey next month, under $300. I'm Open Water certified."
+            className="w-full resize-none bg-transparent px-3 py-2.5 text-[17px] leading-7 no-ring outline-none placeholder:text-muted/70"
             maxLength={1000}
           />
           <div className="flex items-center justify-between gap-3 px-2 pb-1">
             <span className="hidden items-center gap-1 text-[12px] text-muted sm:flex">
               <kbd className="rounded border border-line px-1 font-mono text-[11px]">⌘</kbd>
-              <CornerDownLeft size={12} /> to compile
+              <CornerDownLeft size={12} /> to send
             </span>
-            <Button onClick={submit} disabled={!text.trim() || busy || !me}>
-              {busy ? "Compiling…" : "Find my people"}
+            <Button onClick={submit} disabled={!text.trim() || busy || !me} className="h-10 px-5">
+              {busy ? "Reading your goal…" : MODES[mode].cta}
               <ArrowRight size={16} strokeWidth={1.75} />
             </Button>
           </div>
         </Card>
         {err && (
           <div className="mt-3">
-            <Callout tone="danger" title="Couldn't compile that goal">
+            <Callout tone="danger" title="Couldn't read that goal">
               {err} <button className="underline" onClick={submit}>Try again</button>
             </Callout>
           </div>
@@ -105,32 +147,32 @@ export default function Home() {
             <button
               key={ex.label}
               onClick={() => setText(ex.text)}
-              className="rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] text-muted hover:border-accent hover:text-ink"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] text-muted hover:border-ink hover:text-ink"
             >
-              {ex.label}
+              <ex.icon size={13} strokeWidth={1.9} /> {ex.label}
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
       <aside className="space-y-6">
         <AsiOneCard />
         <Card>
-          <div className="border-b border-line px-5 py-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Your deals</div>
+          <div className="border-b border-line px-5 py-3.5 text-[16px] font-semibold display">Your trips</div>
           <ul className="divide-y divide-line">
             {deals === null && (
               <li className="p-5">
                 <Skeleton className="h-10" />
               </li>
             )}
-            {deals?.length === 0 && <li className="px-5 py-4 text-[13px] text-muted">No deals yet. Publish a goal and start a group.</li>}
+            {deals?.length === 0 && <li className="px-5 py-4 text-[13px] text-muted">No trips yet. Describe one on the left.</li>}
             {deals?.map((d) => (
               <li key={d.id}>
                 <Link href={`/deals/${d.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface-2">
                   <div className="min-w-0">
                     <div className="truncate font-medium">{d.title}</div>
                     <div className="num text-[12px] text-muted">
-                      {d.memberCount} people · round {d.round} of {d.maxRounds}
+                      {d.memberCount === 1 ? "Solo" : `${d.memberCount} people`}, round {d.round} of {d.maxRounds}
                     </div>
                   </div>
                   <StatusPill status={d.status} />
@@ -140,7 +182,7 @@ export default function Home() {
           </ul>
         </Card>
         <Card>
-          <div className="border-b border-line px-5 py-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Your goals</div>
+          <div className="border-b border-line px-5 py-3.5 text-[16px] font-semibold display">Your goals</div>
           <ul className="divide-y divide-line">
             {goals === null && (
               <li className="p-5">

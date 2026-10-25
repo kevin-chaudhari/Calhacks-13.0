@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { Play, QrCode } from "lucide-react";
 import { useState } from "react";
 import { api, ApiError } from "@/lib/api";
+import { money } from "@/lib/format";
 import { usePersona } from "@/lib/persona";
 import { useDealSnapshot } from "@/lib/useDeal";
 import { Button, Callout, Card, CardHeader, Skeleton } from "@/components/ui/primitives";
@@ -11,6 +12,7 @@ import { ActivityFeed, DealHeader, MemberRail, NextStepBar, PlanCard, QuoteMini,
 import { AgentConversation, WorkflowStepper } from "@/components/rally/agents";
 import { ChatPanel } from "@/components/rally/chat";
 import { cx } from "@/components/ui/primitives";
+import { GearCard } from "@/components/rally/gear";
 import { ExplanationCard, NegotiationReplay, NudgeCard, ReplacementNotes, SeatsPanel } from "@/components/rally/platform";
 
 export default function GroupRoom() {
@@ -91,6 +93,27 @@ export default function GroupRoom() {
           </div>
         )}
         {cmdErr && <Callout tone="danger" title="Not started">{cmdErr}</Callout>}
+        {snap.deal.solo && (
+          <div className="flex items-start gap-3 rounded-[12px] border border-line bg-buoy-soft px-5 py-3 text-[14px]">
+            <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-buoy" aria-hidden />
+            <div>
+              <div className="font-semibold">
+                {["GROUP_FORMING", "NEGOTIATING", "PROVIDER_QUOTES_PENDING"].includes(snap.deal.status)
+                  ? "Your agent is negotiating on its own with the shops' agents"
+                  : "Your agent negotiated this on its own with the shops' agents"}
+              </div>
+              <div className="text-[13px] text-ink/75">
+                {(() => {
+                  const q = snap.quotes.find((x) => x.id === snap.deal.chosenQuoteId);
+                  const ride = q?.includes.find((i) => i.startsWith("joins a booked group"));
+                  return q && ride
+                    ? `${q.providerName} has a trip already running that day, so you ${ride.replace("joins", "join")}: ${money(q.pricePerPerson)} instead of ${money(q.soloPricePerPerson)} booking alone.`
+                    : "It asks each shop for its price sheet and any trips already running that you can join at the group rate, then proposes the best plan to you.";
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
         <NudgeCard snap={snap} meId={me?.id} />
         {isOrganizer && (
           <div className="flex justify-end">
@@ -111,6 +134,7 @@ export default function GroupRoom() {
           {isMember && <ExplanationCard dealId={dealId} version={snap.deal.currentProposalVersion ?? 0} />}
           <PlanCard snap={snap} providerName={providerName} />
           <RoundTimeline snap={snap} />
+          {isMember && <GearCard dealId={dealId} version={snap.deal.currentProposalVersion ?? 0} />}
           <NegotiationReplay snap={snap} />
         </div>
         <div className={cx("space-y-4", tab !== "activity" && "hidden lg:block")}>

@@ -7,6 +7,7 @@ import { money, termValue, time } from "@/lib/format";
 import { useDealSnapshot } from "@/lib/useDeal";
 import { Callout, Card, Chip, PageTitle, Skeleton, cx } from "@/components/ui/primitives";
 import { ProvenanceBadge } from "@/components/rally/shell";
+import { GearCard } from "@/components/rally/gear";
 
 export default function Providers() {
   const { dealId } = useParams<{ dealId: string }>();
@@ -88,6 +89,7 @@ export default function Providers() {
           );
         })}
       </div>
+      <div className="mt-6 max-w-2xl"><GearCard dealId={dealId} version={snap.deal.currentProposalVersion ?? 0} /></div>
       <p className="mt-6 text-[12px] text-muted">
         Providers in this demo are fictional, with fixture price tables. A quote is never a reservation; the booking is made with the provider after everyone commits.
       </p>

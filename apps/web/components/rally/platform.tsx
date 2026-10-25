@@ -144,7 +144,7 @@ export function ExplanationCard({ dealId, version }: { dealId: string; version: 
       <div className="flex items-start gap-3 px-5 py-4">
         <Sparkles size={16} className="mt-0.5 shrink-0 text-accent" />
         <div>
-          <div className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Why this plan works for you</div>
+          <div className="text-[13px] font-semibold text-muted">Why this plan works for you</div>
           <p className="mt-1 text-[14px] leading-6">{data.text}</p>
           <div className="mt-1 text-[11px] text-muted">Only you see this · {data.generatedBy === "gemini" ? "written by Gemini from your agent's scoring" : "from your agent's scoring"}</div>
         </div>
@@ -219,7 +219,7 @@ export function NegotiationReplay({ snap }: { snap: DealSnapshot }) {
       </div>
       <div className="grid gap-4 px-5 pb-4 pt-2 md:grid-cols-2">
         <div>
-          <div className="mb-1 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">Proposed</div>
+          <div className="mb-1 text-[12px] font-semibold text-muted">Proposed</div>
           <dl className="space-y-1 text-[13px]">
             {orderedTerms(p.terms).map(([k, v]) => {
               const changed = prev && prev.terms[k] !== v;
@@ -237,7 +237,7 @@ export function NegotiationReplay({ snap }: { snap: DealSnapshot }) {
           </dl>
         </div>
         <div>
-          <div className="mb-1 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">How each agent answered</div>
+          <div className="mb-1 text-[12px] font-semibold text-muted">How each agent answered</div>
           {round?.responses.length ? (
             <ul className="space-y-1 text-[13px]">
               {round.responses.map((r) => (
@@ -314,15 +314,15 @@ export function MetricsGrid({ m }: { m: Metrics }) {
 
 const LIVE: Record<string, string[]> = {
   compiler: ["gemini"], ranker: ["moss"], transport: ["agentverse", "bureau"], store: ["convex"],
-  payments: ["x402_testnet"], providers: ["agents", "seeded+apify"],
+  payments: ["x402_testnet"], providers: ["agents", "seeded+apify"], gear: ["brightdata"],
 };
 const SPONSOR: Record<string, string> = {
-  compiler: "Gemini", ranker: "Moss", transport: "Fetch.ai uAgents", store: "Convex", payments: "x402", providers: "Apify",
+  compiler: "Gemini", ranker: "Moss", transport: "Fetch.ai uAgents", store: "Convex", payments: "x402", providers: "Apify", gear: "Bright Data",
 };
 
 export function AdapterLights({ adapters, convexErrors }: { adapters: Record<string, string>; convexErrors?: number }) {
   return (
-    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
       {Object.keys(SPONSOR).map((k) => {
         const mode = adapters[k] ?? "—";
         const live = (LIVE[k] ?? []).includes(mode) && !(k === "store" && (convexErrors ?? 0) > 0);
@@ -377,7 +377,7 @@ export function CalendarAndShare({ snap }: { snap: DealSnapshot }) {
     if (!plan) return "";
     const people = snap.members.filter((m) => m.state === "joined").map((m) => m.name).join(", ");
     const terms = orderedTerms(plan.terms).map(([k, v]) => `${TERM_LABELS[k] ?? k}: ${termValue(k, v)}`).join("\n");
-    return `${snap.deal.title}\n${terms}\n${quote ? `${quote.providerName} · ${money(quote.pricePerPerson)} per person` : ""}\nWith ${people}\nPlanned by our agents on Rally`;
+    return `${snap.deal.title}\n${terms}\n${quote ? `${quote.providerName} · ${money(quote.pricePerPerson)} per person` : ""}\nWith ${people}\nPlanned by our agents on Parley`;
   }, [plan, quote, snap]);
 
   const downloadIcs = useCallback(() => {
@@ -386,7 +386,7 @@ export function CalendarAndShare({ snap }: { snap: DealSnapshot }) {
     next.setUTCDate(next.getUTCDate() + 1);
     const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/,/g, "\\,").replace(/;/g, "\\;").replace(/\n/g, "\\n");
     const ics = [
-      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Rally//Group plan//EN", "BEGIN:VEVENT",
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Parley//Group plan//EN", "BEGIN:VEVENT",
       `UID:${snap.deal.id}@rally`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
       `DTSTART;VALUE=DATE:${icsDate(date)}`, `DTEND;VALUE=DATE:${icsDate(next.toISOString().slice(0, 10))}`,
       `SUMMARY:${esc(snap.deal.title)}`, `LOCATION:${esc(quote?.providerName ?? "")}`, `DESCRIPTION:${esc(summary)}`,
@@ -435,7 +435,7 @@ export function AsiOneCard() {
         <Avatar initials="AI" size={32} />
         <div className="min-w-0">
           <div className="font-semibold">Also on ASI:One</div>
-          <p className="text-[13px] text-muted">Type the same goal in ASI:One chat; Rally&apos;s concierge agent finds your people and replies with the plan.</p>
+          <p className="text-[13px] text-muted">Type the same goal in ASI:One chat; Parley&apos;s concierge agent finds your people and replies with the plan.</p>
           <div className="mt-2 flex flex-wrap gap-3 text-[13px]">
             <a className="inline-flex items-center gap-1 text-accent underline" href="https://asi1.ai" target="_blank" rel="noreferrer">Open ASI:One <ExternalLink size={12} /></a>
             <a className="inline-flex items-center gap-1 text-muted underline" href={`https://agentverse.ai/agents/details/${AGENT}/profile`} target="_blank" rel="noreferrer">Agent on Agentverse <ExternalLink size={12} /></a>
@@ -482,7 +482,7 @@ export function VendorSearch() {
   return (
     <Card>
       <div className="flex items-center justify-between border-b border-line px-5 py-3">
-        <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Find a vendor</span>
+        <span className="text-[13px] font-semibold text-muted">Find a vendor</span>
         {res && <Chip tone="sim">{res.ranker === "moss" ? "Ranked by Moss" : "Ranked locally"}</Chip>}
       </div>
       <div className="p-3">

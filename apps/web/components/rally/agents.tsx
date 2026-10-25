@@ -106,6 +106,8 @@ const STEPS = [
   { key: "book", label: "Vendor books", who: "Vendor staff" },
 ];
 
+const SOLO_LABEL: Record<string, string> = { group: "Your agent ready", negotiate: "Agent vs shops", approve: "You approve" };
+
 export function stepIndex(deal: Deal): { at: number; failed: boolean } {
   const s = deal.status;
   if (s === "GROUP_FORMING") return { at: 1, failed: false };
@@ -133,7 +135,7 @@ export function WorkflowStepper({ deal, reviewBy }: { deal: Deal; reviewBy?: str
                 done ? "bg-accent text-accent-ink" : current ? (failed ? "bg-danger text-white" : "bg-accent/20 text-accent") : "bg-surface-2 text-muted")}>
                 {done ? <Check size={10} /> : current && failed ? <X size={10} /> : i + 1}
               </span>
-              <span className={cx("truncate text-[12px] font-medium", !done && !current && "text-muted")}>{step.label}</span>
+              <span className={cx("truncate text-[12px] font-medium", !done && !current && "text-muted")}>{deal.solo ? SOLO_LABEL[step.key] ?? step.label : step.label}</span>
             </div>
             <div className="mt-0.5 truncate text-[11px] text-muted">
               {current && step.key === "quote" && reviewBy ? `${reviewBy} reviewing` : step.who}

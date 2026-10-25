@@ -43,8 +43,8 @@ async def lifespan(_: FastAPI):
         mirror.close()
 
 
-app = FastAPI(title="Rally API", version="0.1.0", lifespan=lifespan,
-              description="Commands for the Rally group-deal engine. The UI reads state from Convex "
+app = FastAPI(title="Parley API", version="0.1.0", lifespan=lifespan,
+              description="Commands for the Parley group-deal engine. The UI reads state from Convex "
                           "(or GET /v1/deals/{id}/snapshot in local dev).")
 rally.rail.install(app, rally)          # x402: payment middleware + POST /v1/x402/deposits/{deal}/{user}
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=False,
@@ -121,7 +121,8 @@ class MatchBody(BaseModel):
 
 class DealBody(BaseModel):
     intentId: str
-    candidateIntentIds: list[str]
+    candidateIntentIds: list[str] = []
+    solo: bool = False              # nobody fits (or the person wants to go alone): agent negotiates with vendors
 
 
 class CommitBody(BaseModel):
@@ -144,6 +145,7 @@ def health():
             "convex": mirror.stats() if mirror else {"enabled": False},
             "restored": rally.restored,
             "payments": rally.rail.status(),
+            "gear": rally.gear.status(),
             "agents": {"personal": len(rally.agent_prefs), "providers": len(rally.providers)}}
 
 
@@ -217,7 +219,7 @@ def get_matches(intent_id: str, uid: str = Depends(user)):
 async def create_deal(body: DealBody, uid: str = Depends(user), idempotency_key: str | None = Header(default=None)):
     limited(uid, "cmd", 30)
     return await aidempotent(uid, "deal", idempotency_key,
-                             lambda: rally.create_deal(uid, body.intentId, body.candidateIntentIds))
+                             lambda: rally.create_deal(uid, body.intentId, body.candidateIntentIds, body.solo))
 
 
 @app.get("/v1/deals")
@@ -380,6 +382,22 @@ def vendor_update(body: dict[str, Any], uid: str = Depends(user)):
 class LaunchBody(BaseModel):
     scenario: str = "scuba"
     autoNegotiate: bool = True
+
+
+@app.get("/v1/deals/{deal_id}/gear")
+async def deal_gear(deal_id: str, uid: str = Depends(user)):
+    """What I have to bring for the current plan, with live store prices (Bright Data) when enabled."""
+    limited(uid, "gear", 20)
+    return await rally.gear_for_deal(uid, deal_id)
+
+
+@app.get("/v1/gear/{activity}")
+async def activity_gear(activity: str, request: Request, uid: str = Depends(user)):
+    """Same list before a group exists, e.g. while comparing vendors. Terms come as query params:
+    /v1/gear/scuba_diving?gear_included=false"""
+    limited(uid, "gear", 20)
+    terms = {k: v.lower() == "true" if v.lower() in ("true", "false") else v for k, v in request.query_params.items()}
+    return await rally.gear_for_activity(activity, terms)
 
 
 @app.get("/v1/metrics")

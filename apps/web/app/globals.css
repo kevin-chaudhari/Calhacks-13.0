@@ -1,62 +1,73 @@
 @import "tailwindcss";
 
 /* Design tokens (plan section 8.1). Light by default; dark follows the OS unless overridden. */
+/* Parley design tokens: a nautical chart. Fog-blue chart paper, deep-water ink, sea-glass teal for
+   actions, and buoy yellow reserved for the moment people (or a person and a shop) agree. */
 :root {
-  --bg: #f5f7f8;
-  --surface: #ffffff;
-  --surface-2: #eef2f3;
-  --ink: #0f1a1f;
-  --muted: #5b6b73;
-  --line: #dce3e6;
-  --accent: #0b7a75;
-  --accent-ink: #ffffff;
-  --accent-soft: #ddf1ef;
-  --warn: #b45309;
-  --warn-soft: #fdf1e3;
-  --danger: #b42318;
-  --danger-soft: #fdeceb;
-  --sim: #6b5bd2;
-  --sim-soft: #eeebfb;
+  --bg: #e9f0f0;          /* chart paper */
+  --surface: #f9fbfb;
+  --surface-2: #e1eaea;
+  --ink: #0c2532;         /* deep water */
+  --muted: #536c76;
+  --line: #ccdada;
+  --accent: #0d6a74;      /* sea glass */
+  --accent-ink: #f4fbfb;
+  --accent-soft: #d2e8e7;
+  --buoy: #f0b429;        /* agreement, solo badge, the flag in the logo */
+  --buoy-soft: #fbefcd;
+  --contour: #c4d6d6;
+  --warn: #a5560d;
+  --warn-soft: #f8ead7;
+  --danger: #b3261e;
+  --danger-soft: #fae3e1;
+  --sim: #5b4fc4;
+  --sim-soft: #e9e6fa;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0d1114;
-    --surface: #151b1f;
-    --surface-2: #1c2429;
-    --ink: #e6edf0;
-    --muted: #90a1a9;
-    --line: #263137;
-    --accent: #3fc1b7;
-    --accent-ink: #062321;
-    --accent-soft: #12302e;
-    --warn: #f2a24b;
-    --warn-soft: #2e2213;
-    --danger: #f07167;
-    --danger-soft: #331715;
-    --sim: #a79cf0;
-    --sim-soft: #221d3d;
+    --bg: #07141b;
+    --surface: #0d1f28;
+    --surface-2: #132a35;
+    --ink: #e2eeef;
+    --muted: #8eaab3;
+    --line: #1e3843;
+    --accent: #4cc2bd;
+    --accent-ink: #052226;
+    --accent-soft: #10353a;
+    --buoy: #f5c451;
+    --buoy-soft: #3a2f12;
+    --contour: #16313c;
+    --warn: #f0a457;
+    --warn-soft: #33240f;
+    --danger: #f2766c;
+    --danger-soft: #3a1714;
+    --sim: #a99ef2;
+    --sim-soft: #221d40;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0d1114;
-  --surface: #151b1f;
-  --surface-2: #1c2429;
-  --ink: #e6edf0;
-  --muted: #90a1a9;
-  --line: #263137;
-  --accent: #3fc1b7;
-  --accent-ink: #062321;
-  --accent-soft: #12302e;
-  --warn: #f2a24b;
-  --warn-soft: #2e2213;
-  --danger: #f07167;
-  --danger-soft: #331715;
-  --sim: #a79cf0;
-  --sim-soft: #221d3d;
+  --bg: #07141b;
+  --surface: #0d1f28;
+  --surface-2: #132a35;
+  --ink: #e2eeef;
+  --muted: #8eaab3;
+  --line: #1e3843;
+  --accent: #4cc2bd;
+  --accent-ink: #052226;
+  --accent-soft: #10353a;
+  --buoy: #f5c451;
+  --buoy-soft: #3a2f12;
+  --contour: #16313c;
+  --warn: #f0a457;
+  --warn-soft: #33240f;
+  --danger: #f2766c;
+  --danger-soft: #3a1714;
+  --sim: #a99ef2;
+  --sim-soft: #221d40;
   color-scheme: dark;
 }
 
@@ -76,15 +87,24 @@
   --color-danger-soft: var(--danger-soft);
   --color-sim: var(--sim);
   --color-sim-soft: var(--sim-soft);
+  --color-buoy: var(--buoy);
+  --color-buoy-soft: var(--buoy-soft);
+  --color-contour: var(--contour);
+  --font-display: "Bricolage Grotesque Variable", var(--font-geist-sans), ui-sans-serif, sans-serif;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --radius-card: 10px;
-  --radius-control: 6px;
+  --radius-card: 14px;
+  --radius-control: 8px;
 }
 
 html, body {
   background: var(--bg);
   color: var(--ink);
+}
+
+h1, h2, .display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
 }
 
 body {
@@ -100,6 +120,9 @@ body {
   border-radius: 4px;
 }
 
+/* The goal box shows focus on its card border instead. */
+.no-ring:focus-visible { outline: none; }
+
 .num { font-variant-numeric: tabular-nums; }
 
 @keyframes agreed-flash {
@@ -111,3 +134,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Bathymetric contours behind the home hero: the one decorative moment. */
+.chart-field {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 78% 30%, transparent 0 46px, var(--contour) 47px 48px, transparent 49px 88px,
+      var(--contour) 89px 90px, transparent 91px 134px, var(--contour) 135px 136px, transparent 137px 186px,
+      var(--contour) 187px 188px, transparent 189px 246px, var(--contour) 247px 248px, transparent 249px),
+    radial-gradient(circle at 8% 110%, transparent 0 70px, var(--contour) 71px 72px, transparent 73px 130px,
+      var(--contour) 131px 132px, transparent 133px 200px, var(--contour) 201px 202px, transparent 203px);
+}
+
+@keyframes buoy-rise {
+  from { transform: translateY(6px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.buoy-rise { animation: buoy-rise 520ms cubic-bezier(.2,.7,.2,1) both; }

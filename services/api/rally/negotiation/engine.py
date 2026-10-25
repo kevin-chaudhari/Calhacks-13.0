@@ -60,6 +60,16 @@ class ProviderSheet:
     tiers: list[dict]                      # {min, max, pricePerPerson, includes}
     modifiers: dict[str, dict[str, float]] = field(default_factory=dict)
     provenance: str = "simulated"
+    open_groups: dict[str, int] = field(default_factory=dict)   # date -> people already booked on that trip
+    pool: bool = False                     # solo mode: price a traveller as joining that date's open group
+
+    def pooled_size(self, terms: dict[str, Any], group_size: int) -> int:
+        """Group size the shop prices at: in solo mode, a traveller joining an existing trip counts with it."""
+        if not self.pool:
+            return group_size
+        joined = group_size + self.open_groups.get(str(terms.get("date")), 0)
+        top = max((t["max"] for t in self.tiers), default=group_size)
+        return min(joined, top)
 
     def tier_for(self, group_size: int) -> dict | None:
         for tier in self.tiers:
@@ -74,7 +84,7 @@ class ProviderSheet:
         for key, value in terms.items():
             if key in self.offers and value not in self.offers[key]:
                 return None
-        tier = self.tier_for(group_size)
+        tier = self.tier_for(self.pooled_size(terms, group_size))
         if tier is None:
             return None
         price = float(tier["pricePerPerson"])
